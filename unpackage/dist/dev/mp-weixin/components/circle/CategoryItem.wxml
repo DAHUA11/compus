@@ -1,0 +1,1 @@
+<view class="{{['category-item', 'flex', 'items-center', 'clickable-mp', 'mp-animation', c && 'active']}}" bindtap="{{d}}"><text class="{{['category-icon', 'iconfont', a]}}"></text><text class="category-text">{{b}}</text></view>

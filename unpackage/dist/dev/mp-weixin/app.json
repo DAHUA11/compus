@@ -1,6 +1,12 @@
 {
   "pages": [
-    "pages/index/index"
+    "pages/circle/circle",
+    "pages/index/index",
+    "pages/user/user",
+    "pages/circle/activities/activities",
+    "pages/circle/activity-datail/activity-datail",
+    "pages/circle/pinned-datail/pinned-datail",
+    "pages/circle/pinnedes/pinnedes"
   ],
   "window": {
     "navigationBarTextStyle": "black",

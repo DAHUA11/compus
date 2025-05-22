@@ -1,0 +1,102 @@
+/**
+ * 平台兼容性样式
+ * 处理微信小程序和Web平台间的差异
+ */
+
+/* 修复微信小程序和Web中scroll-view行为不一致的问题 */
+scroll-view {
+  /* 启用CSS硬件加速 */
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  -o-transform: translateZ(0);
+  transform: translateZ(0);
+  
+  /* 平滑滚动 */
+  -webkit-overflow-scrolling: touch;
+  
+  /* 隐藏滚动条 */
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* 确保点击效果在各平台一致 */
+[class*="btn"],
+[class*="item"],
+.clickable {
+  position: relative;
+  
+  /* 优化触摸反馈 */
+  -webkit-tap-highlight-color: transparent;
+  
+  /* 修复某些平台active状态不触发的问题 */
+  &::after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: transparent;
+    z-index: -1;
+  }
+}
+
+/* 修复微信小程序和Web中字体渲染差异 */
+text,
+view {
+  /* 提高字体渲染质量 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 修复在某些平台上flex布局的问题 */
+.flex,
+.flex-row,
+.flex-column,
+.flex-center,
+.flex-between,
+[class*="flex-"] {
+  /* 确保flex元素不会收缩 */
+  flex-shrink: 0;
+}
+
+/* 修复不同平台上overflow的差异 */
+.overflow-hidden {
+  overflow: hidden;
+}
+
+/* 修复不同平台上圆角的差异 */
+.rounded,
+.rounded-sm,
+.rounded-lg,
+.rounded-full,
+[class*="rounded-"] {
+  overflow: hidden;
+}
+
+/* 修复某些平台中高度计算问题 */
+.full-height {
+  height: 100vh;
+  height: -webkit-fill-available;
+  height: fill-available;
+}
+
+/* 确保动画在各平台行为一致 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+} 

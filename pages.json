@@ -1,9 +1,49 @@
 {
-	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+	"pages": [
+		{
+			"path": "pages/circle/circle",
+			"style": {
+				"navigationBarTitleText": "校园圈子"
+			}
+		},
 		{
 			"path": "pages/index/index",
 			"style": {
 				"navigationBarTitleText": "uni-app"
+			}
+		},
+		{
+			"path": "pages/user/user",
+			"style": {
+				"navigationBarTitleText": "个人中心"
+			}
+		},
+		{
+			"path" : "pages/circle/activities/activities",
+			"style" : 
+			{
+				"navigationBarTitleText" : "活动列表"
+			}
+		},
+		{
+			"path" : "pages/circle/activity-datail/activity-datail",
+			"style" : 
+			{
+				"navigationBarTitleText" : "活动详情"
+			}
+		},
+		{
+			"path" : "pages/circle/pinned-datail/pinned-datail",
+			"style" : 
+			{
+				"navigationBarTitleText" : "置顶详情"
+			}
+		},
+		{
+			"path" : "pages/circle/pinnedes/pinnedes",
+			"style" : 
+			{
+				"navigationBarTitleText" : "置顶列表"
 			}
 		}
 	],

@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "校园圈子",
+  "usingComponents": {
+    "activity-card": "../../components/circle/ActivityCard",
+    "post-card": "../../components/circle/PostCard",
+    "pinned-card": "../../components/circle/PinnedCard",
+    "category-item": "../../components/circle/CategoryItem"
+  }
+}

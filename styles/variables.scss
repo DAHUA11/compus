@@ -1,0 +1,118 @@
+/* 品牌色 */
+$primary-color: #4D7CBF; /* 低饱和度蓝色 */
+$primary-color-dark: #3A5F95;
+$primary-color-light: rgba(77, 124, 191, 0.1);
+
+/* 功能色 */
+$success-color: #52A787; /* 低饱和度绿色 */
+$warning-color: #D9A064; /* 低饱和度橙色 */
+$error-color: #C25B5B; /* 低饱和度红色 */
+$info-color: #86909C;
+$purple-color: #a259ec;
+/* 中性色 */
+$black: #1D2129;
+$dark-gray: #4E5969;
+$gray: #86909C;
+$light-gray: #C9CDD4;
+$extra-light-gray: #E5E6EB;
+$white: #FFFFFF;
+
+/* 背景色 */
+$bg-color: #F5F5F5;
+$bg-color-light: #FFFFFF;
+$bg-color-hover: #F2F3F5;
+$bg-color-active: #E5E6EB;
+
+/* 字体大小 */
+$font-size-xs: 20rpx;
+$font-size-sm: 24rpx;
+$font-size-base: 28rpx;
+$font-size-lg: 32rpx;
+$font-size-xl: 36rpx;
+$font-size-xxl: 40rpx;
+
+/* 行高 */
+$line-height-compact: 1.2;
+$line-height-normal: 1.5;
+$line-height-loose: 1.8;
+
+/* 边框 */
+$border-radius-sm: 8rpx;
+$border-radius-base: 16rpx;
+$border-radius-lg: 30rpx;
+$border-radius-circle: 50%;
+
+/* 阴影 */
+$shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+$shadow-base: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+$shadow-lg: 0 8rpx 24rpx rgba(0, 0, 0, 0.12);
+
+/* 间距 */
+$spacing-xs: 15rpx;
+$spacing-sm: 16rpx;
+$spacing-base: 20rpx;
+$spacing-lg: 30rpx;
+$spacing-xl: 40rpx;
+
+/* 动画 */
+$transition-fast: 0.2s;
+$transition-base: 0.3s;
+$transition-slow: 0.5s;
+
+/* 标签颜色 */
+$tag-bg-map: (
+  'official': rgba(22, 93, 255, 0.1),
+  'promotion': rgba(255, 125, 0, 0.1),
+  'discussion': rgba(22, 93, 255, 0.1),
+  'question': rgba(91, 46, 230, 0.1),
+  'lost': rgba(255, 125, 0, 0.1),
+  'hot': rgba(255, 125, 0, 0.1),
+  'pin': rgba(255, 77, 79, 0.1)
+);
+
+$tag-text-map: (
+  'official': $primary-color,
+  'promotion': $warning-color,
+  'discussion': $primary-color,
+  'question': #5B2EE6,
+  'lost': $warning-color,
+  'hot': $warning-color,
+  'pin': $error-color
+);
+
+/* 混合器 */
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@mixin multi-line-ellipsis($lines) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $lines;
+  overflow: hidden;
+}
+
+@mixin tag-style($type) {
+  background-color: map-get($tag-bg-map, $type);
+  color: map-get($tag-text-map, $type);
+}
+
+/* 响应式断点 */
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px; 

@@ -1,0 +1,44 @@
+/**
+ * 微信小程序兼容性样式
+ * 不使用不支持的CSS特性
+ */
+
+/* 修复滚动视图 */
+.mp-scroll-view {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+}
+
+/* 按钮点击效果类 */
+.btn-mp,
+.item-mp,
+.clickable-mp {
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 提高字体渲染质量 */
+.mp-text {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* flex布局兼容 */
+.mp-flex {
+  flex-shrink: 0;
+}
+
+/* 隐藏溢出内容 */
+.mp-overflow-hidden {
+  overflow: hidden;
+}
+
+/* 圆角兼容 */
+.mp-rounded {
+  overflow: hidden;
+}
+
+/* 简化动画 */
+.mp-animation {
+  animation-duration: 0.3s;
+  animation-iteration-count: 1;
+} 

@@ -2,17 +2,26 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 const common_vendor = require("./common/vendor.js");
 if (!Math) {
+  "./pages/circle/circle.js";
   "./pages/index/index.js";
+  "./pages/user/user.js";
+  "./pages/circle/activities/activities.js";
+  "./pages/circle/activity-datail/activity-datail.js";
+  "./pages/circle/pinned-datail/pinned-datail.js";
+  "./pages/circle/pinnedes/pinnedes.js";
 }
 const _sfc_main = {
   onLaunch: function() {
     common_vendor.index.__f__("log", "at App.vue:4", "App Launch");
+    common_vendor.index.preloadPage({
+      url: "pages/circle/activity-detail"
+    });
   },
   onShow: function() {
-    common_vendor.index.__f__("log", "at App.vue:7", "App Show");
+    common_vendor.index.__f__("log", "at App.vue:14", "App Show");
   },
   onHide: function() {
-    common_vendor.index.__f__("log", "at App.vue:10", "App Hide");
+    common_vendor.index.__f__("log", "at App.vue:17", "App Hide");
   }
 };
 function createApp() {

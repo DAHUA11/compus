@@ -73,7 +73,7 @@ export default {
   transition: all $transition-base;
   position: relative;
   overflow: hidden;
-  border: 1rpx solid rgba(0, 0, 0, 0.02);
+  // border: 1rpx solid rgba(0, 0, 0, 0.02);
   
   &:active {
     transform: scale(0.98);
@@ -86,8 +86,8 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 0 0 16rpx 0;
-  margin-bottom: 16rpx;
-  border-bottom: 1rpx solid rgba(0, 0, 0, 0.04);
+  // margin-bottom: 16rpx;
+  // border-bottom: 1rpx solid rgba(0, 0, 0, 0.04);
 
   .user-info {
     display: flex;
@@ -100,7 +100,7 @@ export default {
     height: 76rpx;
     border-radius: $border-radius-circle;
     background-color: $bg-color;
-    border: 2rpx solid $extra-light-gray;
+    // border: 2rpx solid $extra-light-gray;
     box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
   }
   

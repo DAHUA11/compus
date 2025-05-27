@@ -1,5 +1,5 @@
 <template>
-  <view class="pinned-card mp-rounded" >
+  <view class="pinned-card mp-rounded" @tap="$emit('view-detail', post)">
     <view class="pinned-indicator" v-if="isPin">
       <text class="iconfont icon-zhiding"></text>
     </view>
@@ -22,15 +22,15 @@
         @tap.stop="previewImage(post.images, idx)"></image>
     </view>
     <view class="post-actions">
-      <view class="action-item like-btn clickable-mp" @tap="handleLike">
+      <view class="action-item like-btn clickable-mp" @tap.stop="handleLike">
         <text class="action-icon iconfont icon-dianzan" :class="{'liked': isLiked}"></text>
         <text class="action-text">{{ post.likes }}</text>
       </view>
-      <view class="action-item comment-btn clickable-mp" @tap="$emit('view-detail', post)">
+      <view class="action-item comment-btn clickable-mp" @tap.stop="$emit('view-detail', post)">
         <text class="action-icon iconfont icon-icon_comment"></text>
         <text class="action-text">{{post.comments}}</text>
       </view>
-      <view class="action-item share-btn clickable-mp">
+      <view class="action-item share-btn clickable-mp" @tap.stop>
         <text class="action-icon iconfont icon-fasong"></text>
         <text class="action-text">分享</text>
       </view>

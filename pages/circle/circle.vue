@@ -1,45 +1,37 @@
 <template>
 	<view class="circle-container">
-		<!-- 顶部导航栏 -->
-		<view class="header flex-between p-base">
-			<view class="header-left flex items-center">
-				<text class="iconfont icon-huodong text-muted"></text>
-			</view>
-			<view class="header-right flex items-center">
-				<text class="iconfont icon-shezhi mr-lg"></text>
-				<text class="iconfont icon-icon_search"></text>
-				<image class="avatar rounded-full" src="https://cdn.tailwindcss.com" mode="aspectFill"></image>
+		<!-- 搜索框 -->
+		<view class="search-bar">
+			<view class="search-input-wrapper">
+				<text class="iconfont icon-icon_search search-icon"></text>
+				<input class="search-input" placeholder="请输入搜索内容" />
 			</view>
 		</view>
-
-		<!-- 分类标签 -->
-		<scroll-view class="category-scroll" scroll-x="true" show-scrollbar="false" enhanced="true" :scroll-into-view="'category-' + activeCategory">
-			<view class="category-list">
-				<view 
-					v-for="(item, index) in categories" 
-					:key="index" 
-					:id="'category-' + index"
-					class="category-container"
-				>
-					<category-item
-						:name="item.name"
-						:icon="item.icon"
-						:is-active="activeCategory === index"
-						@switch="switchCategory(index)"
-					/>
-				</view>
+		<!-- 顶部大图+分类叠加 -->
+		<view class="banner-wrapper">
+			<image class="banner-image" src="/static/images/circlebanner.png" mode="aspectFill"></image>
+			<view class="banner-bottom-gradient"></view>
+			<view class="category-nav-abs">
+				<scroll-view scroll-x="true" show-scrollbar="false" class="category-scroll">
+					<view class="category-list">
+						<view 
+							v-for="(item, index) in categories" 
+							:key="index" 
+							:id="'category-' + index"
+							class="category-container"
+						>
+							<category-item
+								:name="item.name"
+								:icon-img="item.iconImg"
+								:is-active="activeCategory === index"
+								@switch="switchCategory(index)"
+							/>
+						</view>
+					</view>
+				</scroll-view>
 			</view>
-		</scroll-view>
-
-		<!-- 下拉刷新和内容区域 -->
-		<scroll-view 
-			class="content-scroll" 
-			scroll-y="true" 
-			refresher-enabled="true"
-			:refresher-triggered="refreshing"
-			@refresherrefresh="onRefresh"
-			@scrolltolower="onLoadMore"
-		>
+		</view>
+		<view class="main-content">
 			<!-- 专题活动 -->
 			<view class="section bg-white mt-base p-base rounded">
 				<view class="section-header flex-between mb-sm">
@@ -77,10 +69,6 @@
 						<text class="pinned-title">置顶与推广</text>
 						<view class="pinned-badge ml-xs">2</view>
 					</view>
-					<!-- <view class="more text-primary text-sm flex items-center">
-						<text>更多</text>
-						<text class="iconfont icon-gengduo ml-xs"></text>
-					</view> -->
 				</view>
 				
 				<!-- 置顶内容1 -->
@@ -146,7 +134,7 @@
 					<text class="text-sm text-gray">没有更多内容了</text>
 				</view>
 			</view>
-		</scroll-view>
+		</view>
 		
 		<!-- 悬浮按钮 -->
 		<view class="float-btn flex-center" @tap="createPost">
@@ -177,11 +165,11 @@ export default {
 			activeCategory: 0,
 			activeTab: 0,
 			categories: [
-				{ name: '推荐', icon: 'icon-icon_fire' },
-				{ name: '讨论', icon: 'icon-icon_comment' },
-				{ name: '问答', icon: 'icon-iconquestion' },
-				{ name: '吐槽', icon: 'icon-icon_emoji' },
-				{ name: '交友', icon: 'icon-icon-handshake' }
+				{ name: '推荐', iconImg: '/static/images/cat1.jpg' },
+				{ name: '热门活动', iconImg: '/static/images/cat2.jpg' },
+				{ name: '校园问答', iconImg: '/static/images/cat3.jpg' },
+				{ name: '校园吐槽', iconImg: '/static/images/cat4.jpg' },
+				{ name: '以物换物', iconImg: '/static/images/cat5.jpg' }
 			],
 			filterTabs: ['最新', '热门', '关注'],
 			activities: [
@@ -269,6 +257,7 @@ export default {
 	onLoad() {
 		// 页面加载时初始化数据
 		this.initData();
+		uni.setStorageSync('posts', this.posts);
 	},
 	methods: {
 		// 初始化数据
@@ -373,18 +362,15 @@ export default {
 		
 		// 查看置顶帖子详情
 		viewPinnedDetail(post) {
-    uni.navigateTo({
-        url: `/pages/circle/pinned-datail/pinned-datail?id=${post.id}`
-    });
-},
+			uni.navigateTo({
+				url: `/pages/circle/pinned-datail/pinned-datail?id=${post.id}`
+			});
+		},
 		
-	// 查看帖子详情
+		// 查看帖子详情
 		viewPostDetail(post) {
-			console.log('查看帖子详情', post);
-			// 实际项目中应跳转到帖子详情页
-			uni.showToast({
-				title: '查看帖子：' + post.name,
-				icon: 'none'
+			uni.navigateTo({
+				url: `/pages/circle/post-datail/post-datail?id=${post.id}`
 			});
 		},
 		
@@ -455,6 +441,110 @@ export default {
 	background-color: #F8F9FC; /* 更淡的背景色 */
 }
 
+.search-bar {
+	padding: 32rpx 24rpx 0 24rpx;
+	background: #f8f9fc;
+}
+
+.search-input-wrapper {
+	display: flex;
+	align-items: center;
+	background: #f5f6fa;
+	border-radius: 32rpx;
+	padding: 0 24rpx;
+	height: 64rpx;
+}
+
+.search-icon {
+	font-size: 32rpx;
+	color: #b0b6be;
+	margin-right: 12rpx;
+}
+
+.search-input {
+	flex: 1;
+	border: none;
+	background: transparent;
+	font-size: 28rpx;
+	color: #333;
+}
+
+.banner-wrapper {
+	position: relative;
+	width: 100%;
+	height: 320rpx;
+}
+
+.banner-image {
+	width: 100%;
+	height: 320rpx;
+	object-fit: cover;
+	display: block;
+}
+
+.banner-bottom-gradient {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 120rpx;
+	background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.92) 100%);
+	z-index: 1;
+	pointer-events: none;
+}
+
+.category-nav-abs {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: -60rpx;
+	z-index: 2;
+	display: flex;
+	justify-content: center;
+	padding: 0 24rpx;
+}
+
+.category-scroll {
+	width: 100%;
+	overflow: visible;
+}
+
+.category-list {
+	display: flex;
+	align-items: flex-end;
+}
+
+.category-container {
+	width: 28vw;
+	min-width: 28vw;
+	display: flex;
+	justify-content: center;
+}
+
+.category-item {
+	width: 92%;
+	margin: 0 auto;
+	background: rgba(255,255,255,0.68);
+	border-radius: 32rpx;
+	box-shadow: 0 2rpx 10rpx rgba(77,124,191,0.06);
+	border: 1.5rpx solid rgba(77,124,191,0.08);
+	transition: all $transition-fast;
+	padding: 16rpx 0 8rpx 0;
+}
+
+.category-item.active {
+	background: rgba($primary-color, 0.12);
+	border: 2rpx solid $primary-color;
+	box-shadow: 0 6rpx 24rpx rgba(77,124,191,0.13);
+	transform: scale(1.08);
+}
+
+.main-content {
+	margin-top: 56rpx;
+	flex: 1;
+	/* 这里放原有的内容区 */
+}
+
 .header {
 	background-color: $white;
 	position: sticky;
@@ -491,29 +581,6 @@ export default {
 	margin-left: $spacing-lg;
 	border: 2rpx solid $extra-light-gray;
 	box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.05);
-}
-
-.category-scroll {
-	background-color: $white;
-    padding: $spacing-sm 0;
-    white-space: nowrap;
-    border-bottom: 1rpx solid rgba(0, 0, 0, 0.02);
-    width: 100%;
-    /* 兼容样式 */
-    -webkit-overflow-scrolling: touch;
-    overflow-x: auto;
-}
-
-/* 修复滚动区域样式 - 微信小程序兼容 */
-.category-list {
-	display: inline-flex;
-	padding: 0 $spacing-base;
-	align-items: center;
-	height: 84rpx; /* 固定高度，确保各平台一致 */
-}
-
-.category-container {
-	display: inline-block;
 }
 
 .content-scroll {

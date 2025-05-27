@@ -2541,15 +2541,6 @@ function inject(key, defaultValue, treatDefaultAsFactory = false) {
     warn$1(`inject() can only be used inside setup() or functional components.`);
   }
 }
-/*! #__NO_SIDE_EFFECTS__ */
-// @__NO_SIDE_EFFECTS__
-function defineComponent(options, extraOptions) {
-  return isFunction(options) ? (
-    // #8326: extend call and options.name access are considered side-effects
-    // by Rollup, so we have to wrap it in a pure-annotated IIFE.
-    /* @__PURE__ */ (() => extend({ name: options.name }, extraOptions, { setup: options }))()
-  ) : options;
-}
 const isKeepAlive = (vnode) => vnode.type.__isKeepAlive;
 function onActivated(hook, target) {
   registerKeepAliveHook(hook, "a", target);
@@ -6871,9 +6862,9 @@ function initOnError() {
   };
 }
 function initRuntimeSocketService() {
-  const hosts = "10.46.30.231,127.0.0.1";
+  const hosts = "172.16.0.4,127.0.0.1";
   const port = "8090";
-  const id = "mp-weixin_UuO9l4";
+  const id = "mp-weixin_GQI3tP";
   const lazy = typeof swan !== "undefined";
   let restoreError = lazy ? () => {
   } : initOnError();
@@ -7843,23 +7834,47 @@ const pages = [
     }
   },
   {
-    path: "pages/circle/pinnedes/pinnedes",
+    path: "pages/circle/post-datail/post-datail",
     style: {
-      navigationBarTitleText: "置顶列表"
+      navigationBarTitleText: "帖子详情"
     }
   }
 ];
 const globalStyle = {
   navigationBarTextStyle: "black",
-  navigationBarTitleText: "uni-app",
+  navigationBarTitleText: "校园圈子",
   navigationBarBackgroundColor: "#F8F8F8",
   backgroundColor: "#F8F8F8"
 };
+const tabBar = {
+  color: "#999999",
+  selectedColor: "#7be495",
+  backgroundColor: "#FFFFFF",
+  borderStyle: "black",
+  list: [
+    {
+      pagePath: "pages/circle/circle",
+      text: "校园圈子"
+    },
+    {
+      pagePath: "pages/user/user",
+      text: "个人中心"
+    }
+  ]
+};
 const uniIdRouter = {};
+const easycom = {
+  autoscan: true,
+  custom: {
+    "^uni-(.*)": "uni_modules/uni-$1/components/uni-$1/uni-$1.vue"
+  }
+};
 const e = {
   pages,
   globalStyle,
-  uniIdRouter
+  tabBar,
+  uniIdRouter,
+  easycom
 };
 var define_process_env_UNI_SECURE_NETWORK_CONFIG_default = [];
 function t(e2) {
@@ -8186,7 +8201,7 @@ class S {
 function T(e2) {
   return e2 && "string" == typeof e2 ? JSON.parse(e2) : e2;
 }
-const b = true, E = "mp-weixin", P = T(define_process_env_UNI_SECURE_NETWORK_CONFIG_default), C = E, A = T('{"address":["127.0.0.1","10.46.30.231"],"servePort":7000,"debugPort":9000,"initialLaunchType":"local","skipFiles":["<node_internals>/**","D:/Software/hbuilder/HBuilderX/plugins/unicloud/**/*.js"]}'), O = T('[{"provider":"aliyun","spaceName":"compus","spaceId":"mp-b0aaf81f-b0f5-440a-9038-aecc3361fbd6","clientSecret":"hFjTLcVifgKLbcw2QiuHkg==","endpoint":"https://api.next.bspapp.com"}]') || [];
+const b = true, E = "mp-weixin", P = T(define_process_env_UNI_SECURE_NETWORK_CONFIG_default), C = E, A = T('{"address":["127.0.0.1","172.16.0.4"],"servePort":7003,"debugPort":9003,"initialLaunchType":"local","skipFiles":["<node_internals>/**","D:/Software/hbuilder/HBuilderX/plugins/unicloud/**/*.js"]}'), O = T('[{"provider":"alipay","spaceName":"cumpus22222","spaceId":"env-00jxtkddrnya","spaceAppId":"2021005155619535","accessKey":"Fh5UscQaouzzTNvb","secretKey":"mEVI6tOmGd6x574z"}]') || [];
 let N = "";
 try {
   N = "__UNI__2EF5B03";
@@ -10702,14 +10717,12 @@ let Zs = new class {
 })();
 exports._export_sfc = _export_sfc;
 exports.createSSRApp = createSSRApp;
-exports.defineComponent = defineComponent;
 exports.e = e$1;
 exports.f = f$1;
 exports.index = index;
 exports.n = n$1;
 exports.o = o$1;
 exports.p = p$1;
-exports.ref = ref;
 exports.resolveComponent = resolveComponent;
 exports.t = t$1;
 //# sourceMappingURL=../../.sourcemap/mp-weixin/common/vendor.js.map

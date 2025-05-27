@@ -74,7 +74,10 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     n: common_vendor.t($props.post.likes),
     o: common_vendor.o((...args) => $options.handleLike && $options.handleLike(...args)),
     p: common_vendor.t($props.post.comments),
-    q: common_vendor.o(($event) => _ctx.$emit("view-detail", $props.post))
+    q: common_vendor.o(($event) => _ctx.$emit("view-detail", $props.post)),
+    r: common_vendor.o(() => {
+    }),
+    s: common_vendor.o(($event) => _ctx.$emit("view-detail", $props.post))
   });
 }
 const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

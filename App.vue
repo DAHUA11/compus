@@ -1,4 +1,5 @@
 <script>
+ 
 	export default {
 		onLaunch: function() {
 			console.log('App Launch');
@@ -22,6 +23,7 @@
 <style>
 	/*每个页面公共css */
 	@import '/static/fonts/iconfont.css';
+	
 	
 	/* 全局样式 */
 	page {

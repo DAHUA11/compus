@@ -1,5 +1,6 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
+const common_assets = require("../../common/assets.js");
 const ActivityCard = () => "../../components/circle/ActivityCard.js";
 const PostCard = () => "../../components/circle/PostCard.js";
 const PinnedCard = () => "../../components/circle/PinnedCard.js";
@@ -20,11 +21,11 @@ const _sfc_main = {
       activeCategory: 0,
       activeTab: 0,
       categories: [
-        { name: "推荐", icon: "icon-icon_fire" },
-        { name: "讨论", icon: "icon-icon_comment" },
-        { name: "问答", icon: "icon-iconquestion" },
-        { name: "吐槽", icon: "icon-icon_emoji" },
-        { name: "交友", icon: "icon-icon-handshake" }
+        { name: "推荐", iconImg: "/static/images/cat1.jpg" },
+        { name: "热门活动", iconImg: "/static/images/cat2.jpg" },
+        { name: "校园问答", iconImg: "/static/images/cat3.jpg" },
+        { name: "校园吐槽", iconImg: "/static/images/cat4.jpg" },
+        { name: "以物换物", iconImg: "/static/images/cat5.jpg" }
       ],
       filterTabs: ["最新", "热门", "关注"],
       activities: [
@@ -111,6 +112,7 @@ const _sfc_main = {
   },
   onLoad() {
     this.initData();
+    common_vendor.index.setStorageSync("posts", this.posts);
   },
   methods: {
     // 初始化数据
@@ -180,14 +182,14 @@ const _sfc_main = {
     },
     // 查看活动详情
     viewActivityDetail(activity) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:358", "查看活动详情", activity);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:347", "查看活动详情", activity);
       common_vendor.index.navigateTo({
         url: "/pages/circle/activity-datail/activity-datail?id=" + activity.id
       });
     },
     // 参与活动
     joinActivity(activity) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:366", "参与活动", activity);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:355", "参与活动", activity);
       common_vendor.index.showToast({
         title: "已报名参与：" + activity.title,
         icon: "success"
@@ -201,10 +203,8 @@ const _sfc_main = {
     },
     // 查看帖子详情
     viewPostDetail(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:383", "查看帖子详情", post);
-      common_vendor.index.showToast({
-        title: "查看帖子：" + post.name,
-        icon: "none"
+      common_vendor.index.navigateTo({
+        url: `/pages/circle/post-datail/post-datail?id=${post.id}`
       });
     },
     // 点赞帖子
@@ -218,7 +218,7 @@ const _sfc_main = {
     },
     // 评论帖子
     commentPost(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:406", "评论帖子", post);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:392", "评论帖子", post);
       common_vendor.index.showToast({
         title: "评论功能开发中",
         icon: "none"
@@ -226,7 +226,7 @@ const _sfc_main = {
     },
     // 分享帖子
     sharePost(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:416", "分享帖子", post);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:402", "分享帖子", post);
       common_vendor.index.showToast({
         title: "分享功能开发中",
         icon: "none"
@@ -234,7 +234,7 @@ const _sfc_main = {
     },
     // 发布新帖子
     createPost() {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:426", "发布新帖子");
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:412", "发布新帖子");
       common_vendor.index.showToast({
         title: "发帖功能开发中",
         icon: "none"
@@ -242,7 +242,7 @@ const _sfc_main = {
     },
     // 查看全部活动
     viewAllActivities() {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:436", "查看全部活动");
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:422", "查看全部活动");
       common_vendor.index.navigateTo({
         url: "/pages/circle/activities/activities"
       });
@@ -258,20 +258,20 @@ if (!Array) {
 }
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: common_vendor.f($data.categories, (item, index, i0) => {
+    a: common_assets._imports_0,
+    b: common_vendor.f($data.categories, (item, index, i0) => {
       return {
         a: common_vendor.o(($event) => $options.switchCategory(index), index),
         b: "0c49c78b-0-" + i0,
         c: common_vendor.p({
           name: item.name,
-          icon: item.icon,
+          ["icon-img"]: item.iconImg,
           ["is-active"]: $data.activeCategory === index
         }),
         d: index,
         e: "category-" + index
       };
     }),
-    b: "category-" + $data.activeCategory,
     c: common_vendor.o((...args) => $options.viewAllActivities && $options.viewAllActivities(...args)),
     d: common_vendor.f($data.activities, (item, index, i0) => {
       return {
@@ -322,10 +322,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   }, $data.loading ? {} : {}, {
     n: $data.noMore && $data.posts.length > 0
   }, $data.noMore && $data.posts.length > 0 ? {} : {}, {
-    o: $data.refreshing,
-    p: common_vendor.o((...args) => $options.onRefresh && $options.onRefresh(...args)),
-    q: common_vendor.o((...args) => $options.onLoadMore && $options.onLoadMore(...args)),
-    r: common_vendor.o((...args) => $options.createPost && $options.createPost(...args))
+    o: common_vendor.o((...args) => $options.createPost && $options.createPost(...args))
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

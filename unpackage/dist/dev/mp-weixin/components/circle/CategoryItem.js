@@ -11,6 +11,10 @@ const _sfc_main = {
       type: String,
       required: true
     },
+    iconImg: {
+      type: String,
+      default: ""
+    },
     isActive: {
       type: Boolean,
       default: false
@@ -18,12 +22,17 @@ const _sfc_main = {
   }
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
-  return {
-    a: common_vendor.n($props.icon),
-    b: common_vendor.t($props.name),
-    c: $props.isActive ? 1 : "",
-    d: common_vendor.o(($event) => _ctx.$emit("switch"))
-  };
+  return common_vendor.e({
+    a: $props.iconImg
+  }, $props.iconImg ? {
+    b: $props.iconImg
+  } : {
+    c: common_vendor.n($props.icon)
+  }, {
+    d: common_vendor.t($props.name),
+    e: $props.isActive ? 1 : "",
+    f: common_vendor.o(($event) => _ctx.$emit("switch"))
+  });
 }
 const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);
 wx.createComponent(Component);

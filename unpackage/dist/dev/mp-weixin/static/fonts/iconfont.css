@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 4926550 */
-  src: url('iconfont.woff2?t=1747813009086') format('woff2'),
-       url('iconfont.woff?t=1747813009086') format('woff'),
-       url('iconfont.ttf?t=1747813009086') format('truetype');
+  src: url('iconfont.woff2?t=1747965190078') format('woff2'),
+       url('iconfont.woff?t=1747965190078') format('woff'),
+       url('iconfont.ttf?t=1747965190078') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,62 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-aixinjuanzeng:before {
+  content: "\e61d";
+}
+
+.icon-ershoushichang:before {
+  content: "\e61f";
+}
+
+.icon-tongzhigonggao:before {
+  content: "\e634";
+}
+
+.icon-zhongyaoxinxi:before {
+  content: "\e636";
+}
+
+.icon-woyaotucao:before {
+  content: "\e659";
+}
+
+.icon-tuijian:before {
+  content: "\ecb3";
+}
+
+.icon-huodong1:before {
+  content: "\100ac";
+}
+
+.icon-xiaoyuandashi:before {
+  content: "\e602";
+}
+
+.icon-xiaoyuantese:before {
+  content: "\e61e";
+}
+
+.icon-xiaoyuanquanzi:before {
+  content: "\e632";
+}
+
+.icon-xiaoyuanzulin:before {
+  content: "\e638";
+}
+
+.icon-shuzixiaoyuan:before {
+  content: "\e629";
+}
+
+.icon-xiaoyuanpaotui:before {
+  content: "\e601";
+}
+
+.icon-xiaoyuan:before {
+  content: "\e6dd";
 }
 
 .icon-aixin3:before {

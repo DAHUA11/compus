@@ -1,1 +1,1 @@
-<view class="{{['category-item', 'flex', 'items-center', 'clickable-mp', 'mp-animation', c && 'active']}}" bindtap="{{d}}"><text class="{{['category-icon', 'iconfont', a]}}"></text><text class="category-text">{{b}}</text></view>
+<view class="{{['category-item', 'flex', 'flex-column', 'items-center', 'clickable-mp', 'mp-animation', e && 'active']}}" bindtap="{{f}}"><image wx:if="{{a}}" src="{{b}}" class="category-img-icon" mode="aspectFit"/><text wx:else class="{{['category-icon', 'iconfont', c]}}"></text><text class="category-text">{{d}}</text></view>

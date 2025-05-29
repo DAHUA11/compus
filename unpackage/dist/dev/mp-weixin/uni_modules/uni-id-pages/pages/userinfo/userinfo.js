@@ -96,15 +96,11 @@ const _sfc_main = {
         url: "./bind-mobile/bind-mobile"
       });
     },
-    setNickname(nickname) {
-      if (nickname) {
-        uni_modules_uniIdPages_common_store.mutations.updateUserInfo({
-          nickname
-        });
-        this.setNicknameIng = false;
+    setNickname(val) {
+      let nickname = typeof val === "object" && val !== null ? val.value : val;
+      if (typeof nickname === "string" && nickname.trim()) {
+        uni_modules_uniIdPages_common_store.mutations.updateUserInfo({ nickname: nickname.trim() });
         this.$refs.dialog.close();
-      } else {
-        this.$refs.dialog.open();
       }
     },
     deactivate() {
@@ -140,7 +136,7 @@ const _sfc_main = {
             await uni_modules_uniIdPages_common_store.mutations.updateUserInfo();
           },
           fail: async (err) => {
-            common_vendor.index.__f__("log", "at uni_modules/uni-id-pages/pages/userinfo/userinfo.vue:206", err);
+            common_vendor.index.__f__("log", "at uni_modules/uni-id-pages/pages/userinfo/userinfo.vue:202", err);
             common_vendor.index.hideLoading();
           }
         });
@@ -150,82 +146,90 @@ const _sfc_main = {
       common_vendor.index.navigateTo({
         url: "/uni_modules/uni-id-pages/pages/userinfo/realname-verify/realname-verify"
       });
+    },
+    openNicknameDialog() {
+      this.$refs.dialog.open();
     }
   }
 };
 if (!Array) {
   const _easycom_uni_id_pages_avatar2 = common_vendor.resolveComponent("uni-id-pages-avatar");
+  const _easycom_uni_icons2 = common_vendor.resolveComponent("uni-icons");
   const _easycom_uni_list_item2 = common_vendor.resolveComponent("uni-list-item");
   const _easycom_uni_list2 = common_vendor.resolveComponent("uni-list");
   const _easycom_uni_popup_dialog2 = common_vendor.resolveComponent("uni-popup-dialog");
   const _easycom_uni_popup2 = common_vendor.resolveComponent("uni-popup");
   const _easycom_uni_id_pages_bind_mobile2 = common_vendor.resolveComponent("uni-id-pages-bind-mobile");
-  (_easycom_uni_id_pages_avatar2 + _easycom_uni_list_item2 + _easycom_uni_list2 + _easycom_uni_popup_dialog2 + _easycom_uni_popup2 + _easycom_uni_id_pages_bind_mobile2)();
+  (_easycom_uni_id_pages_avatar2 + _easycom_uni_icons2 + _easycom_uni_list_item2 + _easycom_uni_list2 + _easycom_uni_popup_dialog2 + _easycom_uni_popup2 + _easycom_uni_id_pages_bind_mobile2)();
 }
 const _easycom_uni_id_pages_avatar = () => "../../components/uni-id-pages-avatar/uni-id-pages-avatar.js";
+const _easycom_uni_icons = () => "../../../uni-icons/components/uni-icons/uni-icons.js";
 const _easycom_uni_list_item = () => "../../../uni-list/components/uni-list-item/uni-list-item.js";
 const _easycom_uni_list = () => "../../../uni-list/components/uni-list/uni-list.js";
 const _easycom_uni_popup_dialog = () => "../../../uni-popup/components/uni-popup-dialog/uni-popup-dialog.js";
 const _easycom_uni_popup = () => "../../../uni-popup/components/uni-popup/uni-popup.js";
 const _easycom_uni_id_pages_bind_mobile = () => "../../components/uni-id-pages-bind-mobile/uni-id-pages-bind-mobile.js";
 if (!Math) {
-  (_easycom_uni_id_pages_avatar + _easycom_uni_list_item + _easycom_uni_list + _easycom_uni_popup_dialog + _easycom_uni_popup + _easycom_uni_id_pages_bind_mobile)();
+  (_easycom_uni_id_pages_avatar + _easycom_uni_icons + _easycom_uni_list_item + _easycom_uni_list + _easycom_uni_popup_dialog + _easycom_uni_popup + _easycom_uni_id_pages_bind_mobile)();
 }
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
     a: common_vendor.p({
-      width: "260rpx",
-      height: "260rpx"
+      width: "120px",
+      height: "120px",
+      showSync: false
     }),
-    b: common_vendor.o(($event) => $options.setNickname("")),
+    b: common_vendor.t($options.userInfo.nickname || "未设置昵称"),
     c: common_vendor.p({
-      title: "昵称",
-      rightText: $options.userInfo.nickname || "未设置",
-      link: true
+      type: "compose",
+      size: "18",
+      color: "#4080FF"
     }),
-    d: common_vendor.o($options.bindMobile),
-    e: common_vendor.p({
+    d: common_vendor.o((...args) => $options.openNicknameDialog && $options.openNicknameDialog(...args)),
+    e: common_vendor.o($options.bindMobile),
+    f: common_vendor.p({
       title: "手机号",
       rightText: $options.userInfo.mobile || "未绑定",
       link: true
     }),
-    f: $options.userInfo.email
+    g: $options.userInfo.email
   }, $options.userInfo.email ? {
-    g: common_vendor.p({
+    h: common_vendor.p({
       title: "电子邮箱",
       rightText: $options.userInfo.email
     })
   } : {}, {
-    h: $data.hasPwd
+    i: $data.hasPwd
   }, $data.hasPwd ? {
-    i: common_vendor.o($options.changePassword),
-    j: common_vendor.p({
+    j: common_vendor.o($options.changePassword),
+    k: common_vendor.p({
       title: "修改密码",
       link: true
     })
   } : {}, {
-    k: common_vendor.o($options.setNickname),
-    l: common_vendor.p({
+    l: common_vendor.o($options.realNameVerify),
+    m: common_vendor.p({
+      title: "实名认证",
+      rightText: $options.realNameStatus !== 2 ? "未认证" : "已认证",
+      link: true
+    }),
+    n: common_vendor.o((...args) => $options.logout && $options.logout(...args)),
+    o: common_vendor.o((...args) => $options.deactivate && $options.deactivate(...args)),
+    p: common_vendor.o($options.setNickname),
+    q: common_vendor.p({
       mode: "input",
       value: $options.userInfo.nickname,
-      inputType: $data.setNicknameIng ? "nickname" : "text",
+      inputType: "nickname",
       title: "设置昵称",
       placeholder: "请输入要设置的昵称"
     }),
-    m: common_vendor.sr("dialog", "0be2f605-6"),
-    n: common_vendor.p({
+    r: common_vendor.sr("dialog", "0be2f605-7"),
+    s: common_vendor.p({
       type: "dialog"
     }),
-    o: common_vendor.sr("bind-mobile-by-sms", "0be2f605-8"),
-    p: common_vendor.o($options.bindMobileSuccess),
-    q: $data.showLoginManage
-  }, $data.showLoginManage ? common_vendor.e({
-    r: $options.userInfo._id
-  }, $options.userInfo._id ? {
-    s: common_vendor.o((...args) => $options.logout && $options.logout(...args))
-  } : {
-    t: common_vendor.o((...args) => $options.login && $options.login(...args))
-  }) : {});
+    t: common_vendor.sr("bind-mobile-by-sms", "0be2f605-9"),
+    v: common_vendor.o($options.bindMobileSuccess)
+  });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-0be2f605"]]);
 wx.createPage(MiniProgramPage);

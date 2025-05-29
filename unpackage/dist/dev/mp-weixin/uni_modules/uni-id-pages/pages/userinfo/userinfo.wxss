@@ -79,8 +79,70 @@
 .uni-body.uni_modules-uni-id-pages-pages-login-login-withoutpwd.data-v-0be2f605 {
   height: auto !important;
 }
-.uni-content.data-v-0be2f605 {
-  padding: 0;
+.userinfo-page.data-v-0be2f605 {
+  padding: 32rpx;
+  background: #f5f6fa;
+  min-height: 100vh;
+}
+.profile-card.data-v-0be2f605 {
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx 0 24rpx 0;
+  margin-bottom: 32rpx;
+}
+.avatar-box.data-v-0be2f605 {
+  margin-bottom: 16rpx;
+  border-radius: 50%;
+  border: 4rpx solid #4080FF22;
+  box-shadow: 0 2px 8px rgba(64, 128, 255, 0.08);
+}
+.nickname-box.data-v-0be2f605 {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.nickname.data-v-0be2f605 {
+  font-size: 20px;
+  font-weight: 500;
+  color: #1A1A1A;
+  margin-right: 8rpx;
+}
+.edit-icon.data-v-0be2f605 {
+  opacity: 0.7;
+}
+.info-card.data-v-0be2f605 {
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 32rpx;
+}
+.action-card.data-v-0be2f605 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+}
+.logout-btn.data-v-0be2f605, .deactivate-btn.data-v-0be2f605 {
+  width: 60%;
+  border-radius: 32rpx;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 14rpx 0;
+  margin: 0;
+}
+.logout-btn.data-v-0be2f605 {
+  background: linear-gradient(to right, #4080FF, #60A9FF);
+  color: #fff;
+  border: none;
+}
+.deactivate-btn.data-v-0be2f605 {
+  background: #fff;
+  color: #ff4d4f;
+  border: 1rpx solid #ff4d4f;
 }
 view.data-v-0be2f605 {
   display: flex;

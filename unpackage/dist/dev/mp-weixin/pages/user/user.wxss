@@ -40,46 +40,6 @@ page {
 		margin-right: 16rpx;
 		letter-spacing: 0.2px;
 }
-.edit-icon {
-		width: 16px;
-		height: 16px;
-		opacity: 0.8;
-		transition: opacity 0.3s;
-}
-.edit-icon:hover {
-		opacity: 1;
-}
-.storage-info {
-		font-size: 15px;
-		color: #4080FF;
-		margin-bottom: 24rpx;
-		display: inline-block;
-		padding: 6rpx 16rpx;
-		background: rgba(64, 128, 255, 0.1);
-		border-radius: 20rpx;
-}
-.progress-container {
-		margin-top: 16rpx;
-}
-.progress-bar {
-		height: 8rpx;
-		background-color: rgba(64, 128, 255, 0.1);
-		border-radius: 20rpx;
-		overflow: hidden;
-		margin-bottom: 12rpx;
-}
-.progress-inner {
-		height: 100%;
-		background: linear-gradient(to right, #4080FF, #60A9FF);
-		border-radius: 20rpx;
-		transition: width 0.3s ease;
-}
-.credit-level {
-		font-size: 13px;
-		color: #666666;
-		display: flex;
-		align-items: center;
-}
 .avatar-container {
 		position: relative;
 		width: 140rpx;
@@ -95,23 +55,6 @@ page {
 }
 .avatar:hover {
 		transform: scale(1.02);
-}
-.edit-avatar {
-		position: absolute;
-		right: 0;
-		bottom: 0;
-		width: 44rpx;
-		height: 44rpx;
-		background: linear-gradient(135deg, #4080FF, #60A9FF);
-		border-radius: 50%;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		box-shadow: 0 2px 6px rgba(64, 128, 255, 0.3);
-		transition: transform 0.3s ease;
-}
-.edit-avatar:hover {
-		transform: scale(1.1);
 }
 
 	/* 导航区域 */
@@ -226,4 +169,105 @@ page {
 .setting-text {
 		font-size: 16px;
 		color: #333333;
+}
+
+	/* 未登录状态样式 */
+.not-login-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 100%;
+		padding: 40rpx 0;
+}
+.default-avatar {
+		width: 140rpx;
+		height: 140rpx;
+		border-radius: 50%;
+		margin-bottom: 30rpx;
+		background-color: #F5F6FA;
+}
+.login-btn {
+		background: linear-gradient(to right, #4080FF, #60A9FF);
+		padding: 20rpx 60rpx;
+		border-radius: 40rpx;
+		box-shadow: 0 4px 12px rgba(64, 128, 255, 0.2);
+		transition: transform 0.3s ease;
+}
+.login-btn text {
+		color: #FFFFFF;
+		font-size: 16px;
+		font-weight: 500;
+}
+.login-btn:active {
+		transform: scale(0.98);
+}
+
+	/* 用户卡片 */
+.user-card {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		background: #fff;
+		border-radius: 16rpx;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+		padding: 32rpx;
+		margin-bottom: 32rpx;
+		position: relative;
+}
+.user-card-info {
+		flex: 1;
+}
+.user-card-title {
+		font-size: 18px;
+		font-weight: 600;
+		color: #222;
+		margin-bottom: 12rpx;
+}
+.edit-icon {
+		margin-left: 8rpx;
+		vertical-align: middle;
+}
+.user-card-score {
+		font-size: 15px;
+		color: #666;
+		margin-bottom: 8rpx;
+}
+.user-card-progress {
+		margin-bottom: 8rpx;
+}
+.progress-bar-bg {
+		width: 200rpx;
+		height: 10rpx;
+		background: #f0f0f0;
+		border-radius: 5rpx;
+		overflow: hidden;
+}
+.progress-bar {
+		height: 100%;
+		background: linear-gradient(90deg, #4080FF, #60A9FF);
+		border-radius: 5rpx;
+}
+.user-card-credit {
+		font-size: 14px;
+		color: #888;
+}
+.user-card-avatar {
+		position: relative;
+		width: 90rpx;
+		height: 90rpx;
+		margin-left: 24rpx;
+}
+.user-card-avatar .avatar {
+		width: 90rpx;
+		height: 90rpx;
+		border-radius: 50%;
+		border: 2rpx solid #e0e6f6;
+}
+.avatar-edit-icon {
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		background: #fff;
+		border-radius: 50%;
+		box-shadow: 0 2px 6px rgba(64,128,255,0.12);
 }

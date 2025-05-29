@@ -1,22 +1,13 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
-if (!Array) {
-  const _easycom_uni_icons2 = common_vendor.resolveComponent("uni-icons");
-  _easycom_uni_icons2();
-}
-const _easycom_uni_icons = () => "../../uni_modules/uni-icons/components/uni-icons/uni-icons.js";
-if (!Math) {
-  _easycom_uni_icons();
-}
-const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
-  __name: "user",
-  setup(__props) {
-    const avatarUrl = common_vendor.ref("https://readdy.ai/api/search-image?query=Professional%20avatar%20icon%20with%20minimalist%20design%2C%20simple%20circular%20shape%2C%20light%20blue%20accent%20color%2C%20clean%20white%20background%2C%20modern%20aesthetic%2C%20subtle%20gradient%2C%20high%20quality%20digital%20illustration%2C%20centered%20composition%2C%20professional%20look&width=200&height=200&seq=avatar001&orientation=squarish");
+const common_assets = require("../../common/assets.js");
+const _sfc_main = {
+  setup() {
     const navItems = common_vendor.ref([
-      { icon: "folder", text: "已领任务" },
-      { icon: "staff", text: "发布任务" },
-      { icon: "calendar", text: "任务记录" },
-      { icon: "star", text: "收藏任务" }
+      { icon: "folder", text: "已领任务", type: "received" },
+      { icon: "staff", text: "发布任务", type: "published" },
+      { icon: "calendar", text: "任务记录", type: "history" }
+      // { icon: 'star', text: '收藏任务' }
     ]);
     const taskData = common_vendor.ref([
       { label: "发布任务", value: "32" },
@@ -59,69 +50,151 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
     const toggleDarkMode = (e) => {
       isDarkMode.value = e.detail.value;
     };
-    return (_ctx, _cache) => {
-      return {
-        a: common_vendor.p({
-          type: "compose",
-          size: "16",
-          color: "#4080FF"
-        }),
-        b: avatarUrl.value,
-        c: common_vendor.p({
-          type: "compose",
-          size: "16",
-          color: "#FFFFFF"
-        }),
-        d: common_vendor.f(navItems.value, (item, index, i0) => {
-          return {
-            a: "239efa2b-2-" + i0,
-            b: common_vendor.p({
-              type: item.icon,
-              size: "24",
-              color: "#4080FF"
-            }),
-            c: common_vendor.t(item.text),
-            d: index
-          };
-        }),
-        e: common_vendor.f(taskData.value, (item, index, i0) => {
-          return {
-            a: common_vendor.t(item.value),
-            b: common_vendor.t(item.label),
-            c: index
-          };
-        }),
-        f: common_vendor.f(circleData.value, (item, index, i0) => {
-          return {
-            a: common_vendor.t(item.value),
-            b: common_vendor.t(item.label),
-            c: index
-          };
-        }),
-        g: common_vendor.f(featureItems.value, (item, index, i0) => {
-          return {
-            a: item.imageUrl,
-            b: common_vendor.t(item.text),
-            c: index
-          };
-        }),
-        h: isDarkMode.value,
-        i: common_vendor.o(toggleDarkMode),
-        j: common_vendor.f(settingItems.value, (item, index, i0) => {
-          return {
-            a: common_vendor.t(item.text),
-            b: "239efa2b-3-" + i0,
-            c: index
-          };
-        }),
-        k: common_vendor.p({
-          type: "right",
-          size: "16",
-          color: "#C8C9CC"
-        })
-      };
+    const isLoggedIn = common_vendor.ref(false);
+    const userInfo = common_vendor.ref({});
+    const defaultAvatarUrl = "/static/default-avatar.png";
+    const checkLoginStatus = () => {
+      const token = common_vendor.index.getStorageSync("uni_id_token");
+      isLoggedIn.value = !!token;
+    };
+    const goToLogin = () => {
+      common_vendor.index.navigateTo({
+        url: "/uni_modules/uni-id-pages/pages/login/login-withoutpwd"
+      });
+    };
+    const goedituserinfo = () => {
+      common_vendor.index.navigateTo({
+        url: "/uni_modules/uni-id-pages/pages/userinfo/userinfo"
+      });
+    };
+    const goToUserTask = (type) => {
+      common_vendor.index.navigateTo({
+        url: `/pages/user/user-task/user-task?type=${type}`
+      });
+    };
+    const getUserInfo = () => {
+      const info = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
+      userInfo.value = info && info._id ? {
+        ...info,
+        score: info.score || 2580,
+        // mock数据
+        creditLevel: info.creditLevel || "A级"
+        // mock数据
+      } : {};
+    };
+    common_vendor.onMounted(() => {
+      checkLoginStatus();
+      getUserInfo();
+    });
+    common_vendor.index.onShow(() => {
+      getUserInfo();
+    });
+    if (common_vendor.index.$on) {
+      common_vendor.index.$on("refreshUserInfo", getUserInfo);
+    }
+    return {
+      navItems,
+      taskData,
+      circleData,
+      featureItems,
+      settingItems,
+      isDarkMode,
+      toggleDarkMode,
+      isLoggedIn,
+      userInfo,
+      defaultAvatarUrl,
+      goToLogin,
+      goedituserinfo,
+      goToUserTask
     };
   }
-});
-wx.createPage(_sfc_main);
+};
+if (!Array) {
+  const _easycom_uni_icons2 = common_vendor.resolveComponent("uni-icons");
+  _easycom_uni_icons2();
+}
+const _easycom_uni_icons = () => "../../uni_modules/uni-icons/components/uni-icons/uni-icons.js";
+if (!Math) {
+  _easycom_uni_icons();
+}
+function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
+  return common_vendor.e({
+    a: $setup.isLoggedIn
+  }, $setup.isLoggedIn ? {
+    b: common_vendor.t($setup.userInfo.username || $setup.userInfo.nickname || "未设置昵称"),
+    c: common_vendor.o($setup.goedituserinfo),
+    d: common_vendor.p({
+      type: "compose",
+      size: "16",
+      color: "#4080FF"
+    }),
+    e: common_vendor.t($setup.userInfo.score || 0),
+    f: ($setup.userInfo.score || 0) / 3e3 * 100 + "%",
+    g: common_vendor.t($setup.userInfo.creditLevel || "A级"),
+    h: $setup.userInfo.avatar_file && $setup.userInfo.avatar_file.url ? $setup.userInfo.avatar_file.url : $setup.defaultAvatarUrl,
+    i: common_vendor.p({
+      type: "compose",
+      size: "18",
+      color: "#4080FF"
+    }),
+    j: common_vendor.o((...args) => $setup.goedituserinfo && $setup.goedituserinfo(...args))
+  } : {
+    k: common_assets._imports_0$1,
+    l: common_vendor.o((...args) => $setup.goToLogin && $setup.goToLogin(...args))
+  }, {
+    m: $setup.isLoggedIn
+  }, $setup.isLoggedIn ? {
+    n: common_vendor.f($setup.navItems, (item, index, i0) => {
+      return {
+        a: "239efa2b-2-" + i0,
+        b: common_vendor.p({
+          type: item.icon,
+          size: "24",
+          color: "#4080FF"
+        }),
+        c: common_vendor.t(item.text),
+        d: index,
+        e: common_vendor.o(($event) => $setup.goToUserTask(item.type), index)
+      };
+    })
+  } : {}, {
+    o: common_vendor.f($setup.taskData, (item, index, i0) => {
+      return {
+        a: common_vendor.t(item.value),
+        b: common_vendor.t(item.label),
+        c: index
+      };
+    }),
+    p: common_vendor.f($setup.circleData, (item, index, i0) => {
+      return {
+        a: common_vendor.t(item.value),
+        b: common_vendor.t(item.label),
+        c: index
+      };
+    }),
+    q: common_vendor.f($setup.featureItems, (item, index, i0) => {
+      return {
+        a: item.imageUrl,
+        b: common_vendor.t(item.text),
+        c: index
+      };
+    }),
+    r: $setup.isDarkMode,
+    s: common_vendor.o((...args) => $setup.toggleDarkMode && $setup.toggleDarkMode(...args)),
+    t: common_vendor.f($setup.settingItems, (item, index, i0) => {
+      return {
+        a: common_vendor.t(item.text),
+        b: "239efa2b-3-" + i0,
+        c: index
+      };
+    }),
+    v: common_vendor.p({
+      type: "right",
+      size: "16",
+      color: "#C8C9CC"
+    })
+  });
+}
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);
+wx.createPage(MiniProgramPage);
 //# sourceMappingURL=../../../.sourcemap/mp-weixin/pages/user/user.js.map

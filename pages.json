@@ -40,8 +40,14 @@
 			"style": {
 				"navigationBarTitleText": "帖子详情"
 			}
+		},
+		{
+			"path": "pages/user/user-task/user-task",
+			"style": {
+				"navigationBarTitleText": "任务中心"
+			}
 		}
-
+		
 		, {
 			"path": "uni_modules/uni-id-pages/pages/register/register",
 			"style": {
@@ -128,6 +134,7 @@
 				"navigationBarTitleText": "实名认证"
 			}
 		}
+		
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

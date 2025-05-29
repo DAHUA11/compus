@@ -7,6 +7,7 @@
     "pages/circle/activity-datail/activity-datail",
     "pages/circle/pinned-datail/pinned-datail",
     "pages/circle/post-datail/post-datail",
+    "pages/user/user-task/user-task",
     "uni_modules/uni-id-pages/pages/register/register",
     "uni_modules/uni-id-pages/pages/login/login-withoutpwd",
     "uni_modules/uni-id-pages/pages/login/login-withpwd",

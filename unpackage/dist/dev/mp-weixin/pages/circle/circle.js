@@ -251,10 +251,10 @@ const _sfc_main = {
 };
 if (!Array) {
   const _component_category_item = common_vendor.resolveComponent("category-item");
-  const _component_activity_card = common_vendor.resolveComponent("activity-card");
+  const _component_ActivityCard = common_vendor.resolveComponent("ActivityCard");
   const _component_pinned_card = common_vendor.resolveComponent("pinned-card");
   const _component_post_card = common_vendor.resolveComponent("post-card");
-  (_component_category_item + _component_activity_card + _component_pinned_card + _component_post_card)();
+  (_component_category_item + _component_ActivityCard + _component_pinned_card + _component_post_card)();
 }
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({

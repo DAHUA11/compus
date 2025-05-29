@@ -2813,15 +2813,6 @@ function inject(key, defaultValue, treatDefaultAsFactory = false) {
     warn$1(`inject() can only be used inside setup() or functional components.`);
   }
 }
-/*! #__NO_SIDE_EFFECTS__ */
-// @__NO_SIDE_EFFECTS__
-function defineComponent(options, extraOptions) {
-  return isFunction(options) ? (
-    // #8326: extend call and options.name access are considered side-effects
-    // by Rollup, so we have to wrap it in a pure-annotated IIFE.
-    /* @__PURE__ */ (() => extend({ name: options.name }, extraOptions, { setup: options }))()
-  ) : options;
-}
 const isKeepAlive = (vnode) => vnode.type.__isKeepAlive;
 function onActivated(hook, target) {
   registerKeepAliveHook(hook, "a", target);
@@ -7165,9 +7156,9 @@ function initOnError() {
   };
 }
 function initRuntimeSocketService() {
-  const hosts = "10.46.28.88,127.0.0.1";
+  const hosts = "10.46.6.10,127.0.0.1";
   const port = "8090";
-  const id = "mp-weixin_zvGhoS";
+  const id = "mp-weixin_ByfCX6";
   const lazy = typeof swan !== "undefined";
   let restoreError = lazy ? () => {
   } : initOnError();
@@ -8143,6 +8134,12 @@ const pages = [
     }
   },
   {
+    path: "pages/user/user-task/user-task",
+    style: {
+      navigationBarTitleText: "任务中心"
+    }
+  },
+  {
     path: "uni_modules/uni-id-pages/pages/register/register",
     style: {
       navigationBarTitleText: "注册"
@@ -8605,7 +8602,7 @@ class S {
 function T(e2) {
   return e2 && "string" == typeof e2 ? JSON.parse(e2) : e2;
 }
-const b = true, E = "mp-weixin", P = T(define_process_env_UNI_SECURE_NETWORK_CONFIG_default), C = E, A = T('{"address":["127.0.0.1","10.46.28.88"],"servePort":7000,"debugPort":9000,"initialLaunchType":"local","skipFiles":["<node_internals>/**","D:/Software/hbuilder/HBuilderX/plugins/unicloud/**/*.js"]}'), O = T('[{"provider":"aliyun","spaceName":"compus000","spaceId":"mp-f475c10f-31d0-4fb8-a8fa-89f674307ebc","clientSecret":"vyU9IRh+L6OqzCrSXAOLyg==","endpoint":"https://api.next.bspapp.com"}]') || [];
+const b = true, E = "mp-weixin", P = T(define_process_env_UNI_SECURE_NETWORK_CONFIG_default), C = E, A = T('{"address":["127.0.0.1","10.46.6.10"],"servePort":7000,"debugPort":9000,"initialLaunchType":"local","skipFiles":["<node_internals>/**","D:/Software/hbuilder/HBuilderX/plugins/unicloud/**/*.js"]}'), O = T('[{"provider":"aliyun","spaceName":"compus000","spaceId":"mp-f475c10f-31d0-4fb8-a8fa-89f674307ebc","clientSecret":"vyU9IRh+L6OqzCrSXAOLyg==","endpoint":"https://api.next.bspapp.com"}]') || [];
 let N = "";
 try {
   N = "__UNI__2EF5B03";
@@ -11122,7 +11119,6 @@ let Zs = new class {
 var er = Zs;
 exports._export_sfc = _export_sfc;
 exports.createSSRApp = createSSRApp;
-exports.defineComponent = defineComponent;
 exports.e = e;
 exports.er = er;
 exports.f = f$1;
@@ -11130,6 +11126,7 @@ exports.index = index;
 exports.initVueI18n = initVueI18n;
 exports.n = n$1;
 exports.o = o$1;
+exports.onMounted = onMounted;
 exports.p = p$1;
 exports.pagesJson = pagesJson;
 exports.reactive = reactive;

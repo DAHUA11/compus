@@ -1,30 +1,43 @@
 <template>
 	<view class="page">
 		<!-- 顶部个人信息区域 -->
-		<view class="user-profile">
-			<view class="user-info">
-				<view class="user-name-container">
-					<text class="user-name">臭屁王</text>
-					<uni-icons type="compose" size="16" color="#4080FF" class="edit-icon cursor-pointer"></uni-icons>
-				</view>
-				<text class="storage-info">积分余额: 2580分</text>
-				<view class="progress-container">
-					<view class="progress-bar">
-						<view class="progress-inner" style="width: 60%;"></view>
+		<template v-if="isLoggedIn">
+			<view class="user-card">
+				<view class="user-card-info">
+					<view style="display: flex; align-items: center;">
+						<text class="user-card-title">{{ userInfo.username || userInfo.nickname || '未设置昵称' }}的任务中心</text>
+						<uni-icons  @click="goedituserinfo" type="compose" size="16" color="#4080FF" class="edit-icon" />
 					</view>
-					<text class="credit-level">信用等级: 钻石</text>
+					<view class="user-card-score">积分余额: {{ userInfo.score || 0 }}分</view>
+					<view class="user-card-progress">
+						<view class="progress-bar-bg">
+							<view class="progress-bar" :style="{ width: ((userInfo.score || 0) / 3000 * 100) + '%' }"></view>
+						</view>
+					</view>
+					<view class="user-card-credit">信用等级: {{ userInfo.creditLevel || 'A级' }}</view>
+				</view>
+				<view class="user-card-avatar" @click="goedituserinfo">
+					<image class="avatar" :src="userInfo.avatar_file && userInfo.avatar_file.url ? userInfo.avatar_file.url : defaultAvatarUrl" mode="aspectFill"></image>
+					<uni-icons type="compose" size="18" color="#4080FF" class="avatar-edit-icon" />
 				</view>
 			</view>
-			<view class="avatar-container cursor-pointer">
-				<image class="avatar" :src="avatarUrl" mode="aspectFill"></image>
-				<view class="edit-avatar">
-					<uni-icons type="compose" size="16" color="#FFFFFF"></uni-icons>
+		</template>
+		<template v-else>
+			<view class="not-login-container">
+				<image class="default-avatar" src="/static/default-avatar.png" mode="aspectFill"></image>
+				<view class="login-btn" @click="goToLogin">
+					<text>去登录</text>
 				</view>
 			</view>
-		</view>
+		</template>
 		<!-- 功能导航区 -->
-		<view class="nav-section">
-			<view class="nav-item cursor-pointer" v-for="(item, index) in navItems" :key="index">
+		<view class="nav-section" v-if="isLoggedIn">
+			<view
+				class="nav-item cursor-pointer"
+				v-for="(item, index) in navItems"
+				:key="index"
+				@click="goToUserTask(item.type)"
+			>
 				<uni-icons :type="item.icon" size="24" color="#4080FF"></uni-icons>
 				<text class="nav-text">{{ item.text }}</text>
 			</view>
@@ -75,65 +88,145 @@
 		</view>
 	</view>
 </template>
-<script lang="ts" setup>
-	import { ref } from 'vue';
-	// 用户头像
-	const avatarUrl = ref('https://readdy.ai/api/search-image?query=Professional%20avatar%20icon%20with%20minimalist%20design%2C%20simple%20circular%20shape%2C%20light%20blue%20accent%20color%2C%20clean%20white%20background%2C%20modern%20aesthetic%2C%20subtle%20gradient%2C%20high%20quality%20digital%20illustration%2C%20centered%20composition%2C%20professional%20look&width=200&height=200&seq=avatar001&orientation=squarish');
-	// 导航项
-	const navItems = ref([
-		{ icon: 'folder', text: '已领任务' },
-		{ icon: 'staff', text: '发布任务' },
-		{ icon: 'calendar', text: '任务记录' },
-		{ icon: 'star', text: '收藏任务' }
-	]);
-	// 任务数据
-	const taskData = ref([
-		{ label: '发布任务', value: '32' },
-		{ label: '完成任务', value: '48' },
-		{ label: '累计金额', value: '¥1280' },
-		{ label: '任务评分', value: '4.8' }
-	]);
-	// 圈子贡献
-	const circleData = ref([
-		{ label: '发帖数', value: '56' },
-		{ label: '评论数', value: '128' },
-		{ label: '获赞数', value: '320' },
-		{ label: '活跃度', value: '85%' }
-	]);
-	// 功能项
-	const featureItems = ref([
-		{
-			text: '积分明细',
-			imageUrl: 'https://readdy.ai/api/search-image?query=icon%2C%203D%20cartoon%2C%20Points%20or%20coins%20icon%2C%20subject%20fills%2080%20percent%20of%20frame%2C%20vibrant%20colors%20with%20soft%20gradients%2C%20minimalist%20design%2C%20smooth%20rounded%20shapes%2C%20subtle%20shading%2C%20no%20outlines%2C%20centered%20composition%2C%20isolated%20on%20white%20background%2C%20playful%20and%20friendly%20aesthetic%2C%20isometric%20perspective%2C%20high%20detail%20quality%2C%20clean%20and%20modern%20look%2C%20single%20object%20focus&width=100&height=100&seq=feature001&orientation=squarish'
-		},
-		{
-			text: '数据同步',
-			imageUrl: 'https://readdy.ai/api/search-image?query=icon%2C%203D%20cartoon%2C%20Cloud%20sync%20icon%2C%20subject%20fills%2080%20percent%20of%20frame%2C%20vibrant%20colors%20with%20soft%20gradients%2C%20minimalist%20design%2C%20smooth%20rounded%20shapes%2C%20subtle%20shading%2C%20no%20outlines%2C%20centered%20composition%2C%20isolated%20on%20white%20background%2C%20playful%20and%20friendly%20aesthetic%2C%20isometric%20perspective%2C%20high%20detail%20quality%2C%20clean%20and%20modern%20look%2C%20single%20object%20focus&width=100&height=100&seq=feature002&orientation=squarish'
-		},
-		{
-			text: '任务管理',
-			imageUrl: 'https://readdy.ai/api/search-image?query=icon%2C%203D%20cartoon%2C%20Task%20management%20checklist%2C%20subject%20fills%2080%20percent%20of%20frame%2C%20vibrant%20colors%20with%20soft%20gradients%2C%20minimalist%20design%2C%20smooth%20rounded%20shapes%2C%20subtle%20shading%2C%20no%20outlines%2C%20centered%20composition%2C%20isolated%20on%20white%20background%2C%20playful%20and%20friendly%20aesthetic%2C%20isometric%20perspective%2C%20high%20detail%20quality%2C%20clean%20and%20modern%20look%2C%20single%20object%20focus&width=100&height=100&seq=feature003&orientation=squarish'
-		},
-		{
-			text: '圈子中心',
-			imageUrl: 'https://readdy.ai/api/search-image?query=icon%2C%203D%20cartoon%2C%20Community%20or%20social%20network%20icon%2C%20subject%20fills%2080%20percent%20of%20frame%2C%20vibrant%20colors%20with%20soft%20gradients%2C%20minimalist%20design%2C%20smooth%20rounded%20shapes%2C%20subtle%20shading%2C%20no%20outlines%2C%20centered%20composition%2C%20isolated%20on%20white%20background%2C%20playful%20and%20friendly%20aesthetic%2C%20isometric%20perspective%2C%20high%20detail%20quality%2C%20clean%20and%20modern%20look%2C%20single%20object%20focus&width=100&height=100&seq=feature004&orientation=squarish'
+
+<script>
+import { ref, onMounted } from 'vue'
+
+export default {
+	setup() {
+		// 导航项
+		const navItems = ref([
+			{ icon: 'folder', text: '已领任务', type: 'received' },
+			{ icon: 'staff', text: '发布任务', type: 'published' },
+			{ icon: 'calendar', text: '任务记录', type: 'history' },
+			// { icon: 'star', text: '收藏任务' }
+		])
+
+		// 任务数据
+		const taskData = ref([
+			{ label: '发布任务', value: '32' },
+			{ label: '完成任务', value: '48' },
+			{ label: '累计金额', value: '¥1280' },
+			{ label: '任务评分', value: '4.8' }
+		])
+
+		// 圈子贡献
+		const circleData = ref([
+			{ label: '发帖数', value: '56' },
+			{ label: '评论数', value: '128' },
+			{ label: '获赞数', value: '320' },
+			{ label: '活跃度', value: '85%' }
+		])
+
+		// 功能项
+		const featureItems = ref([
+			{
+				text: '积分明细',
+				imageUrl: 'https://readdy.ai/api/search-image?query=icon%2C%203D%20cartoon%2C%20Points%20or%20coins%20icon%2C%20subject%20fills%2080%20percent%20of%20frame%2C%20vibrant%20colors%20with%20soft%20gradients%2C%20minimalist%20design%2C%20smooth%20rounded%20shapes%2C%20subtle%20shading%2C%20no%20outlines%2C%20centered%20composition%2C%20isolated%20on%20white%20background%2C%20playful%20and%20friendly%20aesthetic%2C%20isometric%20perspective%2C%20high%20detail%20quality%2C%20clean%20and%20modern%20look%2C%20single%20object%20focus&width=100&height=100&seq=feature001&orientation=squarish'
+			},
+			{
+				text: '数据同步',
+				imageUrl: 'https://readdy.ai/api/search-image?query=icon%2C%203D%20cartoon%2C%20Cloud%20sync%20icon%2C%20subject%20fills%2080%20percent%20of%20frame%2C%20vibrant%20colors%20with%20soft%20gradients%2C%20minimalist%20design%2C%20smooth%20rounded%20shapes%2C%20subtle%20shading%2C%20no%20outlines%2C%20centered%20composition%2C%20isolated%20on%20white%20background%2C%20playful%20and%20friendly%20aesthetic%2C%20isometric%20perspective%2C%20high%20detail%20quality%2C%20clean%20and%20modern%20look%2C%20single%20object%20focus&width=100&height=100&seq=feature002&orientation=squarish'
+			},
+			{
+				text: '任务管理',
+				imageUrl: 'https://readdy.ai/api/search-image?query=icon%2C%203D%20cartoon%2C%20Task%20management%20checklist%2C%20subject%20fills%2080%20percent%20of%20frame%2C%20vibrant%20colors%20with%20soft%20gradients%2C%20minimalist%20design%2C%20smooth%20rounded%20shapes%2C%20subtle%20shading%2C%20no%20outlines%2C%20centered%20composition%2C%20isolated%20on%20white%20background%2C%20playful%20and%20friendly%20aesthetic%2C%20isometric%20perspective%2C%20high%20detail%20quality%2C%20clean%20and%20modern%20look%2C%20single%20object%20focus&width=100&height=100&seq=feature003&orientation=squarish'
+			},
+			{
+				text: '圈子中心',
+				imageUrl: 'https://readdy.ai/api/search-image?query=icon%2C%203D%20cartoon%2C%20Community%20or%20social%20network%20icon%2C%20subject%20fills%2080%20percent%20of%20frame%2C%20vibrant%20colors%20with%20soft%20gradients%2C%20minimalist%20design%2C%20smooth%20rounded%20shapes%2C%20subtle%20shading%2C%20no%20outlines%2C%20centered%20composition%2C%20isolated%20on%20white%20background%2C%20playful%20and%20friendly%20aesthetic%2C%20isometric%20perspective%2C%20high%20detail%20quality%2C%20clean%20and%20modern%20look%2C%20single%20object%20focus&width=100&height=100&seq=feature004&orientation=squarish'
+			}
+		])
+
+		// 设置项
+		const settingItems = ref([
+			{ text: '设置中心' },
+			{ text: '账号与安全' },
+			{ text: '通知设置' },
+			{ text: '隐私设置' },
+			{ text: '帮助反馈' }
+		])
+
+		// 深色模式
+		const isDarkMode = ref(false)
+		
+		// 切换深色模式
+		const toggleDarkMode = (e) => {
+			isDarkMode.value = e.detail.value
 		}
-	]);
-	// 设置项
-	const settingItems = ref([
-		{ text: '设置中心' },
-		{ text: '账号与安全' },
-		{ text: '通知设置' },
-		{ text: '隐私设置' },
-		{ text: '帮助反馈' }
-	]);
-	// 深色模式
-	const isDarkMode = ref(false);
-	// 切换深色模式
-	const toggleDarkMode = (e : any) => {
-		isDarkMode.value = e.detail.value;
-	};
+
+		// 登录状态
+		const isLoggedIn = ref(false)
+		const userInfo = ref({})
+		const defaultAvatarUrl = '/static/default-avatar.png'
+
+		// 检查登录状态
+		const checkLoginStatus = () => {
+			const token = uni.getStorageSync('uni_id_token')
+			isLoggedIn.value = !!token
+		}
+
+		// 跳转到登录页面
+		const goToLogin = () => {
+			uni.navigateTo({
+				url: '/uni_modules/uni-id-pages/pages/login/login-withoutpwd'
+			})
+		}
+		//跳转到个人信息编辑页面
+		const goedituserinfo = () =>{
+			uni.navigateTo({
+				url:"/uni_modules/uni-id-pages/pages/userinfo/userinfo"
+			})
+		}
+		//跳转到任务中心页面
+		const goToUserTask = (type) => {
+			uni.navigateTo({
+				url: `/pages/user/user-task/user-task?type=${type}`
+			})
+		}
+		const getUserInfo = () => {
+			const info = uni.getStorageSync('uni-id-pages-userInfo')
+			userInfo.value = info && info._id ? {
+				...info,
+				score: info.score || 2580, // mock数据
+				creditLevel: info.creditLevel || 'A级' // mock数据
+			} : {}
+		}
+
+		onMounted(() => {
+			checkLoginStatus()
+			getUserInfo()
+		})
+
+		// 使用 uni-app 的生命周期
+		uni.onShow(() => {
+			getUserInfo()
+		})
+
+		// 监听全局刷新事件
+		if (uni.$on) {
+			uni.$on('refreshUserInfo', getUserInfo)
+		}
+
+		return {
+			navItems,
+			taskData,
+			circleData,
+			featureItems,
+			settingItems,
+			isDarkMode,
+			toggleDarkMode,
+			isLoggedIn,
+			userInfo,
+			defaultAvatarUrl,
+			goToLogin,
+			goedituserinfo,
+			goToUserTask
+		}
+	}
+}
 </script>
+
 <style>
 	page {
 		height: 100%;
@@ -181,53 +274,6 @@
 		letter-spacing: 0.2px;
 	}
 
-	.edit-icon {
-		width: 16px;
-		height: 16px;
-		opacity: 0.8;
-		transition: opacity 0.3s;
-	}
-
-	.edit-icon:hover {
-		opacity: 1;
-	}
-
-	.storage-info {
-		font-size: 15px;
-		color: #4080FF;
-		margin-bottom: 24rpx;
-		display: inline-block;
-		padding: 6rpx 16rpx;
-		background: rgba(64, 128, 255, 0.1);
-		border-radius: 20rpx;
-	}
-
-	.progress-container {
-		margin-top: 16rpx;
-	}
-
-	.progress-bar {
-		height: 8rpx;
-		background-color: rgba(64, 128, 255, 0.1);
-		border-radius: 20rpx;
-		overflow: hidden;
-		margin-bottom: 12rpx;
-	}
-
-	.progress-inner {
-		height: 100%;
-		background: linear-gradient(to right, #4080FF, #60A9FF);
-		border-radius: 20rpx;
-		transition: width 0.3s ease;
-	}
-
-	.credit-level {
-		font-size: 13px;
-		color: #666666;
-		display: flex;
-		align-items: center;
-	}
-
 	.avatar-container {
 		position: relative;
 		width: 140rpx;
@@ -245,25 +291,6 @@
 
 	.avatar:hover {
 		transform: scale(1.02);
-	}
-
-	.edit-avatar {
-		position: absolute;
-		right: 0;
-		bottom: 0;
-		width: 44rpx;
-		height: 44rpx;
-		background: linear-gradient(135deg, #4080FF, #60A9FF);
-		border-radius: 50%;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		box-shadow: 0 2px 6px rgba(64, 128, 255, 0.3);
-		transition: transform 0.3s ease;
-	}
-
-	.edit-avatar:hover {
-		transform: scale(1.1);
 	}
 
 	/* 导航区域 */
@@ -393,5 +420,110 @@
 	.setting-text {
 		font-size: 16px;
 		color: #333333;
+	}
+
+	/* 未登录状态样式 */
+	.not-login-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 100%;
+		padding: 40rpx 0;
+	}
+	
+	.default-avatar {
+		width: 140rpx;
+		height: 140rpx;
+		border-radius: 50%;
+		margin-bottom: 30rpx;
+		background-color: #F5F6FA;
+	}
+	
+	.login-btn {
+		background: linear-gradient(to right, #4080FF, #60A9FF);
+		padding: 20rpx 60rpx;
+		border-radius: 40rpx;
+		box-shadow: 0 4px 12px rgba(64, 128, 255, 0.2);
+		transition: transform 0.3s ease;
+	}
+	
+	.login-btn text {
+		color: #FFFFFF;
+		font-size: 16px;
+		font-weight: 500;
+	}
+	
+	.login-btn:active {
+		transform: scale(0.98);
+	}
+
+	/* 用户卡片 */
+	.user-card {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		background: #fff;
+		border-radius: 16rpx;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+		padding: 32rpx;
+		margin-bottom: 32rpx;
+		position: relative;
+	}
+	.user-card-info {
+		flex: 1;
+	}
+	.user-card-title {
+		font-size: 18px;
+		font-weight: 600;
+		color: #222;
+		margin-bottom: 12rpx;
+	}
+	.edit-icon {
+		margin-left: 8rpx;
+		vertical-align: middle;
+	}
+	.user-card-score {
+		font-size: 15px;
+		color: #666;
+		margin-bottom: 8rpx;
+	}
+	.user-card-progress {
+		margin-bottom: 8rpx;
+	}
+	.progress-bar-bg {
+		width: 200rpx;
+		height: 10rpx;
+		background: #f0f0f0;
+		border-radius: 5rpx;
+		overflow: hidden;
+	}
+	.progress-bar {
+		height: 100%;
+		background: linear-gradient(90deg, #4080FF, #60A9FF);
+		border-radius: 5rpx;
+	}
+	.user-card-credit {
+		font-size: 14px;
+		color: #888;
+	}
+	.user-card-avatar {
+		position: relative;
+		width: 90rpx;
+		height: 90rpx;
+		margin-left: 24rpx;
+	}
+	.user-card-avatar .avatar {
+		width: 90rpx;
+		height: 90rpx;
+		border-radius: 50%;
+		border: 2rpx solid #e0e6f6;
+	}
+	.avatar-edit-icon {
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		background: #fff;
+		border-radius: 50%;
+		box-shadow: 0 2px 6px rgba(64,128,255,0.12);
 	}
 </style>

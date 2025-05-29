@@ -9,6 +9,7 @@ if (!Math) {
   "./pages/circle/activity-datail/activity-datail.js";
   "./pages/circle/pinned-datail/pinned-datail.js";
   "./pages/circle/post-datail/post-datail.js";
+  "./pages/user/user-task/user-task.js";
   "./uni_modules/uni-id-pages/pages/register/register.js";
   "./uni_modules/uni-id-pages/pages/login/login-withoutpwd.js";
   "./uni_modules/uni-id-pages/pages/login/login-withpwd.js";

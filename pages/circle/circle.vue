@@ -48,13 +48,13 @@
 				</view>
 				<scroll-view class="activity-scroll" scroll-x="true" show-scrollbar="false">
 					<view class="activity-list">
-						<activity-card 
+						<ActivityCard
 							v-for="(item, index) in activities" 
 							:key="index"
 							:activity="item"
 							@view-detail="viewActivityDetail"
 							@join="joinActivity"
-						></activity-card>
+						></ActivityCard>
 					</view>
 				</scroll-view>
 			</view>

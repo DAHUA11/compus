@@ -126,10 +126,83 @@ export default {
     },
     publishActivity() {
       if (!this.canPublish) return;
-      uni.showToast({ title: '发布成功', icon: 'success' });
-      setTimeout(() => {
-        uni.navigateBack();
-      }, 800);
+      
+      // 显示加载提示
+      uni.showLoading({
+        title: '发布中...'
+      });
+      
+      // 上传封面图
+      const uploadCover = new Promise((resolve, reject) => {
+        if (!this.cover) {
+          resolve([]);
+          return;
+        }
+        uniCloud.uploadFile({
+          filePath: this.cover,
+          cloudPath: `activities/${Date.now()}-${Math.random().toString(36).slice(-6)}.${this.cover.split('.').pop()}`,
+          success: res => resolve([res.fileID]),
+          fail: err => reject(err)
+        });
+      });
+      
+      // 处理时间格式
+      const [date, time] = this.timeText.split(' ');
+      const [month, day] = date.split('/');
+      const [hour, minute] = time.split(':');
+      const activityTime = new Date(2024, parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute)).getTime();
+      
+      // 上传封面并发布活动
+      uploadCover
+        .then(fileIDs => {
+          // 从本地存储获取用户id
+          const userInfo = uni.getStorageSync('uni-id-pages-userInfo')
+          console.log('活动页面 userInfo:', userInfo)
+          const userId = userInfo && userInfo._id ? userInfo._id : ''
+          if (!userId) {
+          	uni.hideLoading();
+          	uni.showToast({ title: '请先登录', icon: 'none' });
+          	return Promise.reject(new Error('请先登录'));
+          }
+          return uniCloud.callFunction({
+            name: 'add-content',
+            data: {
+              content_type: 'activity',
+              title: this.title,
+              category: this.typeOptions[this.typeIndex],
+              content: this.desc,
+              files: fileIDs,
+              activity_time: activityTime,
+              location: this.place,
+              max_attendees: 0,
+              user_id: userId,
+              tags: this.selectedTags
+            }
+          });
+        })
+        .then(res => {
+          if (res && res.result && res.result.code === 200) {
+            uni.hideLoading();
+            uni.showToast({
+              title: '发布成功',
+              icon: 'success'
+            });
+            setTimeout(() => {
+              uni.navigateBack();
+            }, 800);
+          } else {
+            throw new Error(res.result.msg);
+          }
+        })
+        .catch(err => {
+          uni.hideLoading();
+          if (err && err.message !== '请先登录') {
+            uni.showToast({
+              title: err.message || '发布失败',
+              icon: 'none'
+            });
+          }
+        });
     }
   }
 };

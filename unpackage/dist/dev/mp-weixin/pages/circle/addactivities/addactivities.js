@@ -53,10 +53,71 @@ const _sfc_main = {
     publishActivity() {
       if (!this.canPublish)
         return;
-      common_vendor.index.showToast({ title: "发布成功", icon: "success" });
-      setTimeout(() => {
-        common_vendor.index.navigateBack();
-      }, 800);
+      common_vendor.index.showLoading({
+        title: "发布中..."
+      });
+      const uploadCover = new Promise((resolve, reject) => {
+        if (!this.cover) {
+          resolve([]);
+          return;
+        }
+        common_vendor.er.uploadFile({
+          filePath: this.cover,
+          cloudPath: `activities/${Date.now()}-${Math.random().toString(36).slice(-6)}.${this.cover.split(".").pop()}`,
+          success: (res) => resolve([res.fileID]),
+          fail: (err) => reject(err)
+        });
+      });
+      const [date, time] = this.timeText.split(" ");
+      const [month, day] = date.split("/");
+      const [hour, minute] = time.split(":");
+      const activityTime = new Date(2024, parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute)).getTime();
+      uploadCover.then((fileIDs) => {
+        const userInfo = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
+        common_vendor.index.__f__("log", "at pages/circle/addactivities/addactivities.vue:160", "活动页面 userInfo:", userInfo);
+        const userId = userInfo && userInfo._id ? userInfo._id : "";
+        if (!userId) {
+          common_vendor.index.hideLoading();
+          common_vendor.index.showToast({ title: "请先登录", icon: "none" });
+          return Promise.reject(new Error("请先登录"));
+        }
+        return common_vendor.er.callFunction({
+          name: "add-content",
+          data: {
+            content_type: "activity",
+            title: this.title,
+            category: this.typeOptions[this.typeIndex],
+            content: this.desc,
+            files: fileIDs,
+            activity_time: activityTime,
+            location: this.place,
+            max_attendees: 0,
+            user_id: userId,
+            tags: this.selectedTags
+          }
+        });
+      }).then((res) => {
+        if (res && res.result && res.result.code === 200) {
+          common_vendor.index.hideLoading();
+          common_vendor.index.showToast({
+            title: "发布成功",
+            icon: "success"
+          });
+          setTimeout(() => {
+            common_vendor.index.navigateBack();
+          }, 800);
+        } else {
+          throw new Error(res.result.msg);
+        }
+      }).catch((err) => {
+        common_vendor.index.hideLoading();
+        if (err && err.message !== "请先登录") {
+          common_vendor.index.showToast({
+            title: err.message || "发布失败",
+            icon: "none"
+          });
+        }
+      });
     }
   }
 };

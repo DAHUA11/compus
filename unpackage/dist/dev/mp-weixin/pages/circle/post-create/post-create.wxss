@@ -179,7 +179,7 @@
   transition: background 0.2s, opacity 0.2s;
 }
 .btn-publish.disabled {
-  background: #a2a2a5 !important;
+  background: #b2b2b4 !important;
   color: #dadde3 !important;
   opacity: 0.7;
   pointer-events: none;

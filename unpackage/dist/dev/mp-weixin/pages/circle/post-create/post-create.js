@@ -37,13 +37,53 @@ const _sfc_main = {
     publishPost() {
       if (!this.canPublish)
         return;
-      common_vendor.index.showToast({
-        title: "发布成功",
-        icon: "success"
+      common_vendor.index.showLoading({
+        title: "发布中..."
       });
-      setTimeout(() => {
-        common_vendor.index.navigateBack();
-      }, 800);
+      const uploadTasks = this.images.map((filePath) => {
+        return new Promise((resolve, reject) => {
+          common_vendor.er.uploadFile({
+            filePath,
+            cloudPath: `posts/${Date.now()}-${Math.random().toString(36).slice(-6)}.${filePath.split(".").pop()}`,
+            success: (res) => resolve(res.fileID),
+            fail: (err) => reject(err)
+          });
+        });
+      });
+      Promise.all(uploadTasks).then((fileIDs) => {
+        const userInfo = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
+        const userId = userInfo && userInfo._id ? userInfo._id : "";
+        if (!userId) {
+          common_vendor.index.hideLoading();
+          common_vendor.index.showToast({ title: "请先登录", icon: "none" });
+          return Promise.reject(new Error("请先登录"));
+        }
+        return common_vendor.er.callFunction({
+          name: "add-content",
+          data: {
+            content_type: "post",
+            category: this.selectedTag,
+            content: this.content,
+            user_id: userId,
+            files: fileIDs
+          }
+        });
+      }).then((res) => {
+        if (res && res.result && res.result.code === 200) {
+          common_vendor.index.hideLoading();
+          common_vendor.index.showToast({ title: "发布成功", icon: "success" });
+          setTimeout(() => {
+            common_vendor.index.navigateBack();
+          }, 800);
+        } else {
+          throw new Error(res.result.msg);
+        }
+      }).catch((err) => {
+        common_vendor.index.hideLoading();
+        if (err && err.message !== "请先登录") {
+          common_vendor.index.showToast({ title: err.message || "发布失败", icon: "none" });
+        }
+      });
     }
   }
 };

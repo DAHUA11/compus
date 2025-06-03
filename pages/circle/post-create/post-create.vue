@@ -101,13 +101,60 @@
 			},
 			publishPost() {
 				if (!this.canPublish) return;
-				uni.showToast({
-					title: '发布成功',
-					icon: 'success'
+				
+				// 显示加载提示
+				uni.showLoading({
+					title: '发布中...'
 				});
-				setTimeout(() => {
-					uni.navigateBack();
-				}, 800);
+				
+				// 上传图片
+				const uploadTasks = this.images.map(filePath => {
+					return new Promise((resolve, reject) => {
+						uniCloud.uploadFile({
+							filePath: filePath,
+							cloudPath: `posts/${Date.now()}-${Math.random().toString(36).slice(-6)}.${filePath.split('.').pop()}`,
+							success: res => resolve(res.fileID),
+							fail: err => reject(err)
+						});
+					});
+				});
+				
+				Promise.all(uploadTasks)
+					.then(fileIDs => {
+						// 从本地存储获取用户id
+						const userInfo = uni.getStorageSync('uni-id-pages-userInfo')
+						const userId = userInfo && userInfo._id ? userInfo._id : ''
+						if (!userId) {
+							uni.hideLoading();
+							uni.showToast({ title: '请先登录', icon: 'none' });
+							return Promise.reject(new Error('请先登录'));
+						}
+						return uniCloud.callFunction({
+							name: 'add-content',
+							data: {
+								content_type: 'post',
+								category: this.selectedTag,
+								content: this.content,
+								user_id: userId,
+								files: fileIDs
+							}
+						});
+					})
+					.then(res => {
+						if (res && res.result && res.result.code === 200) {
+							uni.hideLoading();
+							uni.showToast({ title: '发布成功', icon: 'success' });
+							setTimeout(() => { uni.navigateBack(); }, 800);
+						} else {
+							throw new Error(res.result.msg);
+						}
+					})
+					.catch(err => {
+						uni.hideLoading();
+						if (err && err.message !== '请先登录') {
+							uni.showToast({ title: err.message || '发布失败', icon: 'none' });
+						}
+					});
 			}
 		}
 	}
@@ -273,7 +320,7 @@
 		transition: background 0.2s, opacity 0.2s;
 	}
 	.btn-publish.disabled {
-		background: #a2a2a5 !important;
+		background: #b2b2b4 !important;
 		color: #dadde3 !important;
 		opacity: 0.7;
 		pointer-events: none;

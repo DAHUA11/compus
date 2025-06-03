@@ -1,0 +1,66 @@
+{
+	"bsonType": "object",
+	"required": ["content_type", "category", "content", "user_id", "create_time", "status"],
+	"permission": {
+		"read": true,
+		"create": "auth.uid != null",
+		"update": "doc.user_id == auth.uid",
+		"delete": "doc.user_id == auth.uid"
+	},
+	"properties": {
+		"_id": {
+			"bsonType": "string",
+			"description": "ID，系统自动生成"
+		},
+		"user_id": {
+			"bsonType": "string",
+			"description": "发布者用户ID"
+		},
+		"content_type": {
+			"bsonType": "string",
+			"description": "内容类型：post-普通帖子，activity-活动帖子",
+			"enum": ["post", "activity"]
+		},
+		"title": {
+			"bsonType": "string",
+			"description": "标题，活动帖子必填"
+		},
+		"category": {
+			"bsonType": "string",
+			"description": "分类：失物招领、讨论等"
+		},
+		"content": {
+			"bsonType": "string",
+			"description": "内容正文"
+		},
+		"files": {
+			"bsonType": "array",
+			"description": "附件文件列表",
+			"items": {
+				"bsonType": "string"
+			}
+		},
+		"activity_time": {
+			"bsonType": "number",
+			"description": "活动时间，活动帖子必填"
+		},
+		"location": {
+			"bsonType": "string",
+			"description": "活动地点，活动帖子必填"
+		},
+		"max_attendees": {
+			"bsonType": "int",
+			"description": "最大参与人数，活动帖子可选",
+			"minimum": 1
+		},
+		"create_time": {
+			"bsonType": "number",
+			"description": "创建时间"
+		},
+		"status": {
+			"bsonType": "string",
+			"description": "状态：published-已发布，draft-草稿，deleted-已删除",
+			"enum": ["published", "draft", "deleted"]
+		}
+	}
+}

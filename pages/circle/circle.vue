@@ -136,9 +136,26 @@
 			</view>
 		</view>
 		
-		<!-- 悬浮按钮 -->
-		<view class="float-btn flex-center" @tap="createPost">
-			<text class="iconfont icon-bianji"></text>
+		<!-- 悬浮操作按钮 -->
+		<view>
+			<!-- 遮罩层 -->
+			<view v-if="showFabMenu" class="fab-mask" @tap="closeFabMenu"></view>
+			<!-- 弹出菜单 -->
+			<view v-if="showFabMenu" class="fab-menu">
+				<view class="fab-menu-item" @tap="publishPost" >
+					<text class="iconfont icon-bianji"></text>
+					<text class="fab-menu-text">发帖子</text>
+				</view>
+				<view class="fab-menu-item" @tap="publishActivity">
+					<text class="iconfont icon-huodong"></text>
+					<text class="fab-menu-text">发活动</text>
+				</view>
+			</view>
+			<!-- 主悬浮按钮 -->
+			<view class="float-btn flex-center" @tap="toggleFabMenu">
+				<text class="iconfont" 
+				:class="showFabMenu ? 'icon-jianshao' : 'icon-a-chuangjiantianjiapiliangtianjia'"></text>
+			</view>
 		</view>
 	</view>
 </template>
@@ -251,7 +268,8 @@ export default {
 					comments: 8,
 					isLiked: false
 				}
-			]
+			],
+			showFabMenu: false
 		};
 	},
 	onLoad() {
@@ -408,20 +426,36 @@ export default {
 		},
 		
 		// 发布新帖子
-		createPost() {
-			console.log('发布新帖子');
-			// 实际项目中应跳转到发帖页面
-			uni.showToast({
-				title: '发帖功能开发中',
-				icon: 'none'
+		publishPost() {
+			this.showFabMenu = false;
+			// 跳转到发帖页面
+			uni.showToast({ title: '发帖功能开发中', icon: 'none' });
+			uni.navigateTo({
+				url: '/pages/circle/post-create/post-create'
 			});
 		},
+	
 		
 		// 查看全部活动
 		viewAllActivities() {
 			console.log('查看全部活动');
 			uni.navigateTo({
 				url: '/pages/circle/activities/activities'
+			});
+		},
+		
+		toggleFabMenu() {
+			this.showFabMenu = !this.showFabMenu;
+		},
+		closeFabMenu() {
+			this.showFabMenu = false;
+		},
+		publishActivity() {
+			this.showFabMenu = false;
+			// 跳转到发活动页面
+			uni.showToast({ title: '发活动功能开发中', icon: 'none' });
+			uni.navigateTo({
+				url: '/pages/circle/addactivities/addactivities'
 			});
 		}
 	}
@@ -687,6 +721,52 @@ export default {
 	padding: $spacing-xs $spacing-xs;
 }
 
+.fab-mask {
+	position: fixed;
+	left: 0; top: 0; right: 0; bottom: 0;
+	background: rgba(0,0,0,0.18);
+	z-index: 98;
+}
+
+.fab-menu {
+	position: fixed;
+	right: 48rpx;
+	bottom: 220rpx;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	z-index: 100;
+	animation: fab-fade-in 0.25s;
+}
+@keyframes fab-fade-in {
+	from { opacity: 0; transform: translateY(30rpx);}
+	to { opacity: 1; transform: translateY(0);}
+}
+.fab-menu-item {
+	display: flex;
+	align-items: center;
+	background: #fffbe8;
+	border-radius: 32rpx;
+	box-shadow: 0 2rpx 12rpx rgba(77,124,191,0.13);
+	padding: 18rpx 32rpx;
+	margin-bottom: 24rpx;
+	font-size: 30rpx;
+	color: #333;
+	transition: all 0.2s;
+	&:active {
+		background: #ffe9a7;
+		transform: scale(0.97);
+	}
+	.iconfont {
+		font-size: 38rpx;
+		margin-right: 16rpx;
+		color: #f7c948;
+	}
+}
+.fab-menu-text {
+	font-weight: 600;
+	font-size: 28rpx;
+}
 .float-btn {
 	position: fixed;
 	right: $spacing-lg;

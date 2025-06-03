@@ -1,0 +1,197 @@
+/**
+ * 这里是uni-app内置的常用样式变量
+ *
+ * uni-app 官方扩展插件及插件市场（https://ext.dcloud.net.cn）上很多三方插件均使用了这些样式变量
+ * 如果你是插件开发者，建议你使用scss预处理，并在插件代码中直接使用这些变量（无需 import 这个文件），方便用户通过搭积木的方式开发整体风格一致的App
+ *
+ */
+/**
+ * 如果你是App开发者（插件使用者），你可以通过修改这些变量来定制自己的插件主题，实现自定义主题功能
+ *
+ * 如果你的项目同样使用了scss预处理，你也可以直接在你的 scss 代码中使用如下变量，同时无需 import 这个文件
+ */
+/* 颜色变量 */
+/* 行为相关颜色 */
+/* 文字基本颜色 */
+/* 背景颜色 */
+/* 边框颜色 */
+/* 尺寸变量 */
+/* 文字尺寸 */
+/* 图片尺寸 */
+/* Border Radius */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+.credit-detail-page {
+  background: linear-gradient(180deg, #f5f6fa 60%, #eaf2ff 100%);
+  min-height: 100vh;
+  padding-bottom: 40rpx;
+}
+.credit-summary {
+  background: #fff;
+  border-radius: 22rpx;
+  box-shadow: 0 6px 24px rgba(64, 128, 255, 0.1);
+  margin: 36rpx 24rpx 0 24rpx;
+  padding: 38rpx 24rpx 28rpx 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.credit-score-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+.credit-score-value {
+  font-size: 44px;
+  font-weight: 800;
+  color: #4080FF;
+  margin: 10rpx 0 2rpx 0;
+  letter-spacing: 2px;
+}
+.credit-level {
+  font-size: 20px;
+  font-weight: 700;
+  color: #222;
+}
+.credit-desc {
+  font-size: 16px;
+  color: #888;
+  margin-top: 10rpx;
+}
+.credit-formula {
+  background: #fff;
+  border-radius: 18rpx;
+  margin: 32rpx 24rpx 0 24rpx;
+  padding: 26rpx 22rpx 20rpx 22rpx;
+  box-shadow: 0 2px 8px rgba(64, 128, 255, 0.08);
+}
+.formula-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #4080FF;
+  margin-bottom: 10rpx;
+}
+.formula-content {
+  font-size: 15px;
+  color: #444;
+}
+.credit-rules {
+  background: #fff;
+  border-radius: 18rpx;
+  margin: 32rpx 24rpx 0 24rpx;
+  padding: 26rpx 22rpx 20rpx 22rpx;
+  box-shadow: 0 2px 8px rgba(64, 128, 255, 0.08);
+}
+.rules-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #4080FF;
+  margin-bottom: 14rpx;
+}
+.level-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+.level-item {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  margin-bottom: 2rpx;
+}
+.level-label {
+  font-weight: 700;
+  margin: 0 10rpx;
+}
+.level-desc {
+  color: #666;
+}
+.diamond .level-label {
+  color: #4FC3F7;
+}
+.gold .level-label {
+  color: #FFD700;
+}
+.silver .level-label {
+  color: #B0C4DE;
+}
+.blacklist .level-label {
+  color: #FF5252;
+}
+.credit-tab {
+  margin: 36rpx 24rpx 0 24rpx;
+}
+.tab-bar {
+  display: flex;
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 28rpx 0;
+  font-size: 17px;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.2s;
+  letter-spacing: 1px;
+}
+.tab-item.active {
+  color: #4080FF;
+  font-weight: 700;
+  background: linear-gradient(to right, #eaf2ff, #f5faff);
+  box-shadow: 0 2px 8px rgba(64, 128, 255, 0.06);
+}
+.credit-list {
+  margin: 36rpx 24rpx 0 24rpx;
+}
+.credit-item {
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 2px 8px rgba(64, 128, 255, 0.08);
+  padding: 22rpx 20rpx 18rpx 20rpx;
+  margin-bottom: 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.credit-info {
+  flex: 1;
+  margin-left: 16rpx;
+}
+.credit-desc-main {
+  font-size: 15px;
+  color: #222;
+  font-weight: 600;
+}
+.credit-time {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 4rpx;
+  display: block;
+}
+.credit-amount {
+  font-size: 18px;
+  font-weight: 700;
+  min-width: 60rpx;
+  text-align: right;
+}
+.credit-amount.plus {
+  color: #4CAF50;
+}
+.credit-amount.minus {
+  color: #FF5252;
+}
+.empty-tip {
+  text-align: center;
+  color: #bbb;
+  margin-top: 80rpx;
+  font-size: 17px;
+  letter-spacing: 1px;
+}

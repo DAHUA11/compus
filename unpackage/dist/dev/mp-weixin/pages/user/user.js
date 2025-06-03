@@ -72,6 +72,16 @@ const _sfc_main = {
         url: `/pages/user/user-task/user-task?type=${type}`
       });
     };
+    const gopointsdetails = () => {
+      common_vendor.index.navigateTo({
+        url: "/pages/user/user-pointsdetails/user-pointsdetails"
+      });
+    };
+    const gocreditdetails = () => {
+      common_vendor.index.navigateTo({
+        url: "/pages/user/user-creditdetails/user-creditdetails"
+      });
+    };
     const getUserInfo = () => {
       const info = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
       userInfo.value = info && info._id ? {
@@ -105,7 +115,9 @@ const _sfc_main = {
       defaultAvatarUrl,
       goToLogin,
       goedituserinfo,
-      goToUserTask
+      goToUserTask,
+      gopointsdetails,
+      gocreditdetails
     };
   }
 };
@@ -129,22 +141,24 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       color: "#4080FF"
     }),
     e: common_vendor.t($setup.userInfo.score || 0),
-    f: ($setup.userInfo.score || 0) / 3e3 * 100 + "%",
-    g: common_vendor.t($setup.userInfo.creditLevel || "A级"),
-    h: $setup.userInfo.avatar_file && $setup.userInfo.avatar_file.url ? $setup.userInfo.avatar_file.url : $setup.defaultAvatarUrl,
-    i: common_vendor.p({
+    f: common_vendor.o((...args) => $setup.gopointsdetails && $setup.gopointsdetails(...args)),
+    g: ($setup.userInfo.score || 0) / 3e3 * 100 + "%",
+    h: common_vendor.t($setup.userInfo.creditLevel || "A级"),
+    i: common_vendor.o((...args) => $setup.gocreditdetails && $setup.gocreditdetails(...args)),
+    j: $setup.userInfo.avatar_file && $setup.userInfo.avatar_file.url ? $setup.userInfo.avatar_file.url : $setup.defaultAvatarUrl,
+    k: common_vendor.p({
       type: "compose",
       size: "18",
       color: "#4080FF"
     }),
-    j: common_vendor.o((...args) => $setup.goedituserinfo && $setup.goedituserinfo(...args))
+    l: common_vendor.o((...args) => $setup.goedituserinfo && $setup.goedituserinfo(...args))
   } : {
-    k: common_assets._imports_0$1,
-    l: common_vendor.o((...args) => $setup.goToLogin && $setup.goToLogin(...args))
+    m: common_assets._imports_0$1,
+    n: common_vendor.o((...args) => $setup.goToLogin && $setup.goToLogin(...args))
   }, {
-    m: $setup.isLoggedIn
+    o: $setup.isLoggedIn
   }, $setup.isLoggedIn ? {
-    n: common_vendor.f($setup.navItems, (item, index, i0) => {
+    p: common_vendor.f($setup.navItems, (item, index, i0) => {
       return {
         a: "239efa2b-2-" + i0,
         b: common_vendor.p({
@@ -158,37 +172,28 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       };
     })
   } : {}, {
-    o: common_vendor.f($setup.taskData, (item, index, i0) => {
+    q: common_vendor.f($setup.taskData, (item, index, i0) => {
       return {
         a: common_vendor.t(item.value),
         b: common_vendor.t(item.label),
         c: index
       };
     }),
-    p: common_vendor.f($setup.circleData, (item, index, i0) => {
+    r: common_vendor.f($setup.circleData, (item, index, i0) => {
       return {
         a: common_vendor.t(item.value),
         b: common_vendor.t(item.label),
         c: index
       };
     }),
-    q: common_vendor.f($setup.featureItems, (item, index, i0) => {
-      return {
-        a: item.imageUrl,
-        b: common_vendor.t(item.text),
-        c: index
-      };
-    }),
-    r: $setup.isDarkMode,
-    s: common_vendor.o((...args) => $setup.toggleDarkMode && $setup.toggleDarkMode(...args)),
-    t: common_vendor.f($setup.settingItems, (item, index, i0) => {
+    s: common_vendor.f($setup.settingItems, (item, index, i0) => {
       return {
         a: common_vendor.t(item.text),
         b: "239efa2b-3-" + i0,
         c: index
       };
     }),
-    v: common_vendor.p({
+    t: common_vendor.p({
       type: "right",
       size: "16",
       color: "#C8C9CC"

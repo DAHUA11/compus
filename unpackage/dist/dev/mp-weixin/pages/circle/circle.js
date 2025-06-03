@@ -107,7 +107,8 @@ const _sfc_main = {
           comments: 8,
           isLiked: false
         }
-      ]
+      ],
+      showFabMenu: false
     };
   },
   onLoad() {
@@ -182,14 +183,14 @@ const _sfc_main = {
     },
     // 查看活动详情
     viewActivityDetail(activity) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:347", "查看活动详情", activity);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:365", "查看活动详情", activity);
       common_vendor.index.navigateTo({
         url: "/pages/circle/activity-datail/activity-datail?id=" + activity.id
       });
     },
     // 参与活动
     joinActivity(activity) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:355", "参与活动", activity);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:373", "参与活动", activity);
       common_vendor.index.showToast({
         title: "已报名参与：" + activity.title,
         icon: "success"
@@ -218,7 +219,7 @@ const _sfc_main = {
     },
     // 评论帖子
     commentPost(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:392", "评论帖子", post);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:410", "评论帖子", post);
       common_vendor.index.showToast({
         title: "评论功能开发中",
         icon: "none"
@@ -226,25 +227,38 @@ const _sfc_main = {
     },
     // 分享帖子
     sharePost(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:402", "分享帖子", post);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:420", "分享帖子", post);
       common_vendor.index.showToast({
         title: "分享功能开发中",
         icon: "none"
       });
     },
     // 发布新帖子
-    createPost() {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:412", "发布新帖子");
-      common_vendor.index.showToast({
-        title: "发帖功能开发中",
-        icon: "none"
+    publishPost() {
+      this.showFabMenu = false;
+      common_vendor.index.showToast({ title: "发帖功能开发中", icon: "none" });
+      common_vendor.index.navigateTo({
+        url: "/pages/circle/post-create/post-create"
       });
     },
     // 查看全部活动
     viewAllActivities() {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:422", "查看全部活动");
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:441", "查看全部活动");
       common_vendor.index.navigateTo({
         url: "/pages/circle/activities/activities"
+      });
+    },
+    toggleFabMenu() {
+      this.showFabMenu = !this.showFabMenu;
+    },
+    closeFabMenu() {
+      this.showFabMenu = false;
+    },
+    publishActivity() {
+      this.showFabMenu = false;
+      common_vendor.index.showToast({ title: "发活动功能开发中", icon: "none" });
+      common_vendor.index.navigateTo({
+        url: "/pages/circle/addactivities/addactivities"
       });
     }
   }
@@ -322,7 +336,17 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   }, $data.loading ? {} : {}, {
     n: $data.noMore && $data.posts.length > 0
   }, $data.noMore && $data.posts.length > 0 ? {} : {}, {
-    o: common_vendor.o((...args) => $options.createPost && $options.createPost(...args))
+    o: $data.showFabMenu
+  }, $data.showFabMenu ? {
+    p: common_vendor.o((...args) => $options.closeFabMenu && $options.closeFabMenu(...args))
+  } : {}, {
+    q: $data.showFabMenu
+  }, $data.showFabMenu ? {
+    r: common_vendor.o((...args) => $options.publishPost && $options.publishPost(...args)),
+    s: common_vendor.o((...args) => $options.publishActivity && $options.publishActivity(...args))
+  } : {}, {
+    t: common_vendor.n($data.showFabMenu ? "icon-jianshao" : "icon-a-chuangjiantianjiapiliangtianjia"),
+    v: common_vendor.o((...args) => $options.toggleFabMenu && $options.toggleFabMenu(...args))
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

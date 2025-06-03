@@ -7156,9 +7156,9 @@ function initOnError() {
   };
 }
 function initRuntimeSocketService() {
-  const hosts = "10.46.6.10,127.0.0.1";
+  const hosts = "10.46.0.241,127.0.0.1";
   const port = "8090";
-  const id = "mp-weixin_ByfCX6";
+  const id = "mp-weixin_VAfQOE";
   const lazy = typeof swan !== "undefined";
   let restoreError = lazy ? () => {
   } : initOnError();
@@ -8239,6 +8239,30 @@ const pages = [
       enablePullDownRefresh: false,
       navigationBarTitleText: "实名认证"
     }
+  },
+  {
+    path: "pages/user/user-pointsdetails/user-pointsdetails",
+    style: {
+      navigationBarTitleText: "积分详情"
+    }
+  },
+  {
+    path: "pages/user/user-creditdetails/user-creditdetails",
+    style: {
+      navigationBarTitleText: "信用等级"
+    }
+  },
+  {
+    path: "pages/circle/addactivities/addactivities",
+    style: {
+      navigationBarTitleText: "发布活动"
+    }
+  },
+  {
+    path: "pages/circle/post-create/post-create",
+    style: {
+      navigationBarTitleText: "发布帖子"
+    }
   }
 ];
 const globalStyle = {
@@ -8602,7 +8626,7 @@ class S {
 function T(e2) {
   return e2 && "string" == typeof e2 ? JSON.parse(e2) : e2;
 }
-const b = true, E = "mp-weixin", P = T(define_process_env_UNI_SECURE_NETWORK_CONFIG_default), C = E, A = T('{"address":["127.0.0.1","10.46.6.10"],"servePort":7000,"debugPort":9000,"initialLaunchType":"local","skipFiles":["<node_internals>/**","D:/Software/hbuilder/HBuilderX/plugins/unicloud/**/*.js"]}'), O = T('[{"provider":"aliyun","spaceName":"compus000","spaceId":"mp-f475c10f-31d0-4fb8-a8fa-89f674307ebc","clientSecret":"vyU9IRh+L6OqzCrSXAOLyg==","endpoint":"https://api.next.bspapp.com"}]') || [];
+const b = true, E = "mp-weixin", P = T(define_process_env_UNI_SECURE_NETWORK_CONFIG_default), C = E, A = T('{"address":["127.0.0.1","10.46.0.241"],"servePort":7000,"debugPort":9000,"initialLaunchType":"local","skipFiles":["<node_internals>/**","D:/Software/hbuilder/HBuilderX/plugins/unicloud/**/*.js"]}'), O = T('[{"provider":"aliyun","spaceName":"compus000","spaceId":"mp-f475c10f-31d0-4fb8-a8fa-89f674307ebc","clientSecret":"vyU9IRh+L6OqzCrSXAOLyg==","endpoint":"https://api.next.bspapp.com"}]') || [];
 let N = "";
 try {
   N = "__UNI__2EF5B03";

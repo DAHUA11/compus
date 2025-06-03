@@ -8,13 +8,13 @@
 						<text class="user-card-title">{{ userInfo.username || userInfo.nickname || '未设置昵称' }}的任务中心</text>
 						<uni-icons  @click="goedituserinfo" type="compose" size="16" color="#4080FF" class="edit-icon" />
 					</view>
-					<view class="user-card-score">积分余额: {{ userInfo.score || 0 }}分</view>
+					<view class="user-card-score" @click="gopointsdetails">积分余额: {{ userInfo.score || 0 }}分</view>
 					<view class="user-card-progress">
 						<view class="progress-bar-bg">
 							<view class="progress-bar" :style="{ width: ((userInfo.score || 0) / 3000 * 100) + '%' }"></view>
 						</view>
 					</view>
-					<view class="user-card-credit">信用等级: {{ userInfo.creditLevel || 'A级' }}</view>
+					<view class="user-card-credit" @click="gocreditdetails">信用等级: {{ userInfo.creditLevel || 'A级' }}</view>
 				</view>
 				<view class="user-card-avatar" @click="goedituserinfo">
 					<image class="avatar" :src="userInfo.avatar_file && userInfo.avatar_file.url ? userInfo.avatar_file.url : defaultAvatarUrl" mode="aspectFill"></image>
@@ -66,21 +66,8 @@
 				</view>
 			</view>
 		</view>
-		<!-- 功能区域 -->
-		<view class="feature-section">
-			<view class="feature-item cursor-pointer" v-for="(item, index) in featureItems" :key="index">
-				<view class="feature-icon">
-					<image class="feature-image" :src="item.imageUrl" mode="aspectFill"></image>
-				</view>
-				<text class="feature-text">{{ item.text }}</text>
-			</view>
-		</view>
 		<!-- 设置项 -->
 		<view class="settings-section">
-			<view class="setting-item cursor-pointer">
-				<text class="setting-text">深色模式</text>
-				<switch :checked="isDarkMode" @change="toggleDarkMode" color="#4080FF" />
-			</view>
 			<view class="setting-item cursor-pointer" v-for="(item, index) in settingItems" :key="index">
 				<text class="setting-text">{{ item.text }}</text>
 				<uni-icons type="right" size="16" color="#C8C9CC"></uni-icons>
@@ -184,6 +171,18 @@ export default {
 				url: `/pages/user/user-task/user-task?type=${type}`
 			})
 		}
+		//跳转到积分详情页面
+		const gopointsdetails = () =>{
+			uni.navigateTo({
+				url: '/pages/user/user-pointsdetails/user-pointsdetails'
+			})
+		}
+		//跳转到信用等级页面
+		const gocreditdetails = () =>{
+			uni.navigateTo({
+				url:"/pages/user/user-creditdetails/user-creditdetails"
+			})
+		}
 		const getUserInfo = () => {
 			const info = uni.getStorageSync('uni-id-pages-userInfo')
 			userInfo.value = info && info._id ? {
@@ -192,7 +191,7 @@ export default {
 				creditLevel: info.creditLevel || 'A级' // mock数据
 			} : {}
 		}
-
+		
 		onMounted(() => {
 			checkLoginStatus()
 			getUserInfo()
@@ -221,7 +220,9 @@ export default {
 			defaultAvatarUrl,
 			goToLogin,
 			goedituserinfo,
-			goToUserTask
+			goToUserTask,
+			gopointsdetails,
+			gocreditdetails
 		}
 	}
 }
@@ -359,42 +360,6 @@ export default {
 	.data-label {
 		font-size: 12px;
 		color: #666666;
-	}
-
-	/* 功能区域 */
-	.feature-section {
-		display: flex;
-		flex-wrap: wrap;
-		background-color: #FFFFFF;
-		border-radius: 16rpx;
-		padding: 30rpx;
-		margin-bottom: 30rpx;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-	}
-
-	.feature-item {
-		width: 25%;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		margin-bottom: 20rpx;
-	}
-
-	.feature-icon {
-		width: 80rpx;
-		height: 80rpx;
-		margin-bottom: 10rpx;
-	}
-
-	.feature-image {
-		width: 100%;
-		height: 100%;
-		border-radius: 16rpx;
-	}
-
-	.feature-text {
-		font-size: 14px;
-		color: #333333;
 	}
 
 	/* 设置区域 */

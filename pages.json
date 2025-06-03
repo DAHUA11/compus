@@ -133,6 +133,34 @@
 				"enablePullDownRefresh": false,
 				"navigationBarTitleText": "实名认证"
 			}
+		},
+		{
+			"path" : "pages/user/user-pointsdetails/user-pointsdetails",
+			"style" : 
+			{
+				"navigationBarTitleText" : "积分详情"
+			}
+		},
+		{
+			"path" : "pages/user/user-creditdetails/user-creditdetails",
+			"style" : 
+			{
+				"navigationBarTitleText" : "信用等级"
+			}
+		},
+		{
+			"path" : "pages/circle/addactivities/addactivities",
+			"style" : 
+			{
+				"navigationBarTitleText" : "发布活动"
+			}
+		},
+		{
+			"path" : "pages/circle/post-create/post-create",
+			"style" : 
+			{
+				"navigationBarTitleText" : "发布帖子"
+			}
 		}
 		
 	],

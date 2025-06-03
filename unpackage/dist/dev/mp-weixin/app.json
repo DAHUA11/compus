@@ -23,7 +23,11 @@
     "uni_modules/uni-id-pages/pages/register/register-admin",
     "uni_modules/uni-id-pages/pages/userinfo/set-pwd/set-pwd",
     "uni_modules/uni-id-pages/pages/userinfo/deactivate/deactivate",
-    "uni_modules/uni-id-pages/pages/userinfo/realname-verify/realname-verify"
+    "uni_modules/uni-id-pages/pages/userinfo/realname-verify/realname-verify",
+    "pages/user/user-pointsdetails/user-pointsdetails",
+    "pages/user/user-creditdetails/user-creditdetails",
+    "pages/circle/addactivities/addactivities",
+    "pages/circle/post-create/post-create"
   ],
   "window": {
     "navigationBarTextStyle": "black",

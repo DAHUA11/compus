@@ -880,6 +880,60 @@ to {
   display: inline-flex;
   padding: 15rpx 15rpx;
 }
+.fab-mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.18);
+  z-index: 98;
+}
+.fab-menu {
+  position: fixed;
+  right: 48rpx;
+  bottom: 220rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 100;
+  animation: fab-fade-in 0.25s;
+}
+@keyframes fab-fade-in {
+from {
+    opacity: 0;
+    transform: translateY(30rpx);
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
+.fab-menu-item {
+  display: flex;
+  align-items: center;
+  background: #fffbe8;
+  border-radius: 32rpx;
+  box-shadow: 0 2rpx 12rpx rgba(77, 124, 191, 0.13);
+  padding: 18rpx 32rpx;
+  margin-bottom: 24rpx;
+  font-size: 30rpx;
+  color: #333;
+  transition: all 0.2s;
+}
+.fab-menu-item:active {
+  background: #ffe9a7;
+  transform: scale(0.97);
+}
+.fab-menu-item .iconfont {
+  font-size: 38rpx;
+  margin-right: 16rpx;
+  color: #f7c948;
+}
+.fab-menu-text {
+  font-weight: 600;
+  font-size: 28rpx;
+}
 .float-btn {
   position: fixed;
   right: 30rpx;

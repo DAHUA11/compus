@@ -6,6 +6,20 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "4511969",
+      "name": "减少",
+      "font_class": "jianshao",
+      "unicode": "e644",
+      "unicode_decimal": 58948
+    },
+    {
+      "icon_id": "36747428",
+      "name": "添加",
+      "font_class": "a-chuangjiantianjiapiliangtianjia",
+      "unicode": "e65e",
+      "unicode_decimal": 58974
+    },
+    {
       "icon_id": "5723094",
       "name": "爱心捐赠",
       "font_class": "aixinjuanzeng",

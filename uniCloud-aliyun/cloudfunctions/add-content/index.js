@@ -57,7 +57,9 @@ exports.main = async (event, context) => {
 		files: files || [],
 		user_id,
 		create_time: Date.now(),
-		status: 'published'
+		status: 'published',
+		like_count: 0,
+		comment_count: 0
 	}
 	
 	// 根据内容类型添加特定字段

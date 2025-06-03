@@ -61,6 +61,18 @@
 			"bsonType": "string",
 			"description": "状态：published-已发布，draft-草稿，deleted-已删除",
 			"enum": ["published", "draft", "deleted"]
+		},
+		"like_count": {
+			"bsonType": "int",
+			"description": "点赞数量",
+			"default": 0,
+			"minimum": 0
+		},
+		"comment_count": {
+			"bsonType": "int",
+			"description": "评论数量",
+			"default": 0,
+			"minimum": 0
 		}
 	}
 }

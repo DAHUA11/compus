@@ -189,30 +189,7 @@ export default {
 				{ name: '以物换物', iconImg: '/static/images/cat5.jpg' }
 			],
 			filterTabs: ['最新', '热门', '关注'],
-			activities: [
-				{
-					image: '/static/images/activity1.png',
-					tag: '热门',
-					tagClass: 'hot',
-					title: '校园文化节',
-					description: '一年一度的校园文化节即将开幕，届时将有各种各样文化活动和表演，欢迎大家参与！',
-					time: '5月20日-22日',
-					location: '学校体育馆',
-					avatars: ['/static/images/avatar1.png', '/static/images/avatar2.png', '/static/images/avatar3.png'],
-					participants: 128
-				},
-				{
-					image: '/static/images/activity2.png',
-					tag: '官方',
-					tagClass: 'official',
-					title: '创新创业大赛',
-					description: '展示你的创新想法和创业计划，与来自各个学院的同学一起交流和竞争！',
-					time: '6月5日-15日',
-					location: '学校科技楼',
-					avatars: ['/static/images/avatar4.png', '/static/images/avatar5.png', '/static/images/avatar6.png'],
-					participants: 86
-				}
-			],
+			activities: [],
 			pinnedPosts: [
 				{
 					id: 1,
@@ -244,11 +221,12 @@ export default {
 			showFabMenu: false
 		};
 	},
-	onLoad() {
+	async onLoad() {
 		// 页面加载时初始化数据
 		this.initData();
 		this.fetchPostsFromCloud();
 		uni.setStorageSync('posts', this.posts);
+		await this.fetchActivitiesFromCloud();
 	},
 	onShow() {
 		this.fetchPostsFromCloud();
@@ -606,6 +584,51 @@ export default {
 			if (category === '问答') return 'question';
 			// 其他分类...
 			return '';
+		},
+		// 获取活动数据
+		async fetchActivitiesFromCloud() {
+			this.loading = true;
+			// 获取所有活动
+			const res = await uniCloud.database().collection('add-content')
+				.where({ content_type: 'activity', status: 'published' })
+				.orderBy('create_time', 'desc')
+				.get();
+			const activities = res.result.data;
+			// 获取所有 user_id
+			const userIds = [...new Set(activities.map(item => item.user_id).filter(Boolean))];
+			let userMap = {};
+			if (userIds.length) {
+				const userRes = await uniCloud.database().collection('uni-id-users')
+					.where({ _id: uniCloud.database().command.in(userIds) })
+					.field('_id,avatar_file,nickname')
+					.get();
+				userRes.result.data.forEach(u => {
+					userMap[u._id] = u;
+				});
+			}
+			// 组装活动数据
+			this.activities = activities.map(item => {
+				const user = userMap[item.user_id] || {};
+				return {
+					_id: item._id,
+					image: item.files && item.files.length ? item.files[0] : '/static/images/activity-default.png',
+					tag: item.category || '',
+					tagClass: item.category === '官方' ? 'official' : (item.category === '热门' ? 'hot' : ''),
+					title: item.title,
+					description: item.content,
+					time: this.formatActivityTime(item.activity_time),
+					location: item.location || '',
+					avatars: user.avatar_file && user.avatar_file.url ? [user.avatar_file.url] : [],
+					participants: item.attendee_count || 0
+				}
+			});
+			this.loading = false;
+		},
+		// 活动时间格式化
+		formatActivityTime(ts) {
+			if (!ts) return '';
+			const date = new Date(ts);
+			return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
 		}
 	}
 };

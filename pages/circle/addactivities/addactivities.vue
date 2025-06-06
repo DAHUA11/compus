@@ -46,6 +46,18 @@
       <input class="row-value" v-model="place" placeholder="请输入活动地点" />
     </view>
 
+    <!-- 新增：最大参与人数 -->
+    <view class="section row-section">
+      <view class="row-label">最大参与人数</view>
+      <input 
+        class="row-value" 
+        v-model.number="maxAttendees" 
+        type="number" 
+        placeholder="请输入最大参与人数"
+        min="1"
+      />
+    </view>
+
     <!-- 活动标签（多选） -->
     <view class="section tag-section">
       <view class="row-label">活动标签</view>
@@ -91,11 +103,19 @@ export default {
       place: '',
       tagOptions: ['户外', '运动', '娱乐', '交友', '学习', '比赛', '官方', '自发'],
       selectedTags: [],
+      maxAttendees: '', // 新增：最大参与人数
     };
   },
   computed: {
     canPublish() {
-      return this.cover && this.title.trim() && this.desc.trim() && this.typeIndex !== -1 && this.timeText && this.place.trim();
+      // 新增验证：最大参与人数为大于0的整数
+      return this.cover && 
+             this.title.trim() && 
+             this.desc.trim() && 
+             this.typeIndex !== -1 && 
+             this.timeText && 
+             this.place.trim() && 
+             Number(this.maxAttendees) >= 1; // 新增验证条件
     }
   },
   methods: {
@@ -174,7 +194,7 @@ export default {
               files: fileIDs,
               activity_time: activityTime,
               location: this.place,
-              max_attendees: 0,
+              max_attendees: Number(this.maxAttendees), // 传递用户输入的数值
               user_id: userId,
               tags: this.selectedTags
             }

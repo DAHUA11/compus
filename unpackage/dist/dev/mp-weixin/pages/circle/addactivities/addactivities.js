@@ -16,12 +16,14 @@ const _sfc_main = {
       timeText: "",
       place: "",
       tagOptions: ["户外", "运动", "娱乐", "交友", "学习", "比赛", "官方", "自发"],
-      selectedTags: []
+      selectedTags: [],
+      maxAttendees: ""
+      // 新增：最大参与人数
     };
   },
   computed: {
     canPublish() {
-      return this.cover && this.title.trim() && this.desc.trim() && this.typeIndex !== -1 && this.timeText && this.place.trim();
+      return this.cover && this.title.trim() && this.desc.trim() && this.typeIndex !== -1 && this.timeText && this.place.trim() && Number(this.maxAttendees) >= 1;
     }
   },
   methods: {
@@ -74,7 +76,7 @@ const _sfc_main = {
       const activityTime = new Date(2024, parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute)).getTime();
       uploadCover.then((fileIDs) => {
         const userInfo = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
-        common_vendor.index.__f__("log", "at pages/circle/addactivities/addactivities.vue:160", "活动页面 userInfo:", userInfo);
+        common_vendor.index.__f__("log", "at pages/circle/addactivities/addactivities.vue:180", "活动页面 userInfo:", userInfo);
         const userId = userInfo && userInfo._id ? userInfo._id : "";
         if (!userId) {
           common_vendor.index.hideLoading();
@@ -91,7 +93,8 @@ const _sfc_main = {
             files: fileIDs,
             activity_time: activityTime,
             location: this.place,
-            max_attendees: 0,
+            max_attendees: Number(this.maxAttendees),
+            // 传递用户输入的数值
             user_id: userId,
             tags: this.selectedTags
           }
@@ -142,7 +145,11 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     n: common_vendor.o((...args) => $options.onTimeChange && $options.onTimeChange(...args)),
     o: $data.place,
     p: common_vendor.o(($event) => $data.place = $event.detail.value),
-    q: common_vendor.f($data.tagOptions, (tag, idx, i0) => {
+    q: $data.maxAttendees,
+    r: common_vendor.o(common_vendor.m(($event) => $data.maxAttendees = $event.detail.value, {
+      number: true
+    })),
+    s: common_vendor.f($data.tagOptions, (tag, idx, i0) => {
       return {
         a: common_vendor.t(tag),
         b: idx,
@@ -150,8 +157,8 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         d: common_vendor.o(($event) => $options.toggleTag(tag), idx)
       };
     }),
-    r: !$options.canPublish ? 1 : "",
-    s: common_vendor.o(($event) => $options.canPublish ? $options.publishActivity() : null)
+    t: !$options.canPublish ? 1 : "",
+    v: common_vendor.o(($event) => $options.canPublish ? $options.publishActivity() : null)
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

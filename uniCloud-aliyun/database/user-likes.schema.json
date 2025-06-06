@@ -1,0 +1,54 @@
+{
+	"bsonType": "object",
+	"required": ["user_id", "post_id", "create_time"],
+	"permission": {
+		"read": "auth.uid != null",
+		"create": "auth.uid != null",
+		"update": false,
+		"delete": "auth.uid != null && auth.uid == doc.user_id"
+	},
+	"properties": {
+		"_id": {
+			"bsonType": "string",
+			"description": "ID，系统自动生成"
+		},
+		"user_id": {
+			"bsonType": "string",
+			"description": "点赞用户ID",
+			"foreignKey": "uni-id-users._id"
+		},
+		"post_id": {
+			"bsonType": "string",
+			"description": "被点赞的帖子ID",
+			"foreignKey": "add-content._id"
+		},
+		"create_time": {
+			"bsonType": "timestamp",
+			"description": "点赞时间"
+		}
+	},
+	"indexes": [
+		{
+			"IndexName": "user_post_unique",
+			"MgoKeySchema": {
+				"MgoIndexKeys": [{
+					"Name": "user_id",
+					"Direction": "1"
+				}, {
+					"Name": "post_id",
+					"Direction": "1"
+				}],
+				"MgoIsUnique": true
+			}
+		},
+		{
+			"IndexName": "post_id_index",
+			"MgoKeySchema": {
+				"MgoIndexKeys": [{
+					"Name": "post_id",
+					"Direction": "1"
+				}]
+			}
+		}
+	]
+}

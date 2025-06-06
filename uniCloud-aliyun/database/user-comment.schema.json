@@ -1,0 +1,85 @@
+{
+	"bsonType": "object",
+	"required": [
+		"content",
+		"author_id",
+		"author_name",
+		"create_time",
+		"target_id",
+		"reply_count",
+		"like_count"
+	],
+	"permission": {
+		"read": true,
+		"create": "auth.uid != null",
+		"update": "auth.uid == doc.author_id",
+		"delete": "auth.uid == doc.author_id"
+	},
+	"properties": {
+		"_id": {
+			"bsonType": "string",
+			"description": "评论唯一标识（自动生成）"
+		},
+		"content": {
+			"bsonType": "string",
+			"description": "评论内容"
+		},
+		"author_id": {
+			"bsonType": "string",
+			"description": "评论者用户ID（关联用户表）",
+			"foreignKey": "uni-id-users._id"
+		},
+		"author_name": {
+			"bsonType": "string",
+			"description": "评论者名字，冗余存储"
+		},
+		"author_avatar": {
+			"bsonType": "string",
+			"description": "评论者头像，冗余存储"
+		},
+		"create_time": {
+			"bsonType": "date",
+			"description": "评论发布时间"
+		},
+		"target_id": {
+			"bsonType": "string",
+			"description": "被评论的目标ID（如：帖子ID）",
+			"foreignKey": "add-content._id"
+		},
+		"reply_count": {
+			"bsonType": "int",
+			"description": "回复数",
+			"default": 0,
+			"minimum": 0
+		},
+		"like_count": {
+			"bsonType": "int",
+			"description": "点赞数",
+			"default": 0,
+			"minimum": 0
+		},
+		"parent_id": {
+			"bsonType": "string",
+			"description": "父评论ID（用于嵌套回复，顶级评论此字段为空）",
+			"foreignKey": "user-comment._id"
+		}
+	},
+	"indexes": [
+		{
+			"IndexName": "target_id_index",
+			"MgoKeySchema": {
+				"MgoIndexKeys": [
+					{ "Name": "target_id", "Direction": "1" }
+				]
+			}
+		},
+		{
+			"IndexName": "parent_id_index",
+			"MgoKeySchema": {
+				"MgoIndexKeys": [
+					{ "Name": "parent_id", "Direction": "1" }
+				]
+			}
+		}
+	]
+}

@@ -19,7 +19,7 @@
     "ignoreUploadUnusedFiles": false
   },
   "compileType": "miniprogram",
-  "libVersion": "3.8.4",
+  "libVersion": "3.8.7",
   "appid": "wxc21caa8713ccceff",
   "projectname": "Compus",
   "condition": {},

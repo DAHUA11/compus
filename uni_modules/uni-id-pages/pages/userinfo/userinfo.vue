@@ -4,7 +4,7 @@
 		<!-- 头像和昵称 -->
 		<view class="profile-card">
 			<view class="avatar-box">
-				<uni-id-pages-avatar width="120px" height="120px" :showSync="false" />
+				<uni-id-pages-avatar width="120px" height="120px" :showSync="false" @update="handleAvatarUpdate"/>
 			</view>
 			<view class="nickname-box" @click="openNicknameDialog">
 				<text class="nickname">{{ userInfo.nickname || '未设置昵称' }}</text>
@@ -37,24 +37,24 @@
 	</view>
 </template>
 <script>
-const uniIdCo = uniCloud.importObject("uni-id-co")
-  import {
-    store,
-    mutations
-  } from '@/uni_modules/uni-id-pages/common/store.js'
+	const uniIdCo = uniCloud.importObject("uni-id-co")
+	import {
+		store,
+		mutations
+	} from '@/uni_modules/uni-id-pages/common/store.js'
 	export default {
-    computed: {
-      userInfo() {
-        return store.userInfo
-      },
+		computed: {
+			userInfo() {
+				return store.userInfo
+			},
 	  realNameStatus () {
-		  if (!this.userInfo.realNameAuth) {
-			  return 0
-		  }
+				if (!this.userInfo.realNameAuth) {
+					return 0
+				}
 
-		  return this.userInfo.realNameAuth.authStatus
-	  }
-    },
+				return this.userInfo.realNameAuth.authStatus
+			}
+		},
 		data() {
 			return {
 				univerifyStyle: {
@@ -71,7 +71,8 @@ const uniIdCo = uniCloud.importObject("uni-id-co")
 				// },
 				hasPwd: false,
 				showLoginManage: false ,//通过页面传参隐藏登录&退出登录按钮
-				setNicknameIng:false
+				setNicknameIng:false,
+				avatar_file: null
 			}
 		},
 		async onShow() {
@@ -158,12 +159,24 @@ const uniIdCo = uniCloud.importObject("uni-id-co")
 					url: './bind-mobile/bind-mobile'
 				})
 			},
+			handleAvatarUpdate(newAvatar) {
+			// newAvatar 包含 url、extname 等字段（由 uni-id-pages-avatar 组件提供）
+			this.avatar_file = newAvatar
+			console.log(this.avatar_file)
+			// 可选：更新本地缓存（根据业务需求）
+			uni.setStorageSync('uni-id-pages-userInfo', {
+				...this.userInfo,
+				avatar_file: newAvatar
+			})
+			// 可选：触发全局事件通知其他页面更新（根据业务需求）
+			uni.$emit && uni.$emit('refreshUserInfo')
+		},
 			setNickname(val) {
 				let nickname = typeof val === 'object' && val !== null ? val.value : val
 				if (typeof nickname === 'string' && nickname.trim()) {
 					mutations.updateUserInfo({ nickname: nickname.trim() })
 					this.$refs.dialog.close()
-				}
+									}
 			},
 			deactivate(){
 				uni.navigateTo({

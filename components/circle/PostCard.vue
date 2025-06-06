@@ -24,7 +24,7 @@
     <view class="post-actions">
       <view class="action-item like-btn clickable-mp" 
         :class="{ 'is-active': post.isLiked }"
-        @tap.stop="$emit('like', post)">
+        @tap.stop="likePost(post, idx)" :disabled="post.likeLoading">
         <text class="action-icon iconfont icon-dianzan"></text>
         <text class="action-text">{{post.likes}}</text>
       </view>
@@ -56,6 +56,103 @@ export default {
         urls: images,
         current: images[index]
       });
+    },
+    // 点赞
+    likePost(post, index) {
+      if (post.likeLoading) return;
+      post.likeLoading = true;
+
+      const userId = uni.getStorageSync('uni-id-pages-userInfo')._id;
+      if (!userId) {
+        uni.showToast({ title: '请先登录', icon: 'none' });
+        post.likeLoading = false;
+        return;
+      }
+
+      // 本地先行
+      const originLiked = post.isLiked;
+      const originLikes = post.likes;
+
+      if (post.isLiked) {
+        // 先本地取消
+        post.isLiked = false;
+        post.likes -= 1;
+        // 查找点赞记录
+        uniCloud.database().collection('user-likes')
+          .where({
+            user_id: userId,
+            post_id: post._id
+          })
+          .get()
+          .then(res => {
+            if (res.result.data.length > 0) {
+              const likeId = res.result.data[0]._id;
+              uniCloud.database().collection('user-likes')
+                .doc(likeId)
+                .remove()
+                .then(() => {
+                  uniCloud.database().collection('add-content')
+                    .doc(post._id)
+                    .update({
+                      like_count: post.likes
+                    })
+                    .then(() => {
+                      uni.showToast({ title: '已取消点赞', icon: 'none' });
+                      post.likeLoading = false;
+                    })
+                    .catch(() => {
+                      // 回滚
+                      post.isLiked = originLiked;
+                      post.likes = originLikes;
+                      post.likeLoading = false;
+                    });
+                })
+                .catch(() => {
+                  post.isLiked = originLiked;
+                  post.likes = originLikes;
+                  post.likeLoading = false;
+                });
+            } else {
+              post.likeLoading = false;
+            }
+          })
+          .catch(() => {
+            post.isLiked = originLiked;
+            post.likes = originLikes;
+            post.likeLoading = false;
+          });
+      } else {
+        // 先本地加
+        post.isLiked = true;
+        post.likes += 1;
+        uniCloud.database().collection('user-likes')
+          .add({
+            user_id: userId,
+            post_id: post._id,
+            create_time: Date.now()
+          })
+          .then(() => {
+            uniCloud.database().collection('add-content')
+              .doc(post._id)
+              .update({
+                like_count: post.likes
+              })
+              .then(() => {
+                uni.showToast({ title: '已点赞', icon: 'none' });
+                post.likeLoading = false;
+              })
+              .catch(() => {
+                post.isLiked = originLiked;
+                post.likes = originLikes;
+                post.likeLoading = false;
+              });
+          })
+          .catch(() => {
+            post.isLiked = originLiked;
+            post.likes = originLikes;
+            post.likeLoading = false;
+          });
+      }
     }
   }
 }

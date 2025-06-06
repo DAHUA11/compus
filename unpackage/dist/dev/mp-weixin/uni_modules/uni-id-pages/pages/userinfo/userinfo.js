@@ -32,7 +32,8 @@ const _sfc_main = {
       hasPwd: false,
       showLoginManage: false,
       //通过页面传参隐藏登录&退出登录按钮
-      setNicknameIng: false
+      setNicknameIng: false,
+      avatar_file: null
     };
   },
   async onShow() {
@@ -78,13 +79,13 @@ const _sfc_main = {
           uniIdCo.bindMobileByUniverify(e.authResult).then((res) => {
             uni_modules_uniIdPages_common_store.mutations.updateUserInfo();
           }).catch((e2) => {
-            common_vendor.index.__f__("log", "at uni_modules/uni-id-pages/pages/userinfo/userinfo.vue:142", e2);
+            common_vendor.index.__f__("log", "at uni_modules/uni-id-pages/pages/userinfo/userinfo.vue:143", e2);
           }).finally((e2) => {
             common_vendor.index.closeAuthView();
           });
         },
         fail: (err) => {
-          common_vendor.index.__f__("log", "at uni_modules/uni-id-pages/pages/userinfo/userinfo.vue:149", err);
+          common_vendor.index.__f__("log", "at uni_modules/uni-id-pages/pages/userinfo/userinfo.vue:150", err);
           if (err.code == "30002" || err.code == "30001") {
             this.bindMobileBySmsCode();
           }
@@ -95,6 +96,15 @@ const _sfc_main = {
       common_vendor.index.navigateTo({
         url: "./bind-mobile/bind-mobile"
       });
+    },
+    handleAvatarUpdate(newAvatar) {
+      this.avatar_file = newAvatar;
+      common_vendor.index.__f__("log", "at uni_modules/uni-id-pages/pages/userinfo/userinfo.vue:165", this.avatar_file);
+      common_vendor.index.setStorageSync("uni-id-pages-userInfo", {
+        ...this.userInfo,
+        avatar_file: newAvatar
+      });
+      common_vendor.index.$emit && common_vendor.index.$emit("refreshUserInfo");
     },
     setNickname(val) {
       let nickname = typeof val === "object" && val !== null ? val.value : val;
@@ -136,7 +146,7 @@ const _sfc_main = {
             await uni_modules_uniIdPages_common_store.mutations.updateUserInfo();
           },
           fail: async (err) => {
-            common_vendor.index.__f__("log", "at uni_modules/uni-id-pages/pages/userinfo/userinfo.vue:202", err);
+            common_vendor.index.__f__("log", "at uni_modules/uni-id-pages/pages/userinfo/userinfo.vue:215", err);
             common_vendor.index.hideLoading();
           }
         });
@@ -174,61 +184,62 @@ if (!Math) {
 }
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: common_vendor.p({
+    a: common_vendor.o($options.handleAvatarUpdate),
+    b: common_vendor.p({
       width: "120px",
       height: "120px",
       showSync: false
     }),
-    b: common_vendor.t($options.userInfo.nickname || "未设置昵称"),
-    c: common_vendor.p({
+    c: common_vendor.t($options.userInfo.nickname || "未设置昵称"),
+    d: common_vendor.p({
       type: "compose",
       size: "18",
       color: "#4080FF"
     }),
-    d: common_vendor.o((...args) => $options.openNicknameDialog && $options.openNicknameDialog(...args)),
-    e: common_vendor.o($options.bindMobile),
-    f: common_vendor.p({
+    e: common_vendor.o((...args) => $options.openNicknameDialog && $options.openNicknameDialog(...args)),
+    f: common_vendor.o($options.bindMobile),
+    g: common_vendor.p({
       title: "手机号",
       rightText: $options.userInfo.mobile || "未绑定",
       link: true
     }),
-    g: $options.userInfo.email
+    h: $options.userInfo.email
   }, $options.userInfo.email ? {
-    h: common_vendor.p({
+    i: common_vendor.p({
       title: "电子邮箱",
       rightText: $options.userInfo.email
     })
   } : {}, {
-    i: $data.hasPwd
+    j: $data.hasPwd
   }, $data.hasPwd ? {
-    j: common_vendor.o($options.changePassword),
-    k: common_vendor.p({
+    k: common_vendor.o($options.changePassword),
+    l: common_vendor.p({
       title: "修改密码",
       link: true
     })
   } : {}, {
-    l: common_vendor.o($options.realNameVerify),
-    m: common_vendor.p({
+    m: common_vendor.o($options.realNameVerify),
+    n: common_vendor.p({
       title: "实名认证",
       rightText: $options.realNameStatus !== 2 ? "未认证" : "已认证",
       link: true
     }),
-    n: common_vendor.o((...args) => $options.logout && $options.logout(...args)),
-    o: common_vendor.o((...args) => $options.deactivate && $options.deactivate(...args)),
-    p: common_vendor.o($options.setNickname),
-    q: common_vendor.p({
+    o: common_vendor.o((...args) => $options.logout && $options.logout(...args)),
+    p: common_vendor.o((...args) => $options.deactivate && $options.deactivate(...args)),
+    q: common_vendor.o($options.setNickname),
+    r: common_vendor.p({
       mode: "input",
       value: $options.userInfo.nickname,
       inputType: "nickname",
       title: "设置昵称",
       placeholder: "请输入要设置的昵称"
     }),
-    r: common_vendor.sr("dialog", "0be2f605-7"),
-    s: common_vendor.p({
+    s: common_vendor.sr("dialog", "0be2f605-7"),
+    t: common_vendor.p({
       type: "dialog"
     }),
-    t: common_vendor.sr("bind-mobile-by-sms", "0be2f605-9"),
-    v: common_vendor.o($options.bindMobileSuccess)
+    v: common_vendor.sr("bind-mobile-by-sms", "0be2f605-9"),
+    w: common_vendor.o($options.bindMobileSuccess)
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-0be2f605"]]);

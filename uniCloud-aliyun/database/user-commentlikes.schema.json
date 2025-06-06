@@ -1,0 +1,22 @@
+{
+  "bsonType": "object",
+  "required": ["user_id", "comment_id", "create_time"],
+  "permission": {
+    "read": "auth.uid != null",
+    "create": "auth.uid != null",
+    "delete": "auth.uid != null && auth.uid == doc.user_id"
+  },
+  "properties": {
+    "_id": { "bsonType": "string" },
+    "user_id": { "bsonType": "string" },
+    "comment_id": { "bsonType": "string" },
+    "create_time": { "bsonType": "number" }
+  },
+  "indexes": [
+    {
+      "IndexName": "user_comment_unique",
+      "MgoKeySchema": { "user_id": 1, "comment_id": 1 },
+      "MgoIsUnique": true
+    }
+  ]
+}

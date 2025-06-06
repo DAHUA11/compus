@@ -240,42 +240,18 @@ export default {
 					comments: 24
 				}
 			],
-			posts: [
-				{
-					id: 1,
-					avatar: '/static/images/avatar1.png',
-					name: '李明',
-					college: '计算机科学与技术学院',
-					time: '1小时前',
-					tag: '讨论',
-					tagClass: 'discussion',
-					content: '有没有同学知道学校图书馆新到的那批计算机专业书籍放在哪个区域？找了半天都没找到。',
-					likes: 24,
-					comments: 12,
-					isLiked: false
-				},
-				{
-					id: 2,
-					avatar: '/static/images/avatar2.png',
-					name: '张小红',
-					college: '电子信息工程学院',
-					time: '3小时前',
-					tag: '失物招领',
-					tagClass: 'lost',
-					content: '今天在教学楼A栋302教室捡到一个黑色钱包，里面有身份证和几张银行卡，失主请联系我。',
-					images: ['/static/images/lost1.jpg'],
-					likes: 36,
-					comments: 8,
-					isLiked: false
-				}
-			],
+			posts: [],
 			showFabMenu: false
 		};
 	},
 	onLoad() {
 		// 页面加载时初始化数据
 		this.initData();
+		this.fetchPostsFromCloud();
 		uni.setStorageSync('posts', this.posts);
+	},
+	onShow() {
+		this.fetchPostsFromCloud();
 	},
 	methods: {
 		// 初始化数据
@@ -388,21 +364,97 @@ export default {
 		// 查看帖子详情
 		viewPostDetail(post) {
 			uni.navigateTo({
-				url: `/pages/circle/post-datail/post-datail?id=${post.id}`
+				url: `/pages/circle/post-datail/post-datail?id=${post._id}`
 			});
 		},
 		
 		// 点赞帖子
 		likePost(post, index) {
-			// 点赞帖子
-			post.isLiked = !post.isLiked;
-			post.likes += post.isLiked ? 1 : -1;
-			
-			// 提示
-			uni.showToast({
-				title: post.isLiked ? '已点赞' : '已取消点赞',
-				icon: 'none'
-			});
+			// 防止重复点击
+			if (post.likeLoading) return;
+			post.likeLoading = true;
+
+			// 检查 _id
+			if (!post._id || typeof post._id !== 'string') {
+				uni.showToast({ title: '帖子ID异常', icon: 'none' });
+				post.likeLoading = false;
+				return;
+			}
+			if (typeof post.likes !== 'number') post.likes = 0;
+
+			// 获取当前用户ID
+			const userId = uni.getStorageSync('uni-id-pages-userInfo')._id;
+			if (!userId) {
+				uni.showToast({ title: '请先登录', icon: 'none' });
+				post.likeLoading = false;
+				return;
+			}
+
+			// 检查用户是否已点赞
+			uniCloud.database().collection('user-likes')
+				.where({
+					user_id: userId,
+					post_id: post._id
+				})
+				.get()
+				.then(res => {
+					if (res.result.data.length > 0) {
+						// 已点赞，执行取消点赞
+						const likeId = res.result.data[0]._id;
+						uniCloud.database().collection('user-likes')
+							.doc(likeId)
+							.remove()
+							.then(() => {
+								uniCloud.database().collection('add-content')
+									.doc(post._id)
+									.update({
+										like_count: post.likes - 1
+									})
+									.then(() => {
+										post.isLiked = false;
+										post.likes -= 1;
+										uni.showToast({
+											title: '已取消点赞',
+											icon: 'none'
+										});
+										post.likeLoading = false;
+									})
+									.catch(() => { post.likeLoading = false; });
+							})
+							.catch(() => { post.likeLoading = false; });
+					} else {
+						// 未点赞，执行点赞
+						uniCloud.database().collection('user-likes')
+							.add({
+								user_id: userId,
+								post_id: post._id,
+								create_time: Date.now()
+							})
+							.then(() => {
+								uniCloud.database().collection('add-content')
+									.doc(post._id)
+									.update({
+										like_count: post.likes + 1
+									})
+									.then(() => {
+										post.isLiked = true;
+										post.likes += 1;
+										uni.showToast({
+											title: '已点赞',
+											icon: 'none'
+										});
+										post.likeLoading = false;
+									})
+									.catch(() => { post.likeLoading = false; });
+							})
+							.catch(() => { post.likeLoading = false; });
+					}
+				})
+				.catch((err) => {
+					uni.showToast({ title: '操作失败', icon: 'none' });
+					console.error('点赞操作失败', err);
+					post.likeLoading = false;
+				});
 		},
 		
 		// 评论帖子
@@ -429,7 +481,6 @@ export default {
 		publishPost() {
 			this.showFabMenu = false;
 			// 跳转到发帖页面
-			uni.showToast({ title: '发帖功能开发中', icon: 'none' });
 			uni.navigateTo({
 				url: '/pages/circle/post-create/post-create'
 			});
@@ -457,6 +508,104 @@ export default {
 			uni.navigateTo({
 				url: '/pages/circle/addactivities/addactivities'
 			});
+		},
+		// 获取帖子数据
+		fetchPostsFromCloud() {
+			this.loading = true;
+			// 获取当前用户ID
+			const userId = uni.getStorageSync('uni-id-pages-userInfo')._id;
+
+			uniCloud.database().collection('add-content')
+				.where({
+					content_type: 'post',
+					status: 'published'
+				})
+				.orderBy('create_time', 'desc')
+				.get()
+				.then(res => {
+					const posts = res.result.data;
+					// 收集所有 user_id
+					const userIds = [...new Set(posts.map(item => item.user_id).filter(Boolean))];
+					if (userIds.length === 0) {
+						this.posts = [];
+						this.loading = false;
+						return;
+					}
+
+					// 获取用户点赞状态
+					const getLikesPromise = userId ? 
+						uniCloud.database().collection('user-likes')
+							.where({
+								user_id: userId,
+								post_id: uniCloud.database().command.in(posts.map(p => p._id))
+							})
+							.get()
+							.then(likesRes => {
+								const likedPostIds = new Set(likesRes.result.data.map(like => like.post_id));
+								return likedPostIds;
+							}) : 
+						Promise.resolve(new Set());
+
+					// 批量查用户表
+					const getUserInfoPromise = uniCloud.database().collection('uni-id-users')
+						.where({
+							_id: uniCloud.database().command.in(userIds)
+						})
+						.field('_id,avatar_file,nickname')
+						.get()
+						.then(userRes => {
+							const userMap = {};
+							userRes.result.data.forEach(u => {
+								userMap[u._id] = u;
+							});
+							return userMap;
+						});
+
+					// 等待所有数据获取完成
+					Promise.all([getLikesPromise, getUserInfoPromise])
+						.then(([likedPostIds, userMap]) => {
+							// 组装帖子数据
+							this.posts = posts.map(item => {
+								const user = userMap[item.user_id] || {};
+								return {
+									_id: item._id,
+									avatar: user.avatar_file && user.avatar_file.url ? user.avatar_file.url : '/static/images/default-avatar.png',
+									name: user.nickname || '匿名用户',
+									time: this.formatTime(item.create_time),
+									tag: item.category,
+									tagClass: this.getTagClass(item.category),
+									content: item.content,
+									images: item.files || [],
+									likes: item.like_count || 0,
+									comments: item.comment_count || 0,
+									isLiked: likedPostIds.has(item._id)
+								}
+							});
+							this.loading = false;
+						})
+						.catch(() => {
+							this.loading = false;
+							uni.showToast({ title: '数据加载失败', icon: 'none' });
+						});
+				})
+				.catch(() => {
+					this.loading = false;
+					uni.showToast({ title: '帖子加载失败', icon: 'none' });
+				});
+		},
+		// 辅助方法
+		formatTime(ts) {
+			const date = new Date(ts);
+			// 返回你想要的格式，比如"1小时前"或"2024-06-03 15:00"
+			return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`;
+		},
+		getTagClass(category) {
+			// 根据分类返回不同的样式class
+			if (category === '讨论') return 'discussion';
+			if (category === '失物招领') return 'lost';
+			if (category === '问答') return 'question';
+			// 其他分类...
+			return '';
 		}
 	}
 };

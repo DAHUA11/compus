@@ -34,17 +34,51 @@ const _sfc_main = {
       // 新增：最大参与人数
       contentHtml: "",
       // 存储富文本内容
-      currentWordCount: 0
+      currentWordCount: 0,
       // 当前输入字数
+      isEdit: false,
+      // 是否为编辑状态
+      editId: ""
+      // 新增：编辑时的活动ID
     };
+  },
+  onLoad(options) {
+    var _a;
+    if (options.activity) {
+      const activity = JSON.parse(decodeURIComponent(options.activity));
+      this.isEdit = true;
+      this.editId = activity._id;
+      this.title = activity.title;
+      this.contentHtml = activity.content;
+      if (activity.activity_time) {
+        this.timeText = `${this.formatDate(activity.activity_time).split(" ")[0]} ${this.formatTime(activity.activity_time)}`;
+      }
+      this.place = activity.location;
+      this.maxAttendees = activity.max_attendees;
+      this.selectedTags = Array.isArray(activity.tags) ? activity.tags : [];
+      this.cover = ((_a = activity.files) == null ? void 0 : _a[0]) || "";
+      this.typeIndex = this.typeOptions.findIndex((t) => t === activity.category);
+    }
   },
   computed: {
     canPublish() {
-      return this.cover && this.title.trim() && this.contentHtml.trim() && // 使用contentHtml替代desc
-      this.typeIndex !== -1 && this.timeText && this.place.trim() && Number(this.maxAttendees) >= 1;
+      return this.isEdit || this.cover && this.title.trim() && this.contentHtml.trim() && this.typeIndex !== -1 && this.timeText && this.place.trim() && Number(this.maxAttendees) >= 1;
     }
   },
   methods: {
+    // 时间格式化辅助方法（用于回显时间）
+    formatDate(ts) {
+      const date = new Date(ts);
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const day = date.getDate().toString().padStart(2, "0");
+      return `${month}/${day}`;
+    },
+    formatTime(ts) {
+      const date = new Date(ts);
+      const hours = date.getHours().toString().padStart(2, "0");
+      const minutes = date.getMinutes().toString().padStart(2, "0");
+      return `${hours}:${minutes}`;
+    },
     chooseCover() {
       common_vendor.index.chooseImage({
         count: 1,
@@ -76,13 +110,22 @@ const _sfc_main = {
       const pureText = e.detail.text.replace(/<[^>]+>/g, "");
       this.currentWordCount = pureText.length;
     },
+    onEditorReady() {
+      common_vendor.index.createSelectorQuery().in(this).select("#editor").context((res) => {
+        if (res && res.context && this.contentHtml) {
+          common_vendor.index.__f__("log", "at pages/circle/addactivities/addactivities.vue:226", "小程序富文本内容回显", this.contentHtml);
+          res.context.setContents({ html: this.contentHtml });
+        }
+      }).exec();
+    },
     publishActivity() {
       if (!this.canPublish)
         return;
-      common_vendor.index.showLoading({ title: "发布中..." });
+      common_vendor.index.showLoading({ title: this.isEdit ? "更新中..." : "发布中..." });
       const uploadCover = new Promise((resolve, reject) => {
-        if (!this.cover) {
-          resolve([]);
+        const isLocalFile = this.cover && !/^cloud:\/\//.test(this.cover) && !/^https?:\/\//.test(this.cover);
+        if (!this.cover || !isLocalFile) {
+          resolve([this.cover]);
           return;
         }
         common_vendor.nr.uploadFile({
@@ -106,34 +149,51 @@ const _sfc_main = {
       const activityTime = activityDate.getTime();
       uploadCover.then((fileIDs) => {
         const userInfo = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
-        common_vendor.index.__f__("log", "at pages/circle/addactivities/addactivities.vue:222", "活动页面 userInfo:", userInfo);
         const userId = userInfo && userInfo._id ? userInfo._id : "";
         if (!userId) {
           common_vendor.index.hideLoading();
           common_vendor.index.showToast({ title: "请先登录", icon: "none" });
           return Promise.reject(new Error("请先登录"));
         }
-        return common_vendor.nr.callFunction({
-          name: "add-content",
-          data: {
-            content_type: "activity",
-            title: this.title,
-            category: this.typeOptions[this.typeIndex],
-            content: this.contentHtml,
-            // 使用contentHtml替代desc
-            files: fileIDs,
-            activity_time: activityTime,
-            location: this.place,
-            max_attendees: Number(this.maxAttendees),
-            user_id: userId,
-            tags: this.selectedTags
-          }
-        });
+        if (this.isEdit && this.editId) {
+          return common_vendor.nr.callFunction({
+            name: "update-content",
+            data: {
+              _id: this.editId,
+              content_type: "activity",
+              title: this.title,
+              category: this.typeOptions[this.typeIndex],
+              content: this.contentHtml,
+              files: fileIDs,
+              activity_time: activityTime,
+              location: this.place,
+              max_attendees: Number(this.maxAttendees),
+              user_id: userId,
+              tags: this.selectedTags
+            }
+          });
+        } else {
+          return common_vendor.nr.callFunction({
+            name: "add-content",
+            data: {
+              content_type: "activity",
+              title: this.title,
+              category: this.typeOptions[this.typeIndex],
+              content: this.contentHtml,
+              files: fileIDs,
+              activity_time: activityTime,
+              location: this.place,
+              max_attendees: Number(this.maxAttendees),
+              user_id: userId,
+              tags: this.selectedTags
+            }
+          });
+        }
       }).then((res) => {
+        common_vendor.index.hideLoading();
         if (res && res.result && res.result.code === 200) {
-          common_vendor.index.hideLoading();
           common_vendor.index.showToast({
-            title: "发布成功",
+            title: this.isEdit ? "更新成功" : "发布成功",
             icon: "success"
           });
           setTimeout(() => {
@@ -146,7 +206,7 @@ const _sfc_main = {
         common_vendor.index.hideLoading();
         if (err && err.message !== "请先登录") {
           common_vendor.index.showToast({
-            title: err.message || "发布失败",
+            title: err.message || (this.isEdit ? "更新失败" : "发布失败"),
             icon: "none"
           });
         }
@@ -156,32 +216,30 @@ const _sfc_main = {
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: $data.cover
+    a: $data.title,
+    b: common_vendor.o(($event) => $data.title = $event.detail.value),
+    c: $data.contentHtml,
+    d: common_vendor.o((...args) => $options.onEditorReady && $options.onEditorReady(...args)),
+    e: common_vendor.o((...args) => $options.onEditorInput && $options.onEditorInput(...args)),
+    f: common_vendor.t($data.currentWordCount),
+    g: $data.cover
   }, $data.cover ? {
-    b: $data.cover
+    h: $data.cover
   } : {}, {
-    c: common_vendor.o((...args) => $options.chooseCover && $options.chooseCover(...args)),
-    d: $data.isHot
-  }, $data.isHot ? {} : {}, {
-    e: $data.title,
-    f: common_vendor.o(($event) => $data.title = $event.detail.value),
-    g: $data.contentHtml,
-    h: common_vendor.o((...args) => _ctx.onEditorReady && _ctx.onEditorReady(...args)),
-    i: common_vendor.o((...args) => $options.onEditorInput && $options.onEditorInput(...args)),
-    j: common_vendor.t($data.currentWordCount),
-    k: common_vendor.t($data.typeOptions[$data.typeIndex] || "请选择"),
-    l: $data.typeOptions,
-    m: common_vendor.o((...args) => $options.onTypeChange && $options.onTypeChange(...args)),
-    n: common_vendor.t($data.timeText || "请选择"),
-    o: $data.timeRange,
-    p: common_vendor.o((...args) => $options.onTimeChange && $options.onTimeChange(...args)),
-    q: $data.place,
-    r: common_vendor.o(($event) => $data.place = $event.detail.value),
-    s: $data.maxAttendees,
-    t: common_vendor.o(common_vendor.m(($event) => $data.maxAttendees = $event.detail.value, {
+    i: common_vendor.o((...args) => $options.chooseCover && $options.chooseCover(...args)),
+    j: common_vendor.t($data.typeOptions[$data.typeIndex] || "请选择"),
+    k: $data.typeOptions,
+    l: common_vendor.o((...args) => $options.onTypeChange && $options.onTypeChange(...args)),
+    m: common_vendor.t($data.timeText || "请选择"),
+    n: $data.timeRange,
+    o: common_vendor.o((...args) => $options.onTimeChange && $options.onTimeChange(...args)),
+    p: $data.place,
+    q: common_vendor.o(($event) => $data.place = $event.detail.value),
+    r: $data.maxAttendees,
+    s: common_vendor.o(common_vendor.m(($event) => $data.maxAttendees = $event.detail.value, {
       number: true
     })),
-    v: common_vendor.f($data.tagOptions, (tag, idx, i0) => {
+    t: common_vendor.f($data.tagOptions, (tag, idx, i0) => {
       return {
         a: common_vendor.t(tag),
         b: idx,
@@ -189,8 +247,8 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         d: common_vendor.o(($event) => $options.toggleTag(tag), idx)
       };
     }),
-    w: !$options.canPublish ? 1 : "",
-    x: common_vendor.o(($event) => $options.canPublish ? $options.publishActivity() : null)
+    v: !$options.canPublish ? 1 : "",
+    w: common_vendor.o(($event) => $options.canPublish ? $options.publishActivity() : null)
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

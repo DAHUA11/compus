@@ -78,18 +78,18 @@
 		<!-- 底部操作栏 -->
 		<view class="footer-bar card-ani">
 			<view class="action-btns">
-				<button 
-					class="action-btn clickable-mp" 
-					@tap="isCurrentUser ? editActivity : viewOrganizer"
-				>
-					{{ isCurrentUser ? '编辑活动' : '主办方介绍' }}
-				</button>
-				<!-- 参与按钮保持不变 -->
 				<button
-					class="action-btn primary clickable-mp"
-					v-if="canJoin(activity)"
-					@tap="joinActivity"
-				>
+					v-if="isCurrentUser"
+					class="action-btn clickable-mp"
+					@tap="editActivity"
+				>编辑活动</button>
+				<button
+					v-else
+					class="action-btn clickable-mp"
+					@tap="viewOrganizer"
+				>主办方介绍</button>
+				<!-- 参与按钮保持不变 -->
+				<button class="action-btn primary clickable-mp" v-if="canJoin(activity)" @tap="joinActivity">
 					立即参与
 				</button>
 				<button class="action-btn disabled" v-else>
@@ -162,6 +162,35 @@
 			}, 100);
 		},
 		methods: {
+			//编辑活动跳转方法
+			editActivity() {
+				console.log('编辑活动')
+				// 只传递需要编辑的字段，避免冗余
+				const activity = encodeURIComponent(JSON.stringify({
+					_id: this.activity._id,
+					title: this.activity.title,
+					content: this.activity.content,
+					activity_time: this.activity.activity_time || (this.activity.date && this.activity.date
+						.getTime()),
+					location: this.activity.location,
+					max_attendees: this.activity.max_attendees,
+					tags: this.activity.tags,
+					files: this.activity.files || (this.activity.image ? [this.activity.image] : []),
+					category: this.activity.category
+				}));
+				uni.navigateTo({
+					url: `/pages/circle/addactivities/addactivities?activity=${activity}`
+				});
+			},
+
+			//主办方介绍提示
+			viewOrganizer() {
+				uni.showModal({
+					title: '提示',
+					content: '主办方介绍功能暂未开通，敬请期待~',
+					showCancel: false
+				});
+			},
 			// 加载活动详情数据
 			async loadActivityDetail() {
 				try {
@@ -176,10 +205,11 @@
 					const res = await uniCloud.database().collection("add-content").doc(this.id).get();
 					if (res.result.data && res.result.data.length > 0) {
 						const rawActivity = res.result.data[0];
-            // 3. 判断是否是当前用户发布的活动
-          this.isCurrentUser = this.currentUserId === rawActivity.user_id;
+						// 3. 判断是否是当前用户发布的活动
+						this.isCurrentUser = this.currentUserId === rawActivity.user_id;
 						// 4.获取发布者信息
-						const userRes = await uniCloud.database().collection("uni-id-users").doc(rawActivity.user_id).field("avatar_file,nickname").get();
+						const userRes = await uniCloud.database().collection("uni-id-users").doc(rawActivity.user_id)
+							.field("avatar_file,nickname").get();
 						this.activity = {
 							...rawActivity,
 							date: new Date(rawActivity.activity_time), // 完整日期对象
@@ -218,7 +248,7 @@
 				};
 				return tagMap[category] || "";
 			},
-			// 新增：状态判断方法
+			// 状态判断方法
 			// 状态文本映射方法（修改核心逻辑）
 			getStatusText(item) {
 				const currentTime = new Date().getTime(); // 当前时间戳
@@ -240,7 +270,7 @@
 			// 参与活动（关键修改）
 			async joinActivity(item) {
 				console.log('参与活动', item);
-				console.log("活动信息",this.activity)
+				console.log("活动信息", this.activity)
 				try {
 					// 检查登录状态
 					const token = uni.getStorageSync('uni_id_token');

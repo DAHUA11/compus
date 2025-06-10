@@ -1,86 +1,94 @@
 <template>
   <view class="add-activity-container">
-    <!-- 顶部渐变提示 -->
-    <view class="header-gradient">
-      <view class="header-title">清晰标题更容易被推荐哦~</view>
-      <view class="header-desc">为了让大家更好地了解活动，请介绍一下活动亮点、行程规划和注意事项等内容……</view>
-    </view>
-
-    <!-- 活动封面上传 -->
-    <view class="section cover-section">
-      <view class="cover-upload" @tap="chooseCover">
-        <image v-if="cover" :src="cover" class="cover-img"></image>
-        <view v-else class="cover-placeholder">
-          <text class="iconfont icon-tianjia"></text>
-          <view>上传活动封面</view>
-        </view>
+    <!-- 自定义渐变导航栏
+    <view class="custom-navbar">
+      <view class="nav-back" @tap="navigateBack">
+        <text class="iconfont icon-arrow-left"></text>
       </view>
-      <view v-if="isHot" class="hot-badge">活动爆品</view>
-    </view>
+      <text class="nav-title">发布活动</text>
+    </view> -->
 
-    <!-- 活动标题/描述 -->
-    <view class="section">
-      <input class="input-title" v-model="title" maxlength="30" placeholder="请输入活动标题" />
-      <!-- 替换原textarea为富文本编辑器 -->
+    <!-- 原顶部渐变提示（保持不变） -->
+    <view class="header-gradient-overlap">
+      <view class="header-gradient-fade"></view>
+    </view>
+    <!-- 悬浮叠加的输入卡片（标题、内容、上传封面同盒） -->
+    <view class="section overlap-card">
+      <input class="input-title" v-model="title" maxlength="30" placeholder="清晰标题更容易被推荐哦~" />
+      
       <editor 
+        id="editor"
+        ref="editor"
         class="rich-editor"
         :value="contentHtml"
-        placeholder="请详细描述活动内容（支持图文混排）"
+        placeholder="为了让大家更好地了解活动，请介绍一下活动亮点、行程规划和注意事项等内容……"
         :maxlength="500"  
         @ready="onEditorReady"
         @input="onEditorInput"
       ></editor>
       <view class="word-count">已输入{{ currentWordCount }}/500字</view>
-    </view>
-
-    <!-- 活动类型 -->
-    <view class="section row-section">
-      <view class="row-label">活动类型</view>
-      <picker :range="typeOptions" @change="onTypeChange">
-        <view class="row-value">{{ typeOptions[typeIndex] || '请选择' }}</view>
-      </picker>
-    </view>
-
-    <!-- 活动时间 -->
-    <view class="section row-section">
-      <view class="row-label">活动时间</view>
-      <picker mode="multiSelector" :range="timeRange" @change="onTimeChange">
-        <view class="row-value">{{ timeText || '请选择' }}</view>
-      </picker>
-    </view>
-
-    <!-- 活动地点 -->
-    <view class="section row-section">
-      <view class="row-label">活动地点</view>
-      <input class="row-value" v-model="place" placeholder="请输入活动地点" />
-    </view>
-
-    <!-- 最大参与人数 -->
-    <view class="section row-section">
-      <view class="row-label">最大参与人数</view>
-      <input 
-        class="row-value" 
-        v-model.number="maxAttendees" 
-        type="number" 
-        placeholder="请输入最大参与人数"
-        min="1"
-      />
-    </view>
-
-    <!-- 活动标签（多选） -->
-    <view class="section tag-section">
-      <view class="row-label">活动标签</view>
-      <view class="tag-list">
-        <view
-          v-for="(tag, idx) in tagOptions"
-          :key="idx"
-          class="tag-chip"
-          :class="{ active: selectedTags.includes(tag) }"
-          @tap="toggleTag(tag)"
-        >{{ tag }}</view>
+      <!-- 上传活动封面区域放在卡片内，富文本编辑器下方 -->
+      <view class="cover-upload-box">
+        <view class="cover-upload" @tap="chooseCover">
+          <image v-if="cover" :src="cover" class="cover-img"></image>
+          <view v-else class="cover-placeholder">
+            <text class="iconfont icon-tianjia"></text>
+            <view>上传活动封面</view>
+          </view>
+        </view>
       </view>
     </view>
-
+    <!-- 活动信息区域卡片 -->
+    <view class="info-card">
+      <!-- 活动类型 -->
+      <picker :range="typeOptions" @change="onTypeChange">
+        <view class="info-row">
+          <text class="iconfont icon-type info-icon"></text>
+          <text class="info-label">活动类型</text>
+          <view class="info-value">{{ typeOptions[typeIndex] || '请选择' }}</view>
+          <text class="iconfont icon-arrow-right info-arrow"></text>
+        </view>
+      </picker>
+      <view class="info-divider"></view>
+      <!-- 活动时间 -->
+      <picker mode="multiSelector" :range="timeRange" @change="onTimeChange">
+        <view class="info-row">
+          <text class="iconfont icon-shijian1 info-icon"></text>
+          <text class="info-label">活动时间</text>
+          <view class="info-value">{{ timeText || '请选择' }}</view>
+          <text class="iconfont icon-arrow-right info-arrow"></text>
+        </view>
+      </picker>
+      <view class="info-divider"></view>
+      <!-- 活动地点 -->
+      <view class="info-row">
+        <text class="iconfont icon-didiandingwei_o info-icon"></text>
+        <text class="info-label">活动地点</text>
+        <input class="info-value input-value" v-model="place" placeholder="请输入活动地点" />
+      </view>
+      <view class="info-divider"></view>
+      <!-- 最大参与人数 -->
+      <view class="info-row">
+        <text class="iconfont icon-renshu info-icon"></text>
+        <text class="info-label">最大参与人数</text>
+        <input class="info-value input-value" v-model.number="maxAttendees" type="number" min="1" placeholder="请输入最大参与人数" />
+      </view>
+      <view class="info-divider"></view>
+      <!-- 活动标签 -->
+      <view class="info-row tag-row">
+        <text class="iconfont icon-biaoqian info-icon"></text>
+        <text class="info-label">活动标签</text>
+        <view class="tag-list">
+          <view
+            v-for="(tag, idx) in tagOptions"
+            :key="idx"
+            class="tag-chip"
+            :class="{ active: selectedTags.includes(tag) }"
+            @tap.stop="toggleTag(tag)"
+          >{{ tag }}</view>
+        </view>
+      </view>
+    </view>
     <!-- 发布按钮 -->
     <view class="footer">
       <view
@@ -128,21 +136,58 @@ export default {
       selectedTags: [],
       maxAttendees: '', // 新增：最大参与人数
       contentHtml: '',  // 存储富文本内容
-      currentWordCount: 0  // 当前输入字数
+      currentWordCount: 0 , // 当前输入字数
+      isEdit: false, // 是否为编辑状态
+      editId: '', // 新增：编辑时的活动ID
     };
+  },
+  onLoad(options) {
+    if (options.activity) {
+      const activity = JSON.parse(decodeURIComponent(options.activity));
+      this.isEdit = true;
+      this.editId = activity._id;
+      this.title = activity.title;
+      this.contentHtml = activity.content;
+      // 处理时间回显
+      if (activity.activity_time) {
+        this.timeText = `${this.formatDate(activity.activity_time).split(' ')[0]} ${this.formatTime(activity.activity_time)}`;
+      }
+      this.place = activity.location;
+      this.maxAttendees = activity.max_attendees;
+      this.selectedTags = Array.isArray(activity.tags) ? activity.tags : [];
+      this.cover = activity.files?.[0] || '';
+      // 回显类型
+      this.typeIndex = this.typeOptions.findIndex(t => t === activity.category);
+    }
   },
   computed: {
     canPublish() {
-      return this.cover && 
-             this.title.trim() && 
-             this.contentHtml.trim() && // 使用contentHtml替代desc
-             this.typeIndex !== -1 && 
-             this.timeText && 
-             this.place.trim() && 
-             Number(this.maxAttendees) >= 1;
+      // 编辑模式下允许部分字段不变（根据需求调整验证逻辑）
+      return this.isEdit || (
+        this.cover && 
+        this.title.trim() && 
+        this.contentHtml.trim() && 
+        this.typeIndex !== -1 && 
+        this.timeText && 
+        this.place.trim() && 
+        Number(this.maxAttendees) >= 1
+      );
     }
   },
   methods: {
+    // 时间格式化辅助方法（用于回显时间）
+    formatDate(ts) {
+      const date = new Date(ts);
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      return `${month}/${day}`;
+    },
+    formatTime(ts) {
+      const date = new Date(ts);
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    },
     chooseCover() {
       uni.chooseImage({
         count: 1,
@@ -174,16 +219,33 @@ export default {
       const pureText = e.detail.text.replace(/<[^>]+>/g, '');
       this.currentWordCount = pureText.length;
     },
+    onEditorReady() {
+      // #ifdef MP-WEIXIN
+      uni.createSelectorQuery().in(this).select('#editor').context(res => {
+        if (res && res.context && this.contentHtml) {
+          console.log('小程序富文本内容回显', this.contentHtml)
+          res.context.setContents({ html: this.contentHtml });
+        }
+      }).exec();
+      // #endif
+      // #ifdef H5
+      if (this.$refs.editor && this.contentHtml) {
+        console.log('H5富文本内容回显', this.contentHtml)
+        this.$refs.editor.setContents({ html: this.contentHtml });
+      }
+      // #endif
+    },
     publishActivity() {
       if (!this.canPublish) return;
       
-      // 显示加载提示
-      uni.showLoading({ title: '发布中...' });
+      uni.showLoading({ title: this.isEdit ? '更新中...' : '发布中...' });
       
-      // 上传封面图（原有代码不变）
+      // 上传封面图（仅本地图片才上传，云端fileID或http图片直接用）
       const uploadCover = new Promise((resolve, reject) => {
-        if (!this.cover) {
-          resolve([]);
+        const isLocalFile = this.cover && !/^cloud:\/\//.test(this.cover) && !/^https?:\/\//.test(this.cover);
+        if (!this.cover || !isLocalFile) {
+          // 已经是云端图片、网络图片或未选择图片
+          resolve([this.cover]);
           return;
         }
         uniCloud.uploadFile({
@@ -194,59 +256,70 @@ export default {
         });
       });
       
-      // 处理时间格式（关键修改）
+      // 处理时间格式
       const [dateStr, timeStr] = this.timeText.split(' ');
       const [monthStr, dayStr] = dateStr.split('/');
       const [hour, minute] = timeStr.split(':');
-      
-      // 动态获取当前年份，并处理跨年逻辑
       const currentDate = new Date();
       const currentYear = currentDate.getFullYear();
-      const selectedMonth = parseInt(monthStr) - 1; // 月份从0开始
+      const selectedMonth = parseInt(monthStr) - 1;
       const selectedDay = parseInt(dayStr);
-      
-      // 创建日期对象时自动处理年份（例如当前是2023-12-31，用户选01/05会自动转为2024-01-05）
       const activityDate = new Date(currentYear, selectedMonth, selectedDay, parseInt(hour), parseInt(minute));
-      
-      // 处理跨年场景：如果生成的月份小于用户选择的月份（说明年份需要+1）
       if (activityDate.getMonth() !== selectedMonth) {
         activityDate.setFullYear(currentYear + 1);
       }
       const activityTime = activityDate.getTime();
       
-      // 后续上传逻辑（原有代码不变）
       uploadCover
         .then(fileIDs => {
-          // 从本地存储获取用户id
           const userInfo = uni.getStorageSync('uni-id-pages-userInfo')
-          console.log('活动页面 userInfo:', userInfo)
           const userId = userInfo && userInfo._id ? userInfo._id : ''
           if (!userId) {
-          	uni.hideLoading();
-          	uni.showToast({ title: '请先登录', icon: 'none' });
-          	return Promise.reject(new Error('请先登录'));
+            uni.hideLoading();
+            uni.showToast({ title: '请先登录', icon: 'none' });
+            return Promise.reject(new Error('请先登录'));
           }
-          return uniCloud.callFunction({
-            name: 'add-content',
-            data: {
-              content_type: 'activity',
-              title: this.title,
-              category: this.typeOptions[this.typeIndex],
-              content: this.contentHtml, // 使用contentHtml替代desc
-              files: fileIDs,
-              activity_time: activityTime,
-              location: this.place,
-              max_attendees: Number(this.maxAttendees),
-              user_id: userId,
-              tags: this.selectedTags
-            }
-          });
+          // 编辑和新建分开
+          if (this.isEdit && this.editId) {
+            return uniCloud.callFunction({
+              name: 'update-content',
+              data: {
+                _id: this.editId,
+                content_type: 'activity',
+                title: this.title,
+                category: this.typeOptions[this.typeIndex],
+                content: this.contentHtml,
+                files: fileIDs,
+                activity_time: activityTime,
+                location: this.place,
+                max_attendees: Number(this.maxAttendees),
+                user_id: userId,
+                tags: this.selectedTags
+              }
+            });
+          } else {
+            return uniCloud.callFunction({
+              name: 'add-content',
+              data: {
+                content_type: 'activity',
+                title: this.title,
+                category: this.typeOptions[this.typeIndex],
+                content: this.contentHtml,
+                files: fileIDs,
+                activity_time: activityTime,
+                location: this.place,
+                max_attendees: Number(this.maxAttendees),
+                user_id: userId,
+                tags: this.selectedTags
+              }
+            });
+          }
         })
         .then(res => {
+          uni.hideLoading();
           if (res && res.result && res.result.code === 200) {
-            uni.hideLoading();
             uni.showToast({
-              title: '发布成功',
+              title: this.isEdit ? '更新成功' : '发布成功',
               icon: 'success'
             });
             setTimeout(() => {
@@ -260,7 +333,7 @@ export default {
           uni.hideLoading();
           if (err && err.message !== '请先登录') {
             uni.showToast({
-              title: err.message || '发布失败',
+              title: err.message || (this.isEdit ? '更新失败' : '发布失败'),
               icon: 'none'
             });
           }
@@ -276,34 +349,63 @@ export default {
   background: #f8f9fc;
   padding-bottom: 120rpx;
 }
-.header-gradient {
-  background: linear-gradient(90deg, #eaffd0 0%, #fffbe8 100%);
-  padding: 32rpx 24rpx 18rpx 24rpx;
-  border-radius: 0 0 32rpx 32rpx;
+/* 自定义导航栏样式 */
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100rpx; /* 与原生导航栏高度一致 */
+  background: linear-gradient(90deg, #eaffd0 0%, #fffbe8 100%); /* 与页面顶部渐变一致 */
+  display: flex;
+  align-items: center;
+  padding: 0 32rpx;
+  z-index: 10; /* 确保在顶部 */
 }
-.header-title {
-  font-size: 28rpx;
+
+.nav-back {
+  font-size: 40rpx;
+  color: #222;
+  margin-right: 32rpx;
+}
+
+.nav-title {
+  font-size: 34rpx;
   font-weight: 700;
-  color: #a3b800;
-  margin-bottom: 8rpx;
+  color: #222;
 }
-.header-desc {
-  font-size: 24rpx;
-  color: #b0b6be;
+// 顶部渐变色区域加高，底部渐变透明过渡
+.header-gradient-overlap {
+  position: relative;
+  background: linear-gradient(90deg, #eaffd0 0%, #fffbe8 100%);
+  border-radius: 0 0 48rpx 48rpx;
+  padding: 0 0 120rpx 0;
+  min-height: 260rpx;
+  z-index: 1;
+  overflow: hidden;
 }
-.section {
+.header-gradient-fade {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 40rpx;
+  background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, #f8f9fc 100%);
+  z-index: 2;
+}
+// 悬浮叠加的输入卡片
+.overlap-card {
+  position: relative;
+  z-index: 3;
+  margin: -350rpx 24rpx 0 24rpx;
   background: #fff;
-  border-radius: 20rpx;
-  margin: 24rpx 24rpx 0 24rpx;
-  padding: 24rpx;
-  box-shadow: 0 2rpx 8rpx rgba(77,124,191,0.04);
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(77,124,191,0.10);
+  padding: 36rpx 28rpx 28rpx 28rpx;
 }
-.cover-section {
+.cover-upload-box {
+  margin-top: 32rpx;
   display: flex;
   align-items: center;
   position: relative;
-  padding-bottom: 0;
-	padding-bottom: 20rpx;
 }
 .cover-upload {
   width: 160rpx;
@@ -338,7 +440,7 @@ export default {
 }
 .hot-badge {
   position: absolute;
-  right: 0;
+  left: 180rpx;
   top: 0;
   background: #222;
   color: #ffe37c;
@@ -350,9 +452,10 @@ export default {
 }
 .input-title {
   // width: 100%;
-  font-size: 30rpx;
-  font-weight: 700;
-  color: #333;
+  font-size: 34rpx;
+  font-weight: 800;
+  height: 80rpx;
+  // color: #333;
   background: #f8f9fc;
 	// background-color: pink;
   border: none;
@@ -364,43 +467,84 @@ export default {
   width: 95%;
   min-height: 80rpx;
   font-size: 26rpx;
-  color: #666;
+  color: #cbcdca;
   background: #f8f9fc;
 	// background-color: pink;
   border: none;
   border-radius: 12rpx;
   padding: 18rpx;
 }
-.row-section {
+.rich-editor {
+  height: 200rpx;
+  //字体不倾斜
+  font-style: normal;
+}
+.word-count{
+  font-size: 24rpx;
+  color: #cbcdca;
+  margin-top: 8rpx;
+  text-align: right;
+}
+.info-card {
+  background: #fff;
+  border-radius: 24rpx;
+  margin: 32rpx 24rpx 0 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(77,124,191,0.06);
+  padding: 0 0 80rpx 0; //上 左 下 右
+}
+.info-row {
   display: flex;
   align-items: center;
-  padding: 0 24rpx 0 0;
-  margin-bottom: 0;
-  margin-top: 0;
-  box-shadow: none;
-  border-radius: 16rpx;
-  background: #fff;
-  height: 80rpx;
+  padding: 0 32rpx;
+  height: 110rpx;
+  position: relative;
 }
-.row-label {
-  font-size: 26rpx;
-  color: #888;
-  width: 160rpx;
-  flex-shrink: 0;
+.info-icon {
+  font-size: 36rpx;
+  color: #b0b6be;
+  margin-right: 18rpx;
 }
-.row-value {
-  font-size: 28rpx;
-  color: #333;
+.info-label {
+  font-size: 30rpx;
+  font-family: 'AlimamaShuHeiTi-Bold' !important;
+  font-weight: 700;
+  color: #222;
+  margin-right: 18rpx;
+  min-width: 140rpx;
+}
+.info-value {
   flex: 1;
-  padding-left: 12rpx;
+  font-size: 28rpx;
+  color: #b0b6be;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-/* 活动标签 chips */
-.tag-section {
-  display: flex;
+.input-value {
+  background: transparent;
+  border: none;
+  font-size: 28rpx;
+  color: #b0b6be;
+  flex: 1;
+  padding: 0;
+  margin: 0;
+}
+.info-arrow {
+  font-size: 32rpx;
+  color: #e0e0e0;
+  margin-left: 12rpx;
+}
+.info-divider {
+  height: 1rpx;
+  background: #f0f1f5;
+  margin: 0 32rpx;
+}
+.tag-row {
   align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 12rpx;
-  padding-bottom: 8rpx;
+  min-height: 90rpx;
+  padding-top: 18rpx;
+  padding-bottom: 18rpx;
 }
 .tag-list {
   display: flex;

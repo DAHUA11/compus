@@ -7,6 +7,14 @@ const _sfc_main = {
       type: Object,
       required: true
     }
+  },
+  methods: {
+    // 新增：过滤HTML标签的方法
+    filterHtmlTags(htmlStr) {
+      if (!htmlStr)
+        return "";
+      return htmlStr.replace(/<[^>]+>/g, "");
+    }
   }
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
@@ -15,7 +23,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     b: common_vendor.t($props.activity.tag),
     c: common_vendor.n($props.activity.tagClass),
     d: common_vendor.t($props.activity.title),
-    e: common_vendor.t($props.activity.description),
+    e: common_vendor.t($options.filterHtmlTags($props.activity.description)),
     f: common_vendor.t($props.activity.time),
     g: common_vendor.t($props.activity.location),
     h: common_vendor.f($props.activity.avatars.slice(0, 3), (avatar, idx, i0) => {

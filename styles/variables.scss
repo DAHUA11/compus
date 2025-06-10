@@ -81,22 +81,25 @@ $tag-text-map: (
 );
 
 /* 混合器 */
+// 定义 flex 居中混合宏
 @mixin flex-center {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
 }
 
+// 定义 flex 两端对齐混合宏
 @mixin flex-between {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
 }
 
+// 定义单行文本省略混合宏
 @mixin text-ellipsis {
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @mixin multi-line-ellipsis($lines) {
@@ -115,4 +118,4 @@ $tag-text-map: (
 $breakpoint-sm: 576px;
 $breakpoint-md: 768px;
 $breakpoint-lg: 992px;
-$breakpoint-xl: 1200px; 
+$breakpoint-xl: 1200px;

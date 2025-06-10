@@ -36,10 +36,10 @@ const _sfc_main = {
     common_vendor.index.__f__("log", "at App.vue:5", "App Launch");
   },
   onShow: function() {
-    common_vendor.index.__f__("log", "at App.vue:15", "App Show");
+    common_vendor.index.__f__("log", "at App.vue:8", "App Show");
   },
   onHide: function() {
-    common_vendor.index.__f__("log", "at App.vue:18", "App Hide");
+    common_vendor.index.__f__("log", "at App.vue:11", "App Hide");
   }
 };
 function createApp() {

@@ -63,6 +63,32 @@ const _sfc_main = {
     }, 100);
   },
   methods: {
+    //编辑活动跳转方法
+    editActivity() {
+      common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:167", "编辑活动");
+      const activity = encodeURIComponent(JSON.stringify({
+        _id: this.activity._id,
+        title: this.activity.title,
+        content: this.activity.content,
+        activity_time: this.activity.activity_time || this.activity.date && this.activity.date.getTime(),
+        location: this.activity.location,
+        max_attendees: this.activity.max_attendees,
+        tags: this.activity.tags,
+        files: this.activity.files || (this.activity.image ? [this.activity.image] : []),
+        category: this.activity.category
+      }));
+      common_vendor.index.navigateTo({
+        url: `/pages/circle/addactivities/addactivities?activity=${activity}`
+      });
+    },
+    //主办方介绍提示
+    viewOrganizer() {
+      common_vendor.index.showModal({
+        title: "提示",
+        content: "主办方介绍功能暂未开通，敬请期待~",
+        showCancel: false
+      });
+    },
     // 加载活动详情数据
     async loadActivityDetail() {
       var _a, _b, _c, _d;
@@ -101,7 +127,7 @@ const _sfc_main = {
           common_vendor.index.navigateBack();
         }
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/circle/activity-datail/activity-datail.vue:203", "加载活动详情失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/activity-datail/activity-datail.vue:233", "加载活动详情失败", err);
         common_vendor.index.showToast({
           title: "加载失败，请重试",
           icon: "none"
@@ -119,7 +145,7 @@ const _sfc_main = {
       };
       return tagMap[category] || "";
     },
-    // 新增：状态判断方法
+    // 状态判断方法
     // 状态文本映射方法（修改核心逻辑）
     getStatusText(item) {
       const currentTime = (/* @__PURE__ */ new Date()).getTime();
@@ -138,8 +164,8 @@ const _sfc_main = {
     },
     // 参与活动（关键修改）
     async joinActivity(item) {
-      common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:242", "参与活动", item);
-      common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:243", "活动信息", this.activity);
+      common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:272", "参与活动", item);
+      common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:273", "活动信息", this.activity);
       try {
         const token = common_vendor.index.getStorageSync("uni_id_token");
         if (!token) {
@@ -192,7 +218,7 @@ const _sfc_main = {
           }
         }
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/circle/activity-datail/activity-datail.vue:301", "参与活动失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/activity-datail/activity-datail.vue:331", "参与活动失败", err);
         common_vendor.index.showToast({
           title: "参与失败，请稍后重试",
           icon: "none"
@@ -253,13 +279,17 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         e: common_vendor.o(($event) => _ctx.viewRelatedActivity(item), index)
       };
     }),
-    s: common_vendor.t($data.isCurrentUser ? "编辑活动" : "主办方介绍"),
-    t: common_vendor.o(($event) => $data.isCurrentUser ? _ctx.editActivity : _ctx.viewOrganizer),
-    v: $options.canJoin($data.activity)
-  }, $options.canJoin($data.activity) ? {
-    w: common_vendor.o((...args) => $options.joinActivity && $options.joinActivity(...args))
+    s: $data.isCurrentUser
+  }, $data.isCurrentUser ? {
+    t: common_vendor.o((...args) => $options.editActivity && $options.editActivity(...args))
   } : {
-    x: common_vendor.t($data.activity.status === "ended" ? "已结束" : "已参与")
+    v: common_vendor.o((...args) => $options.viewOrganizer && $options.viewOrganizer(...args))
+  }, {
+    w: $options.canJoin($data.activity)
+  }, $options.canJoin($data.activity) ? {
+    x: common_vendor.o((...args) => $options.joinActivity && $options.joinActivity(...args))
+  } : {
+    y: common_vendor.t($data.activity.status === "ended" ? "已结束" : "已参与")
   }) : {});
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

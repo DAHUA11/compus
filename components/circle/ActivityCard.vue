@@ -7,7 +7,8 @@
     <view class="activity-tag" :class="activity.tagClass">{{activity.tag}}</view>
     <view class="activity-content">
       <text class="activity-title">{{activity.title}}</text>
-      <text class="activity-desc">{{activity.description}}</text>
+      <!-- 关键修改：使用过滤方法处理富文本 -->
+      <text class="activity-desc">{{ filterHtmlTags(activity.description) }}</text>
       <view class="activity-info">
         <text class="iconfont icon-time"></text>
         <text>{{activity.time}}</text>
@@ -37,6 +38,13 @@ export default {
     activity: {
       type: Object,
       required: true
+    }
+  },
+  methods: {
+    // 新增：过滤HTML标签的方法
+    filterHtmlTags(htmlStr) {
+      if (!htmlStr) return ''; // 处理空值
+      return htmlStr.replace(/<[^>]+>/g, ''); // 正则移除所有HTML标签
     }
   }
 }
@@ -199,4 +207,4 @@ export default {
   background: linear-gradient(90deg, #2255a4 0%, #4080FF 100%);
   transform: scale(0.97);
 }
-</style> 
+</style>

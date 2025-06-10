@@ -57,6 +57,13 @@
 /* 标签颜色 */
 /* 混合器 */
 /* 响应式断点 */
+/* 基础样式 */
+@font-face {
+  font-family: "AlimamaShuHeiTi-Bold";
+  src: url("../../static/fonts/AlimamaShuHeiTi-Bold.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
 /* 布局类 */
 .flex {
   display: flex;
@@ -71,13 +78,13 @@
 }
 .flex-center {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
 }
 .flex-between {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
 }
 .flex-wrap {
   flex-wrap: wrap;
@@ -361,9 +368,9 @@
 }
 /* 文本样式 */
 .text-ellipsis {
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .text-ellipsis-2 {
   display: -webkit-box;

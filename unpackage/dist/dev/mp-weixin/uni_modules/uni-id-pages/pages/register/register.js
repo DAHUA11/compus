@@ -3,7 +3,7 @@ const common_vendor = require("../../../../common/vendor.js");
 const uni_modules_uniIdPages_pages_register_validator = require("./validator.js");
 const uni_modules_uniIdPages_common_loginPage_mixin = require("../../common/login-page.mixin.js");
 require("../../common/store.js");
-const uniIdCo = common_vendor.er.importObject("uni-id-co");
+const uniIdCo = common_vendor.nr.importObject("uni-id-co");
 const _sfc_main = {
   mixins: [uni_modules_uniIdPages_common_loginPage_mixin.mixin],
   data() {

@@ -120,7 +120,7 @@ const _sfc_main = {
           icon: "none",
           duration: 3e3
         });
-      const uniIdCo = common_vendor.er.importObject("uni-id-co", {
+      const uniIdCo = common_vendor.nr.importObject("uni-id-co", {
         customUI: true
       });
       common_vendor.index.__f__("log", "at uni_modules/uni-id-pages/components/uni-id-pages-email-form/uni-id-pages-email-form.vue:144", "sendEmailCode", {

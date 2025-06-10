@@ -62,7 +62,7 @@ const _sfc_main = {
         });
         let {
           fileID
-        } = await common_vendor.er.uploadFile({
+        } = await common_vendor.nr.uploadFile({
           filePath: avatarUrl,
           cloudPath,
           fileType: "image"

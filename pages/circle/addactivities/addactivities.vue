@@ -21,7 +21,16 @@
     <!-- 活动标题/描述 -->
     <view class="section">
       <input class="input-title" v-model="title" maxlength="30" placeholder="请输入活动标题" />
-      <textarea class="input-desc" v-model="desc" maxlength="100" placeholder="请简单介绍活动内容..." auto-height />
+      <!-- 替换原textarea为富文本编辑器 -->
+      <editor 
+        class="rich-editor"
+        :value="contentHtml"
+        placeholder="请详细描述活动内容（支持图文混排）"
+        :maxlength="500"  
+        @ready="onEditorReady"
+        @input="onEditorInput"
+      ></editor>
+      <view class="word-count">已输入{{ currentWordCount }}/500字</view>
     </view>
 
     <!-- 活动类型 -->
@@ -46,7 +55,7 @@
       <input class="row-value" v-model="place" placeholder="请输入活动地点" />
     </view>
 
-    <!-- 新增：最大参与人数 -->
+    <!-- 最大参与人数 -->
     <view class="section row-section">
       <view class="row-label">最大参与人数</view>
       <input 
@@ -88,34 +97,49 @@
 <script>
 export default {
   data() {
+
+    // 动态生成未来30天的日期数组（格式MM/DD）
+    const generateDateRange = () => {
+      const dates = [];
+      const currentDate = new Date();
+      for (let i = 0; i < 30; i++) { // 生成未来30天
+        const date = new Date(currentDate);
+        date.setDate(currentDate.getDate() + i);
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        dates.push(`${month}/${day}`);
+      }
+      return dates;
+    };
+
     return {
       cover: '',
       isHot: true,
       title: '',
-      desc: '',
       typeOptions: ['官方', '社团', '学术', '体育', '娱乐', '其他'],
       typeIndex: -1,
       timeRange: [
-        ['05/01', '05/02', '05/03', '05/04', '05/05', '05/06', '05/07'],
-        ['10:00', '14:00', '18:00', '20:00']
+        generateDateRange(), // 动态生成的日期数组
+        ['10:00', '14:00', '18:00', '20:00'] // 固定时段选项
       ],
       timeText: '',
       place: '',
       tagOptions: ['户外', '运动', '娱乐', '交友', '学习', '比赛', '官方', '自发'],
       selectedTags: [],
       maxAttendees: '', // 新增：最大参与人数
+      contentHtml: '',  // 存储富文本内容
+      currentWordCount: 0  // 当前输入字数
     };
   },
   computed: {
     canPublish() {
-      // 新增验证：最大参与人数为大于0的整数
       return this.cover && 
              this.title.trim() && 
-             this.desc.trim() && 
+             this.contentHtml.trim() && // 使用contentHtml替代desc
              this.typeIndex !== -1 && 
              this.timeText && 
              this.place.trim() && 
-             Number(this.maxAttendees) >= 1; // 新增验证条件
+             Number(this.maxAttendees) >= 1;
     }
   },
   methods: {
@@ -144,15 +168,19 @@ export default {
         this.selectedTags.push(tag);
       }
     },
+    // 编辑器输入事件
+    onEditorInput(e) {
+      this.contentHtml = e.detail.html;  // 通过事件获取最新内容
+      const pureText = e.detail.text.replace(/<[^>]+>/g, '');
+      this.currentWordCount = pureText.length;
+    },
     publishActivity() {
       if (!this.canPublish) return;
       
       // 显示加载提示
-      uni.showLoading({
-        title: '发布中...'
-      });
+      uni.showLoading({ title: '发布中...' });
       
-      // 上传封面图
+      // 上传封面图（原有代码不变）
       const uploadCover = new Promise((resolve, reject) => {
         if (!this.cover) {
           resolve([]);
@@ -166,13 +194,27 @@ export default {
         });
       });
       
-      // 处理时间格式
-      const [date, time] = this.timeText.split(' ');
-      const [month, day] = date.split('/');
-      const [hour, minute] = time.split(':');
-      const activityTime = new Date(2024, parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute)).getTime();
+      // 处理时间格式（关键修改）
+      const [dateStr, timeStr] = this.timeText.split(' ');
+      const [monthStr, dayStr] = dateStr.split('/');
+      const [hour, minute] = timeStr.split(':');
       
-      // 上传封面并发布活动
+      // 动态获取当前年份，并处理跨年逻辑
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const selectedMonth = parseInt(monthStr) - 1; // 月份从0开始
+      const selectedDay = parseInt(dayStr);
+      
+      // 创建日期对象时自动处理年份（例如当前是2023-12-31，用户选01/05会自动转为2024-01-05）
+      const activityDate = new Date(currentYear, selectedMonth, selectedDay, parseInt(hour), parseInt(minute));
+      
+      // 处理跨年场景：如果生成的月份小于用户选择的月份（说明年份需要+1）
+      if (activityDate.getMonth() !== selectedMonth) {
+        activityDate.setFullYear(currentYear + 1);
+      }
+      const activityTime = activityDate.getTime();
+      
+      // 后续上传逻辑（原有代码不变）
       uploadCover
         .then(fileIDs => {
           // 从本地存储获取用户id
@@ -190,11 +232,11 @@ export default {
               content_type: 'activity',
               title: this.title,
               category: this.typeOptions[this.typeIndex],
-              content: this.desc,
+              content: this.contentHtml, // 使用contentHtml替代desc
               files: fileIDs,
               activity_time: activityTime,
               location: this.place,
-              max_attendees: Number(this.maxAttendees), // 传递用户输入的数值
+              max_attendees: Number(this.maxAttendees),
               user_id: userId,
               tags: this.selectedTags
             }
@@ -225,7 +267,7 @@ export default {
         });
     }
   }
-};
+}
 </script>
 
 <style lang="scss">

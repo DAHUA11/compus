@@ -43,7 +43,7 @@ const _sfc_main = {
           duration: 3e3
         });
       }
-      const uniIdCo = common_vendor.er.importObject("uni-id-co");
+      const uniIdCo = common_vendor.nr.importObject("uni-id-co");
       uniIdCo.bindMobileBySms(this.formData).then((e) => {
         common_vendor.index.showToast({
           title: e.errMsg,

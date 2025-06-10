@@ -708,7 +708,8 @@ to {
   transform: scale(1.05);
   box-shadow: 0 2rpx 8rpx rgba(77, 124, 191, 0.25);
 }
-.date-item.active .day, .date-item.active .weekday {
+.date-item.active .day,
+.date-item.active .weekday {
   color: #FFFFFF;
 }
 .date-item.active .dot {

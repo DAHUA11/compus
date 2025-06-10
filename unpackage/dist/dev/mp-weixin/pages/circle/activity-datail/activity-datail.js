@@ -4,21 +4,8 @@ const _sfc_main = {
   data() {
     return {
       id: null,
-      activity: {
-        id: 1,
-        image: "/static/images/activity1.png",
-        tag: "官方",
-        tagClass: "official",
-        title: "校园文化节",
-        description: "<p>一年一度的校园文化节即将开幕，届时将有各种各样文化活动和表演，欢迎大家参与！</p><p>本次活动内容包括：</p><ul><li>开幕式文艺演出</li><li>各学院特色文化展示</li><li>才艺比赛</li><li>游园会</li><li>闭幕晚会</li></ul><p>活动期间会有精美礼品发放，欢迎全校师生积极参与！</p>",
-        date: /* @__PURE__ */ new Date(),
-        time: "19:00-21:30",
-        location: "学校体育馆",
-        avatars: ["/static/images/avatar1.png", "/static/images/avatar2.png", "/static/images/avatar3.png"],
-        participants: 128,
-        status: "upcoming"
-        // upcoming, ongoing, ended
-      },
+      activity: {},
+      // 初始化为空对象避免渲染错误
       relatedActivities: [
         {
           id: 2,
@@ -50,17 +37,21 @@ const _sfc_main = {
       menuButtonLeft: 0,
       menuButtonRight: 0,
       headerHeight: 0,
-      coverShow: false
+      coverShow: false,
+      currentUserId: null,
+      // 新增：当前登录用户ID
+      isCurrentUser: false
+      // 新增：是否是活动发布者标识
     };
   },
   onLoad(options) {
-    const sysInfo = common_vendor.index.getSystemInfoSync();
+    const windowInfo = common_vendor.index.getWindowInfo();
     const menuButton = common_vendor.index.getMenuButtonBoundingClientRect();
-    this.statusBarHeight = sysInfo.statusBarHeight;
+    this.statusBarHeight = windowInfo.statusBarHeight;
     this.menuButtonHeight = menuButton.height;
     this.menuButtonLeft = menuButton.left;
     this.menuButtonRight = menuButton.right;
-    this.headerHeight = sysInfo.statusBarHeight + menuButton.height;
+    this.headerHeight = windowInfo.statusBarHeight + menuButton.height;
     if (options.id) {
       this.id = options.id;
       this.loadActivityDetail();
@@ -73,113 +64,203 @@ const _sfc_main = {
   },
   methods: {
     // 加载活动详情数据
-    loadActivityDetail() {
+    async loadActivityDetail() {
+      var _a, _b, _c, _d;
+      try {
+        const token = common_vendor.index.getStorageSync("uni_id_token");
+        if (token) {
+          const decodedToken = JSON.parse(atob(token.split(".")[1]));
+          this.currentUserId = decodedToken.uid;
+        }
+        const res = await common_vendor.nr.database().collection("add-content").doc(this.id).get();
+        if (res.result.data && res.result.data.length > 0) {
+          const rawActivity = res.result.data[0];
+          this.isCurrentUser = this.currentUserId === rawActivity.user_id;
+          const userRes = await common_vendor.nr.database().collection("uni-id-users").doc(rawActivity.user_id).field("avatar_file,nickname").get();
+          this.activity = {
+            ...rawActivity,
+            date: new Date(rawActivity.activity_time),
+            // 完整日期对象
+            // time: this.formatTime(rawActivity.activity_time),  // 单独时间部分
+            participants: rawActivity.attendee_count || 0,
+            // 从数据库字段映射
+            tagClass: this.getTagClass(rawActivity.category),
+            // 新增tagClass映射
+            avatar: ((_b = (_a = userRes.result.data[0]) == null ? void 0 : _a.avatar_file) == null ? void 0 : _b.url) || "/static/images/default-avatar.png",
+            image: ((_c = rawActivity.files) == null ? void 0 : _c[0]) || "/static/images/activity-default.png",
+            // 取files第一张图
+            publisher: ((_d = userRes.result.data[0]) == null ? void 0 : _d.nickname) || "匿名发布者",
+            formattedDate: this.formatDate(rawActivity.create_time)
+            // 使用统一日期格式化
+          };
+        } else {
+          common_vendor.index.showToast({
+            title: "活动不存在",
+            icon: "none"
+          });
+          common_vendor.index.navigateBack();
+        }
+      } catch (err) {
+        common_vendor.index.__f__("error", "at pages/circle/activity-datail/activity-datail.vue:203", "加载活动详情失败", err);
+        common_vendor.index.showToast({
+          title: "加载失败，请重试",
+          icon: "none"
+        });
+      }
     },
-    // 返回上一页
-    goBack() {
-      common_vendor.index.navigateBack();
-    },
-    // 格式化日期
-    formatDate(date) {
-      const months = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
-      return `${months[date.getMonth()]}${date.getDate()}日`;
-    },
-    // 获取状态类名
-    getStatusClass(item) {
-      return item.status;
-    },
-    // 获取状态文本
-    getStatusText(item) {
-      const statusMap = {
-        "upcoming": "即将开始",
-        "ongoing": "进行中",
-        "ended": "已结束"
+    //标签类名映射方法
+    getTagClass(category) {
+      const tagMap = {
+        官方: "official",
+        社团: "club",
+        学术: "academic",
+        娱乐: "entertainment",
+        体育: "sports"
       };
-      return statusMap[item.status] || "未知状态";
+      return tagMap[category] || "";
     },
-    // 是否可以参与
+    // 新增：状态判断方法
+    // 状态文本映射方法（修改核心逻辑）
+    getStatusText(item) {
+      const currentTime = (/* @__PURE__ */ new Date()).getTime();
+      const activityTime = item.date.getTime();
+      if (currentTime < activityTime) {
+        return "即将开始";
+      } else {
+        return "已结束";
+      }
+    },
+    // 参与权限判断（同步调整）
     canJoin(item) {
-      return item.status === "upcoming" || item.status === "ongoing";
+      const currentTime = (/* @__PURE__ */ new Date()).getTime();
+      const activityTime = item.date.getTime();
+      return currentTime < activityTime;
     },
-    // 立即参与
-    joinActivity() {
-      common_vendor.index.showModal({
-        title: "确认参与",
-        content: "确定要参与该活动吗？",
-        success: (res) => {
-          if (res.confirm) {
+    // 参与活动（关键修改）
+    async joinActivity(item) {
+      common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:242", "参与活动", item);
+      common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:243", "活动信息", this.activity);
+      try {
+        const token = common_vendor.index.getStorageSync("uni_id_token");
+        if (!token) {
+          common_vendor.index.showModal({
+            title: "提示",
+            content: "请先登录后再参与活动",
+            confirmText: "去登录",
+            success: (res2) => {
+              if (res2.confirm) {
+                common_vendor.index.navigateTo({
+                  url: "/pages/login/login"
+                });
+              }
+            }
+          });
+          return;
+        }
+        const res = await common_vendor.nr.callFunction({
+          name: "joinactivity",
+          data: {
+            activityId: this.activity._id,
+            token
+          }
+        });
+        if (res.result.success) {
+          common_vendor.index.showToast({
+            title: "参与成功",
+            icon: "success"
+          });
+          this.onRefresh();
+        } else {
+          if (res.result.code === "TOKEN_INVALID") {
+            common_vendor.index.showModal({
+              title: "提示",
+              content: "登录状态已失效，请重新登录",
+              confirmText: "去登录",
+              success: (res2) => {
+                if (res2.confirm) {
+                  common_vendor.index.navigateTo({
+                    url: "/pages/login/login"
+                  });
+                }
+              }
+            });
+          } else {
             common_vendor.index.showToast({
-              title: "报名成功",
-              icon: "success"
+              title: res.result.message || "参与失败",
+              icon: "none"
             });
           }
         }
-      });
+      } catch (err) {
+        common_vendor.index.__f__("error", "at pages/circle/activity-datail/activity-datail.vue:301", "参与活动失败", err);
+        common_vendor.index.showToast({
+          title: "参与失败，请稍后重试",
+          icon: "none"
+        });
+      }
     },
-    // 分享活动
-    shareActivity() {
-      common_vendor.index.showToast({
-        title: "分享功能开发中",
-        icon: "none"
-      });
+    getStatusClass(item) {
+      const currentTime = (/* @__PURE__ */ new Date()).getTime();
+      const activityTime = item.date.getTime();
+      return currentTime < activityTime ? "status-upcoming" : "status-ended";
     },
-    // 查看主办方
-    viewOrganizer() {
-      common_vendor.index.showToast({
-        title: "主办方信息页面开发中",
-        icon: "none"
-      });
-    },
-    // 查看相关活动
-    viewRelatedActivity(item) {
-      common_vendor.index.navigateTo({
-        url: "/pages/circle/activity-detail?id=" + item.id
-      });
+    // 日期格式化优化（原有方法增强）
+    formatDate(ts) {
+      const date = new Date(ts);
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const day = date.getDate().toString().padStart(2, "0");
+      const hours = date.getHours().toString().padStart(2, "0");
+      const minutes = date.getMinutes().toString().padStart(2, "0");
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
     }
   }
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: $data.activity.image,
-    b: common_vendor.t($options.getStatusText($data.activity)),
-    c: common_vendor.n($options.getStatusClass($data.activity)),
-    d: $data.coverShow ? 1 : "",
-    e: common_vendor.t($data.activity.tag),
-    f: common_vendor.n($data.activity.tagClass),
-    g: common_vendor.t($data.activity.title),
-    h: common_vendor.t($options.formatDate($data.activity.date)),
-    i: common_vendor.t($data.activity.time),
-    j: common_vendor.t($data.activity.location),
-    k: common_vendor.t($data.activity.participants),
-    l: $data.activity.description || "暂无详细描述",
-    m: $data.activity.avatars && $data.activity.avatars.length > 0
+    a: $data.activity._id
+  }, $data.activity._id ? common_vendor.e({
+    b: $data.activity.image,
+    c: common_vendor.t($options.getStatusText($data.activity)),
+    d: common_vendor.n($options.getStatusClass($data.activity)),
+    e: $data.coverShow ? 1 : "",
+    f: common_vendor.t($data.activity.tag),
+    g: common_vendor.n($data.activity.tagClass),
+    h: common_vendor.t($data.activity.title),
+    i: common_vendor.t($options.formatDate($data.activity.date)),
+    j: common_vendor.t($data.activity.time),
+    k: common_vendor.t($data.activity.location),
+    l: common_vendor.t($data.activity.participants),
+    m: $data.activity.content || "暂无详细描述",
+    n: $data.activity.avatars && $data.activity.avatars.length > 0
   }, $data.activity.avatars && $data.activity.avatars.length > 0 ? common_vendor.e({
-    n: common_vendor.f($data.activity.avatars, (avatar, index, i0) => {
+    o: common_vendor.f($data.activity.avatars, (avatar, index, i0) => {
       return {
         a: index,
         b: avatar
       };
     }),
-    o: $data.activity.participants > $data.activity.avatars.length
+    p: $data.activity.participants > $data.activity.avatars.length
   }, $data.activity.participants > $data.activity.avatars.length ? {
-    p: common_vendor.t($data.activity.participants - $data.activity.avatars.length)
+    q: common_vendor.t($data.activity.participants - $data.activity.avatars.length)
   } : {}) : {}, {
-    q: common_vendor.f($data.relatedActivities, (item, index, i0) => {
+    r: common_vendor.f($data.relatedActivities, (item, index, i0) => {
       return {
         a: item.image,
         b: common_vendor.t(item.title),
         c: common_vendor.t($options.formatDate(item.date)),
         d: index,
-        e: common_vendor.o(($event) => $options.viewRelatedActivity(item), index)
+        e: common_vendor.o(($event) => _ctx.viewRelatedActivity(item), index)
       };
     }),
-    r: common_vendor.o((...args) => $options.viewOrganizer && $options.viewOrganizer(...args)),
-    s: $options.canJoin($data.activity)
+    s: common_vendor.t($data.isCurrentUser ? "编辑活动" : "主办方介绍"),
+    t: common_vendor.o(($event) => $data.isCurrentUser ? _ctx.editActivity : _ctx.viewOrganizer),
+    v: $options.canJoin($data.activity)
   }, $options.canJoin($data.activity) ? {
-    t: common_vendor.o((...args) => $options.joinActivity && $options.joinActivity(...args))
+    w: common_vendor.o((...args) => $options.joinActivity && $options.joinActivity(...args))
   } : {
-    v: common_vendor.t($data.activity.status === "ended" ? "已结束" : "已参与")
-  });
+    x: common_vendor.t($data.activity.status === "ended" ? "已结束" : "已参与")
+  }) : {});
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);
 wx.createPage(MiniProgramPage);

@@ -1,0 +1,77 @@
+
+{
+	"bsonType": "object",
+	"required": ["activity_id", "user_id", "join_time", "status"],
+	"permission": {
+		"read": "doc.user_id == auth.uid || doc.activity_id in db.collection('add-content').where('user_id == auth.uid').get().data.map(item => item._id)",
+		"create": "auth.uid != null",
+		"update": "doc.user_id == auth.uid",
+		"delete": "doc.user_id == auth.uid"
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"activity_id": {
+			"bsonType": "string",
+			"description": "活动ID，关联add-content集合",
+			"foreignKey": "add-content._id"
+		},
+		"user_id": {
+			"bsonType": "string",
+			"description": "用户ID，关联uni-id-users集合",
+			"foreignKey": "uni-id-users._id"
+		},
+		"join_time": {
+			"bsonType": "timestamp",
+			"description": "参与时间"
+		},
+		"status": {
+			"bsonType": "string",
+			"description": "参与状态",
+			"enum": ["joined", "cancelled", "completed"],
+			"defaultValue": "joined"
+		},
+		"create_date": {
+			"bsonType": "timestamp",
+			"description": "创建时间",
+			"defaultValue": {
+				"$env": "now"
+			}
+		},
+		"update_date": {
+			"bsonType": "timestamp",
+			"description": "更新时间",
+			"defaultValue": {
+				"$env": "now"
+			}
+		}
+	},
+	"indexes": [
+		{
+			"IndexName": "activity_user_index",
+			"MgoKeySchema": {
+				"MgoIndexKeys": [{
+					"Name": "activity_id",
+					"Direction": "1"
+				}, {
+					"Name": "user_id",
+					"Direction": "1"
+				}],
+				"MgoIsUnique": true
+			}
+		},
+		{
+			"IndexName": "user_status_index",
+			"MgoKeySchema": {
+				"MgoIndexKeys": [{
+					"Name": "user_id",
+					"Direction": "1"
+				}, {
+					"Name": "status",
+					"Direction": "1"
+				}]
+			}
+		}
+	]
+}

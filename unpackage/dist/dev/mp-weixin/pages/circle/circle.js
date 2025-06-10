@@ -139,16 +139,64 @@ const _sfc_main = {
     viewActivityDetail(activity) {
       common_vendor.index.__f__("log", "at pages/circle/circle.vue:319", "查看活动详情", activity);
       common_vendor.index.navigateTo({
-        url: "/pages/circle/activity-datail/activity-datail?id=" + activity.id
+        url: `/pages/circle/activity-datail/activity-datail?id=${activity._id}`
       });
     },
-    // 参与活动
-    joinActivity(activity) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:327", "参与活动", activity);
-      common_vendor.index.showToast({
-        title: "已报名参与：" + activity.title,
-        icon: "success"
-      });
+    // 参与活动（关键修改）
+    async joinActivity(item) {
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:327", "参与活动", item);
+      try {
+        const token = common_vendor.index.getStorageSync("uni_id_token");
+        if (!token) {
+          common_vendor.index.showModal({
+            title: "提示",
+            content: "请先登录后再参与活动",
+            confirmText: "去登录",
+            success: (res2) => {
+              if (res2.confirm) {
+                common_vendor.index.navigateTo({
+                  url: "/pages/login/login"
+                });
+              }
+            }
+          });
+          return;
+        }
+        const res = await common_vendor.nr.callFunction({
+          name: "joinactivity",
+          data: {
+            activityId: item._id,
+            token
+          }
+        });
+        if (res.result.success) {
+          common_vendor.index.showToast({ title: "参与成功", icon: "success" });
+          this.onRefresh();
+        } else {
+          if (res.result.code === "TOKEN_INVALID") {
+            common_vendor.index.showModal({
+              title: "提示",
+              content: "登录状态已失效，请重新登录",
+              confirmText: "去登录",
+              success: (res2) => {
+                if (res2.confirm) {
+                  common_vendor.index.navigateTo({
+                    url: "/pages/login/login"
+                  });
+                }
+              }
+            });
+          } else {
+            common_vendor.index.showToast({
+              title: res.result.message || "参与失败",
+              icon: "none"
+            });
+          }
+        }
+      } catch (err) {
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:382", "参与活动失败", err);
+        common_vendor.index.showToast({ title: "参与失败，请稍后重试", icon: "none" });
+      }
     },
     // 查看置顶帖子详情
     viewPinnedDetail(post) {
@@ -180,14 +228,14 @@ const _sfc_main = {
         post.likeLoading = false;
         return;
       }
-      common_vendor.er.database().collection("user-likes").where({
+      common_vendor.nr.database().collection("user-likes").where({
         user_id: userId,
         post_id: post._id
       }).get().then((res) => {
         if (res.result.data.length > 0) {
           const likeId = res.result.data[0]._id;
-          common_vendor.er.database().collection("user-likes").doc(likeId).remove().then(() => {
-            common_vendor.er.database().collection("add-content").doc(post._id).update({
+          common_vendor.nr.database().collection("user-likes").doc(likeId).remove().then(() => {
+            common_vendor.nr.database().collection("add-content").doc(post._id).update({
               like_count: post.likes - 1
             }).then(() => {
               post.isLiked = false;
@@ -204,12 +252,12 @@ const _sfc_main = {
             post.likeLoading = false;
           });
         } else {
-          common_vendor.er.database().collection("user-likes").add({
+          common_vendor.nr.database().collection("user-likes").add({
             user_id: userId,
             post_id: post._id,
             create_time: Date.now()
           }).then(() => {
-            common_vendor.er.database().collection("add-content").doc(post._id).update({
+            common_vendor.nr.database().collection("add-content").doc(post._id).update({
               like_count: post.likes + 1
             }).then(() => {
               post.isLiked = true;
@@ -228,13 +276,13 @@ const _sfc_main = {
         }
       }).catch((err) => {
         common_vendor.index.showToast({ title: "操作失败", icon: "none" });
-        common_vendor.index.__f__("error", "at pages/circle/circle.vue:433", "点赞操作失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:485", "点赞操作失败", err);
         post.likeLoading = false;
       });
     },
     // 评论帖子
     commentPost(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:440", "评论帖子", post);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:492", "评论帖子", post);
       common_vendor.index.showToast({
         title: "评论功能开发中",
         icon: "none"
@@ -242,7 +290,7 @@ const _sfc_main = {
     },
     // 分享帖子
     sharePost(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:450", "分享帖子", post);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:502", "分享帖子", post);
       common_vendor.index.showToast({
         title: "分享功能开发中",
         icon: "none"
@@ -257,7 +305,7 @@ const _sfc_main = {
     },
     // 查看全部活动
     viewAllActivities() {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:470", "查看全部活动");
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:522", "查看全部活动");
       common_vendor.index.navigateTo({
         url: "/pages/circle/activities/activities"
       });
@@ -279,7 +327,7 @@ const _sfc_main = {
     fetchPostsFromCloud() {
       this.loading = true;
       const userId = common_vendor.index.getStorageSync("uni-id-pages-userInfo")._id;
-      common_vendor.er.database().collection("add-content").where({
+      common_vendor.nr.database().collection("add-content").where({
         content_type: "post",
         status: "published"
       }).orderBy("create_time", "desc").get().then((res) => {
@@ -290,15 +338,15 @@ const _sfc_main = {
           this.loading = false;
           return;
         }
-        const getLikesPromise = userId ? common_vendor.er.database().collection("user-likes").where({
+        const getLikesPromise = userId ? common_vendor.nr.database().collection("user-likes").where({
           user_id: userId,
-          post_id: common_vendor.er.database().command.in(posts.map((p) => p._id))
+          post_id: common_vendor.nr.database().command.in(posts.map((p) => p._id))
         }).get().then((likesRes) => {
           const likedPostIds = new Set(likesRes.result.data.map((like) => like.post_id));
           return likedPostIds;
         }) : Promise.resolve(/* @__PURE__ */ new Set());
-        const getUserInfoPromise = common_vendor.er.database().collection("uni-id-users").where({
-          _id: common_vendor.er.database().command.in(userIds)
+        const getUserInfoPromise = common_vendor.nr.database().collection("uni-id-users").where({
+          _id: common_vendor.nr.database().command.in(userIds)
         }).field("_id,avatar_file,nickname").get().then((userRes) => {
           const userMap = {};
           userRes.result.data.forEach((u) => {
@@ -324,12 +372,14 @@ const _sfc_main = {
             };
           });
           this.loading = false;
-        }).catch(() => {
+        }).catch((err) => {
+          common_vendor.index.__f__("error", "at pages/circle/circle.vue:617", "帖子加载失败", err);
           this.loading = false;
           common_vendor.index.showToast({ title: "数据加载失败", icon: "none" });
         });
-      }).catch(() => {
+      }).catch((err) => {
         this.loading = false;
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:624", "帖子加载失败", err);
         common_vendor.index.showToast({ title: "帖子加载失败", icon: "none" });
       });
     },
@@ -350,12 +400,12 @@ const _sfc_main = {
     // 获取活动数据
     async fetchActivitiesFromCloud() {
       this.loading = true;
-      const res = await common_vendor.er.database().collection("add-content").where({ content_type: "activity", status: "published" }).orderBy("create_time", "desc").get();
+      const res = await common_vendor.nr.database().collection("add-content").where({ content_type: "activity", status: "published" }).orderBy("create_time", "desc").get();
       const activities = res.result.data;
       const userIds = [...new Set(activities.map((item) => item.user_id).filter(Boolean))];
       let userMap = {};
       if (userIds.length) {
-        const userRes = await common_vendor.er.database().collection("uni-id-users").where({ _id: common_vendor.er.database().command.in(userIds) }).field("_id,avatar_file,nickname").get();
+        const userRes = await common_vendor.nr.database().collection("uni-id-users").where({ _id: common_vendor.nr.database().command.in(userIds) }).field("_id,avatar_file,nickname").get();
         userRes.result.data.forEach((u) => {
           userMap[u._id] = u;
         });

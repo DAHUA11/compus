@@ -1,7 +1,7 @@
 "use strict";
 const common_vendor = require("../../../../common/vendor.js");
 const uni_modules_uniIdPages_common_loginPage_mixin = require("../../common/login-page.mixin.js");
-const uniIdCo = common_vendor.er.importObject("uni-id-co", {
+const uniIdCo = common_vendor.nr.importObject("uni-id-co", {
   errorOptions: {
     type: "toast"
   }

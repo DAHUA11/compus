@@ -31,14 +31,14 @@ const _sfc_main = {
       if (post.isLiked) {
         post.isLiked = false;
         post.likes -= 1;
-        common_vendor.er.database().collection("user-likes").where({
+        common_vendor.nr.database().collection("user-likes").where({
           user_id: userId,
           post_id: post._id
         }).get().then((res) => {
           if (res.result.data.length > 0) {
             const likeId = res.result.data[0]._id;
-            common_vendor.er.database().collection("user-likes").doc(likeId).remove().then(() => {
-              common_vendor.er.database().collection("add-content").doc(post._id).update({
+            common_vendor.nr.database().collection("user-likes").doc(likeId).remove().then(() => {
+              common_vendor.nr.database().collection("add-content").doc(post._id).update({
                 like_count: post.likes
               }).then(() => {
                 common_vendor.index.showToast({ title: "已取消点赞", icon: "none" });
@@ -64,12 +64,12 @@ const _sfc_main = {
       } else {
         post.isLiked = true;
         post.likes += 1;
-        common_vendor.er.database().collection("user-likes").add({
+        common_vendor.nr.database().collection("user-likes").add({
           user_id: userId,
           post_id: post._id,
           create_time: Date.now()
         }).then(() => {
-          common_vendor.er.database().collection("add-content").doc(post._id).update({
+          common_vendor.nr.database().collection("add-content").doc(post._id).update({
             like_count: post.likes
           }).then(() => {
             common_vendor.index.showToast({ title: "已点赞", icon: "none" });

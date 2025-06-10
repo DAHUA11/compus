@@ -34,9 +34,6 @@ if (!Math) {
 const _sfc_main = {
   onLaunch: function() {
     common_vendor.index.__f__("log", "at App.vue:5", "App Launch");
-    common_vendor.index.preloadPage({
-      url: "pages/circle/activity-detail"
-    });
   },
   onShow: function() {
     common_vendor.index.__f__("log", "at App.vue:15", "App Show");

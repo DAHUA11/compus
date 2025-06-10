@@ -23,7 +23,7 @@ const _sfc_main = {
     // 获取帖子详情+用户信息+点赞状态
     async loadPostDetail(postId) {
       try {
-        const postRes = await common_vendor.er.database().collection("add-content").doc(postId).get();
+        const postRes = await common_vendor.nr.database().collection("add-content").doc(postId).get();
         if (!postRes.result.data || postRes.result.data.length === 0) {
           common_vendor.index.showToast({ title: "未找到该帖子", icon: "none" });
           return;
@@ -31,13 +31,13 @@ const _sfc_main = {
         const post = postRes.result.data[0];
         let user = {};
         try {
-          const userRes = await common_vendor.er.database().collection("uni-id-users").doc(post.user_id).field("_id,avatar_file,nickname").get();
+          const userRes = await common_vendor.nr.database().collection("uni-id-users").doc(post.user_id).field("_id,avatar_file,nickname").get();
           user = userRes.result.data[0] || {};
         } catch (e) {
         }
         let isLiked = false;
         if (this.userInfo && this.userInfo._id) {
-          const likeRes = await common_vendor.er.database().collection("user-likes").where({
+          const likeRes = await common_vendor.nr.database().collection("user-likes").where({
             user_id: this.userInfo._id,
             post_id: postId
           }).get();
@@ -74,11 +74,11 @@ const _sfc_main = {
       const postId = this.post._id;
       if (this.post.isLiked) {
         try {
-          const likeRes = await common_vendor.er.database().collection("user-likes").where({ user_id: userId, post_id: postId }).get();
+          const likeRes = await common_vendor.nr.database().collection("user-likes").where({ user_id: userId, post_id: postId }).get();
           if (likeRes.result.data.length > 0) {
             const likeId = likeRes.result.data[0]._id;
-            await common_vendor.er.database().collection("user-likes").doc(likeId).remove();
-            await common_vendor.er.database().collection("add-content").doc(postId).update({
+            await common_vendor.nr.database().collection("user-likes").doc(likeId).remove();
+            await common_vendor.nr.database().collection("add-content").doc(postId).update({
               like_count: this.post.likes - 1
             });
             this.post.isLiked = false;
@@ -90,12 +90,12 @@ const _sfc_main = {
         }
       } else {
         try {
-          await common_vendor.er.database().collection("user-likes").add({
+          await common_vendor.nr.database().collection("user-likes").add({
             user_id: userId,
             post_id: postId,
             create_time: Date.now()
           });
-          await common_vendor.er.database().collection("add-content").doc(postId).update({
+          await common_vendor.nr.database().collection("add-content").doc(postId).update({
             like_count: this.post.likes + 1
           });
           this.post.isLiked = true;
@@ -129,14 +129,14 @@ const _sfc_main = {
       return "";
     },
     async fetchComments(postId) {
-      const res = await common_vendor.er.database().collection("user-comment").where({ target_id: postId }).orderBy("create_time", "asc").get();
+      const res = await common_vendor.nr.database().collection("user-comment").where({ target_id: postId }).orderBy("create_time", "asc").get();
       const all = res.result.data;
       const commentIds = all.map((item) => item._id);
       let likedMap = {};
       if (this.userInfo && this.userInfo._id && commentIds.length) {
-        const likeRes = await common_vendor.er.database().collection("user-commentlikes").where({
+        const likeRes = await common_vendor.nr.database().collection("user-commentlikes").where({
           user_id: this.userInfo._id,
-          comment_id: common_vendor.er.database().command.in(commentIds)
+          comment_id: common_vendor.nr.database().command.in(commentIds)
         }).get();
         likedMap = {};
         likeRes.result.data.forEach((like) => {
@@ -169,23 +169,23 @@ const _sfc_main = {
       }
       const userId = this.userInfo._id;
       const commentId = comment._id;
-      const likeRes = await common_vendor.er.database().collection("user-commentlikes").where({ user_id: userId, comment_id: commentId }).get();
+      const likeRes = await common_vendor.nr.database().collection("user-commentlikes").where({ user_id: userId, comment_id: commentId }).get();
       if (likeRes.result.data.length > 0) {
         const likeId = likeRes.result.data[0]._id;
-        await common_vendor.er.database().collection("user-commentlikes").doc(likeId).remove();
-        await common_vendor.er.database().collection("user-comment").doc(commentId).update({
+        await common_vendor.nr.database().collection("user-commentlikes").doc(likeId).remove();
+        await common_vendor.nr.database().collection("user-comment").doc(commentId).update({
           like_count: Math.max(0, comment.like_count - 1)
         });
         this.comments[idx].like_count = Math.max(0, this.comments[idx].like_count - 1);
         this.comments[idx].liked = false;
         common_vendor.index.showToast({ title: "已取消点赞", icon: "none" });
       } else {
-        await common_vendor.er.database().collection("user-commentlikes").add({
+        await common_vendor.nr.database().collection("user-commentlikes").add({
           user_id: userId,
           comment_id: commentId,
           create_time: Date.now()
         });
-        await common_vendor.er.database().collection("user-comment").doc(commentId).update({
+        await common_vendor.nr.database().collection("user-comment").doc(commentId).update({
           like_count: comment.like_count + 1
         });
         this.comments[idx].like_count += 1;
@@ -216,7 +216,7 @@ const _sfc_main = {
         return;
       }
       const postId = this.post._id;
-      await common_vendor.er.callFunction({
+      await common_vendor.nr.callFunction({
         name: "user-comment",
         data: {
           content: this.commentText,

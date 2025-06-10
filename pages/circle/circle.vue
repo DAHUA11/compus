@@ -318,18 +318,70 @@ export default {
 		viewActivityDetail(activity) {
 			console.log('查看活动详情', activity);
 			uni.navigateTo({
-				url: '/pages/circle/activity-datail/activity-datail?id=' + activity.id
+				url: `/pages/circle/activity-datail/activity-datail?id=${activity._id}`
 			});
 		},
 		
-		// 参与活动
-		joinActivity(activity) {
-			console.log('参与活动', activity);
-			// 实际项目中应处理活动参与逻辑
-			uni.showToast({
-				title: '已报名参与：' + activity.title,
-				icon: 'success'
-			});
+		// 参与活动（关键修改）
+		async joinActivity(item) {
+			console.log('参与活动', item);
+			try {
+				// 检查登录状态
+				const token = uni.getStorageSync('uni_id_token');
+				if (!token) {
+					uni.showModal({
+						title: '提示',
+						content: '请先登录后再参与活动',
+						confirmText: '去登录',
+						success: (res) => {
+							if (res.confirm) {
+								uni.navigateTo({
+									url: '/pages/login/login'
+								});
+							}
+						}
+					});
+					return;
+				}
+		
+				// 调用云函数
+				const res = await uniCloud.callFunction({
+					name: 'joinactivity',
+					data: {
+						activityId: item._id,
+						token: token
+					}
+				});
+		
+				if (res.result.success) {
+					uni.showToast({ title: '参与成功', icon: 'success' });
+					this.onRefresh();
+				} else {
+					// 处理特定的错误码
+					if (res.result.code === 'TOKEN_INVALID') {
+						uni.showModal({
+							title: '提示',
+							content: '登录状态已失效，请重新登录',
+							confirmText: '去登录',
+							success: (res) => {
+								if (res.confirm) {
+									uni.navigateTo({
+										url: '/pages/login/login'
+									});
+								}
+							}
+						});
+					} else {
+						uni.showToast({ 
+							title: res.result.message || '参与失败', 
+							icon: 'none' 
+						});
+					}
+				}
+			} catch (err) {
+				console.error('参与活动失败', err);
+				uni.showToast({ title: '参与失败，请稍后重试', icon: 'none' });
+			}
 		},
 		
 		// 查看置顶帖子详情
@@ -561,13 +613,15 @@ export default {
 							});
 							this.loading = false;
 						})
-						.catch(() => {
+						.catch((err) => {
+							console.error('帖子加载失败', err);
 							this.loading = false;
 							uni.showToast({ title: '数据加载失败', icon: 'none' });
 						});
 				})
-				.catch(() => {
+				.catch((err) => {
 					this.loading = false;
+					console.error('帖子加载失败', err);
 					uni.showToast({ title: '帖子加载失败', icon: 'none' });
 				});
 		},

@@ -33,7 +33,7 @@ const _sfc_main = {
     src: {
       handler(src) {
         if (src && src.substring(0, 8) == "cloud://") {
-          common_vendor.er.getTempFileURL({
+          common_vendor.nr.getTempFileURL({
             fileList: [src]
           }).then((res) => {
             this.cSrc = res.fileList[0].tempFileURL;

@@ -3,7 +3,7 @@ const common_vendor = require("../../../../../common/vendor.js");
 const uni_modules_uniIdPages_common_password = require("../../../common/password.js");
 const uni_modules_uniIdPages_common_store = require("../../../common/store.js");
 const uni_modules_uniIdPages_config = require("../../../config.js");
-const uniIdCo = common_vendor.er.importObject("uni-id-co", {
+const uniIdCo = common_vendor.nr.importObject("uni-id-co", {
   customUI: true
 });
 const _sfc_main = {

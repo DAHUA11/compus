@@ -666,7 +666,7 @@ to {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #F8F9FC;
+  background-color: #f8f9fc;
   padding-top: 0;
 }
 .activity-cover {
@@ -714,6 +714,18 @@ to {
   color: #fff;
 }
 .activity-cover .activity-status.ended {
+  background: linear-gradient(90deg, #999, #bbb);
+  color: #fff;
+}
+.activity-cover .activity-status.status-upcoming {
+  background: linear-gradient(90deg, #4D7CBF, #7398cc);
+  color: #fff;
+}
+.activity-cover .activity-status.status-ongoing {
+  background: linear-gradient(90deg, #52A787, #72ba9f);
+  color: #fff;
+}
+.activity-cover .activity-status.status-ended {
   background: linear-gradient(90deg, #999, #bbb);
   color: #fff;
 }
@@ -771,11 +783,11 @@ to {
 }
 .activity-basic-info .activity-tag.club {
   background-color: rgba(91, 46, 230, 0.1);
-  color: #5B2EE6;
+  color: #5b2ee6;
 }
 .activity-basic-info .activity-tag.academic {
   background-color: rgba(6, 167, 136, 0.1);
-  color: #06A788;
+  color: #06a788;
 }
 .activity-basic-info .activity-tag.entertainment {
   background-color: rgba(217, 160, 100, 0.1);
@@ -783,7 +795,7 @@ to {
 }
 .activity-basic-info .activity-tag.sports {
   background-color: rgba(255, 51, 102, 0.1);
-  color: #FF3366;
+  color: #ff3366;
 }
 .activity-basic-info .activity-title {
   font-size: 40rpx;

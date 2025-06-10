@@ -1,8 +1,8 @@
 "use strict";
 const common_vendor = require("../../../../common/vendor.js");
-const db = common_vendor.er.database();
+const db = common_vendor.nr.database();
 db.collection("uni-id-users");
-const uniIdCo = common_vendor.er.importObject("uni-id-co");
+const uniIdCo = common_vendor.nr.importObject("uni-id-co");
 const _sfc_main = {
   emits: ["success"],
   computed: {},
@@ -23,7 +23,7 @@ const _sfc_main = {
               success({
                 code
               }) {
-                common_vendor.er.importObject("uni-id-co", {
+                common_vendor.nr.importObject("uni-id-co", {
                   customUI: true
                 }).loginByWeixin({ code }).then((e) => {
                   resolve();

@@ -42,7 +42,7 @@ const _sfc_main = {
       });
       const uploadTasks = this.images.map((filePath) => {
         return new Promise((resolve, reject) => {
-          common_vendor.er.uploadFile({
+          common_vendor.nr.uploadFile({
             filePath,
             cloudPath: `posts/${Date.now()}-${Math.random().toString(36).slice(-6)}.${filePath.split(".").pop()}`,
             success: (res) => resolve(res.fileID),
@@ -58,7 +58,7 @@ const _sfc_main = {
           common_vendor.index.showToast({ title: "请先登录", icon: "none" });
           return Promise.reject(new Error("请先登录"));
         }
-        return common_vendor.er.callFunction({
+        return common_vendor.nr.callFunction({
           name: "add-content",
           data: {
             content_type: "post",

@@ -300,7 +300,7 @@ const _sfc_main = {
     login(params, type) {
       common_vendor.index.__f__("log", "at uni_modules/uni-id-pages/components/uni-id-pages-fab-login/uni-id-pages-fab-login.vue:480", { params, type });
       let action = "loginBy" + type.trim().replace(type[0], type[0].toUpperCase());
-      const uniIdCo = common_vendor.er.importObject("uni-id-co", {
+      const uniIdCo = common_vendor.nr.importObject("uni-id-co", {
         customUI: true
       });
       uniIdCo[action](params).then((result) => {

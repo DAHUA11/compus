@@ -4,12 +4,12 @@
 		onLaunch: function() {
 			console.log('App Launch');
 			
-			// 在小程序中预加载活动详情页面
-			// #ifdef MP-WEIXIN
-			uni.preloadPage({
-				url: 'pages/circle/activity-detail'
-			});
-			// #endif
+			// // 在小程序中预加载活动详情页面
+			// // #ifdef MP-WEIXIN
+			// uni.preloadPage({
+			// 	url: 'pages/circle/activity-detail'
+			// });
+			// // #endif
 		},
 		onShow: function() {
 			console.log('App Show')

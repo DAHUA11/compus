@@ -56,7 +56,7 @@ const _sfc_main = {
         this.val = "";
         this.focusCaptchaInput = true;
       }
-      const uniIdCo = common_vendor.er.importObject("uni-captcha-co", {
+      const uniIdCo = common_vendor.nr.importObject("uni-captcha-co", {
         customUI: true
       });
       uniIdCo.getImageCaptcha({

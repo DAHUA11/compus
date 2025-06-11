@@ -171,7 +171,8 @@ const _sfc_main = {
         });
         if (res.result.success) {
           common_vendor.index.showToast({ title: "参与成功", icon: "success" });
-          this.onRefresh();
+          await this.fetchActivitiesFromCloud();
+          await this.fetchPostsFromCloud();
         } else {
           if (res.result.code === "TOKEN_INVALID") {
             common_vendor.index.showModal({
@@ -194,7 +195,7 @@ const _sfc_main = {
           }
         }
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/circle/circle.vue:382", "参与活动失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:385", "参与活动失败", err);
         common_vendor.index.showToast({ title: "参与失败，请稍后重试", icon: "none" });
       }
     },
@@ -276,13 +277,13 @@ const _sfc_main = {
         }
       }).catch((err) => {
         common_vendor.index.showToast({ title: "操作失败", icon: "none" });
-        common_vendor.index.__f__("error", "at pages/circle/circle.vue:485", "点赞操作失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:488", "点赞操作失败", err);
         post.likeLoading = false;
       });
     },
     // 评论帖子
     commentPost(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:492", "评论帖子", post);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:495", "评论帖子", post);
       common_vendor.index.showToast({
         title: "评论功能开发中",
         icon: "none"
@@ -290,7 +291,7 @@ const _sfc_main = {
     },
     // 分享帖子
     sharePost(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:502", "分享帖子", post);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:505", "分享帖子", post);
       common_vendor.index.showToast({
         title: "分享功能开发中",
         icon: "none"
@@ -305,7 +306,7 @@ const _sfc_main = {
     },
     // 查看全部活动
     viewAllActivities() {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:522", "查看全部活动");
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:525", "查看全部活动");
       common_vendor.index.navigateTo({
         url: "/pages/circle/activities/activities"
       });
@@ -373,13 +374,13 @@ const _sfc_main = {
           });
           this.loading = false;
         }).catch((err) => {
-          common_vendor.index.__f__("error", "at pages/circle/circle.vue:617", "帖子加载失败", err);
+          common_vendor.index.__f__("error", "at pages/circle/circle.vue:620", "帖子加载失败", err);
           this.loading = false;
           common_vendor.index.showToast({ title: "数据加载失败", icon: "none" });
         });
       }).catch((err) => {
         this.loading = false;
-        common_vendor.index.__f__("error", "at pages/circle/circle.vue:624", "帖子加载失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:627", "帖子加载失败", err);
         common_vendor.index.showToast({ title: "帖子加载失败", icon: "none" });
       });
     },
@@ -400,32 +401,49 @@ const _sfc_main = {
     // 获取活动数据
     async fetchActivitiesFromCloud() {
       this.loading = true;
-      const res = await common_vendor.nr.database().collection("add-content").where({ content_type: "activity", status: "published" }).orderBy("create_time", "desc").get();
-      const activities = res.result.data;
-      const userIds = [...new Set(activities.map((item) => item.user_id).filter(Boolean))];
-      let userMap = {};
-      if (userIds.length) {
-        const userRes = await common_vendor.nr.database().collection("uni-id-users").where({ _id: common_vendor.nr.database().command.in(userIds) }).field("_id,avatar_file,nickname").get();
-        userRes.result.data.forEach((u) => {
-          userMap[u._id] = u;
+      try {
+        const userId = common_vendor.index.getStorageSync("uni-id-pages-userInfo")._id;
+        const res = await common_vendor.nr.database().collection("add-content").where({ content_type: "activity", status: "published" }).orderBy("create_time", "desc").get();
+        const activities = res.result.data;
+        const userIds = [...new Set(activities.map((item) => item.user_id).filter(Boolean))];
+        let userMap = {};
+        if (userIds.length) {
+          const userRes = await common_vendor.nr.database().collection("uni-id-users").where({ _id: common_vendor.nr.database().command.in(userIds) }).field("_id,avatar_file,nickname").get();
+          userRes.result.data.forEach((u) => {
+            userMap[u._id] = u;
+          });
+        }
+        let userJoins = /* @__PURE__ */ new Set();
+        if (userId) {
+          const joinsRes = await common_vendor.nr.database().collection("activity_participants").where({
+            user_id: userId,
+            activity_id: common_vendor.nr.database().command.in(activities.map((a) => a._id))
+          }).get();
+          userJoins = new Set(joinsRes.result.data.map((j) => j.activity_id));
+        }
+        this.activities = activities.map((item) => {
+          const user = userMap[item.user_id] || {};
+          return {
+            _id: item._id,
+            image: item.files && item.files.length ? item.files[0] : "/static/images/activity-default.png",
+            tag: item.category || "",
+            tagClass: item.category === "官方" ? "official" : item.category === "热门" ? "hot" : "",
+            title: item.title,
+            description: item.content,
+            time: this.formatActivityTime(item.activity_time),
+            location: item.location || "",
+            avatars: user.avatar_file && user.avatar_file.url ? [user.avatar_file.url] : [],
+            participants: item.attendee_count || 0,
+            hasJoined: userJoins.has(item._id)
+            // 添加参与状态
+          };
         });
+      } catch (err) {
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:702", "获取活动数据失败", err);
+        common_vendor.index.showToast({ title: "获取活动数据失败", icon: "none" });
+      } finally {
+        this.loading = false;
       }
-      this.activities = activities.map((item) => {
-        const user = userMap[item.user_id] || {};
-        return {
-          _id: item._id,
-          image: item.files && item.files.length ? item.files[0] : "/static/images/activity-default.png",
-          tag: item.category || "",
-          tagClass: item.category === "官方" ? "official" : item.category === "热门" ? "hot" : "",
-          title: item.title,
-          description: item.content,
-          time: this.formatActivityTime(item.activity_time),
-          location: item.location || "",
-          avatars: user.avatar_file && user.avatar_file.url ? [user.avatar_file.url] : [],
-          participants: item.attendee_count || 0
-        };
-      });
-      this.loading = false;
     },
     // 活动时间格式化
     formatActivityTime(ts) {

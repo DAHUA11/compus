@@ -25,7 +25,11 @@
           ></image>
           <text class="participant-count">{{activity.participants}}人已参与</text>
         </view>
-        <button class="join-btn clickable-mp" @tap.stop="$emit('join', activity)">立即参与</button>
+        <button 
+          class="join-btn clickable-mp" 
+          :class="{ 'joined': activity.hasJoined }"
+          @tap.stop="$emit('join', activity)"
+        >{{ activity.hasJoined ? '已参与' : '立即参与' }}</button>
       </view>
     </view>
   </view>
@@ -202,6 +206,11 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+
+  &.joined {
+    background: linear-gradient(90deg, #999 0%, #bbb 100%);
+    box-shadow: none;
+  }
 }
 .join-btn:active {
   background: linear-gradient(90deg, #2255a4 0%, #4080FF 100%);

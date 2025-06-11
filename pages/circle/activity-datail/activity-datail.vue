@@ -88,10 +88,13 @@
 					class="action-btn clickable-mp"
 					@tap="viewOrganizer"
 				>主办方介绍</button>
-				<!-- 参与按钮保持不变 -->
-				<button class="action-btn primary clickable-mp" v-if="canJoin(activity)" @tap="joinActivity">
-					立即参与
-				</button>
+				<!-- 参与按钮 -->
+				<button 
+					class="action-btn primary clickable-mp" 
+					:class="{ 'disabled': activity.hasJoined }"
+					v-if="canJoin(activity)" 
+					@tap="joinActivity"
+				>{{ activity.hasJoined ? '已参与' : '立即参与' }}</button>
 				<button class="action-btn disabled" v-else>
 					{{ activity.status === "ended" ? "已结束" : "已参与" }}
 				</button>
@@ -194,33 +197,51 @@
 			// 加载活动详情数据
 			async loadActivityDetail() {
 				try {
-					// 1. 获取当前用户ID（通过解析uni_id_token）
+					// 1. 获取当前用户ID
 					const token = uni.getStorageSync('uni_id_token');
+					let currentUserId = null;
 					if (token) {
-						const decodedToken = JSON.parse(atob(token.split('.')[1])); // 解析JWT payload
-						this.currentUserId = decodedToken.uid; // uni-id的用户ID存储在uid字段
+						const decodedToken = JSON.parse(atob(token.split('.')[1]));
+						currentUserId = decodedToken.uid;
 					}
 
-					// 2. 查询活动详情（原有逻辑）
+					// 2. 查询活动详情
 					const res = await uniCloud.database().collection("add-content").doc(this.id).get();
 					if (res.result.data && res.result.data.length > 0) {
 						const rawActivity = res.result.data[0];
+						
 						// 3. 判断是否是当前用户发布的活动
-						this.isCurrentUser = this.currentUserId === rawActivity.user_id;
-						// 4.获取发布者信息
+						this.isCurrentUser = currentUserId === rawActivity.user_id;
+						console.log('当前用户发布的活动',rawActivity )
+						console.log('当前用户ID', currentUserId)
+						// 4. 获取发布者信息
 						const userRes = await uniCloud.database().collection("uni-id-users").doc(rawActivity.user_id)
 							.field("avatar_file,nickname").get();
+							
+						// 5. 获取用户参与状态
+						let hasJoined = false;
+						if (currentUserId) {
+							const joinRes = await uniCloud.database().collection('activity_participants')
+								.where({
+									user_id: currentUserId,
+									activity_id: rawActivity._id
+								})
+								.get();
+								console.log('参与记录', joinRes)
+							hasJoined = joinRes.result.data.length > 0;
+							console.log('参与状态', hasJoined)
+						}
+						
 						this.activity = {
 							...rawActivity,
-							date: new Date(rawActivity.activity_time), // 完整日期对象
-							// time: this.formatTime(rawActivity.activity_time),  // 单独时间部分
-							participants: rawActivity.attendee_count || 0, // 从数据库字段映射
-							tagClass: this.getTagClass(rawActivity.category), // 新增tagClass映射
-							avatar: userRes.result.data[0]?.avatar_file?.url ||
-								"/static/images/default-avatar.png",
-							image: rawActivity.files?.[0] || "/static/images/activity-default.png", // 取files第一张图
+							date: new Date(rawActivity.activity_time),
+							participants: rawActivity.attendee_count || 0,
+							tagClass: this.getTagClass(rawActivity.category),
+							avatar: userRes.result.data[0]?.avatar_file?.url || "/static/images/default-avatar.png",
+							image: rawActivity.files?.[0] || "/static/images/activity-default.png",
 							publisher: userRes.result.data[0]?.nickname || "匿名发布者",
-							formattedDate: this.formatDate(rawActivity.create_time), // 使用统一日期格式化
+							formattedDate: this.formatDate(rawActivity.create_time),
+							hasJoined: hasJoined // 添加参与状态
 						};
 					} else {
 						uni.showToast({
@@ -261,7 +282,7 @@
 				}
 			},
 
-			// 参与权限判断（同步调整）
+			// 参与权限判断
 			canJoin(item) {
 				const currentTime = new Date().getTime();
 				const activityTime = item.date.getTime();
@@ -304,7 +325,13 @@
 							title: '参与成功',
 							icon: 'success'
 						});
-						this.onRefresh();
+						await this.loadActivityDetail(); // 参与后刷新详情
+						// 通知上级页面刷新
+						const pages = getCurrentPages();
+						if (pages.length > 1) {
+							const prevPage = pages[pages.length - 2];
+							if (prevPage.onRefresh) prevPage.onRefresh();
+						}
 					} else {
 						// 处理特定的错误码
 						if (res.result.code === 'TOKEN_INVALID') {
@@ -340,7 +367,7 @@
 				const activityTime = item.date.getTime();
 				return currentTime < activityTime ? "status-upcoming" : "status-ended"; // 匹配CSS中的类名
 			},
-			// 日期格式化优化（原有方法增强）
+			// 日期格式化优化
 			formatDate(ts) {
 				const date = new Date(ts);
 				const year = date.getFullYear();
@@ -350,6 +377,10 @@
 				const minutes = date.getMinutes().toString().padStart(2, "0");
 				// 返回完整格式：年-月-日 时:分（如2024-06-15 14:30）
 				return `${year}-${month}-${day} ${hours}:${minutes}`;
+			},
+			// 新增：详情页支持外部刷新
+			onRefresh() {
+				this.loadActivityDetail();
 			}
 		},
 	};

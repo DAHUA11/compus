@@ -54,8 +54,12 @@
 						</view>
 						<view class="action-btn-group">
 							<button class="action-btn secondary clickable-mp" @tap.stop="viewDetail(item)">查看详情</button>
-							<button class="action-btn primary clickable-mp" v-if="canJoin(item)"
-								@tap.stop="joinActivity(item)">立即参与</button>
+							<button 
+								class="action-btn primary clickable-mp" 
+								:class="{ 'disabled': item.hasJoined }"
+								v-if="canJoin(item)"
+								@tap.stop="joinActivity(item)"
+							>{{ item.hasJoined ? '已参与' : '立即参与' }}</button>
 						</view>
 					</view>
 				</view>
@@ -134,6 +138,9 @@
 				this.cardAniShow = true;
 			}, 100);
 		},
+		onShow() {
+			this.onRefresh();
+		},
 		methods: {
 			// 生成日期数据
 			generateDates() {
@@ -205,20 +212,23 @@
 				});
 				if (isLoadMore) this.loading = true;
 				try {
-					// 构建查询条件（新增日期范围过滤）
+					// 获取当前用户ID
+					const userId = uni.getStorageSync('uni-id-pages-userInfo')._id;
+					
+					// 构建查询条件
 					const where = {
 						content_type: 'activity'
 					};
 
-					// 日期过滤：活动时间在选中日期的00:00到23:59之间
+					// 日期过滤
 					const startOfDay = new Date(this.selectedDate);
-					startOfDay.setHours(0, 0, 0, 0); // 当天0点
+					startOfDay.setHours(0, 0, 0, 0);
 					const endOfDay = new Date(this.selectedDate);
-					endOfDay.setHours(23, 59, 59, 999); // 当天23:59:59.999
+					endOfDay.setHours(23, 59, 59, 999);
 
 					where.activity_time = {
-						$gte: startOfDay.getTime(), // 大于等于当天0点
-						$lte: endOfDay.getTime() // 小于等于当天23:59:59.999
+						$gte: startOfDay.getTime(),
+						$lte: endOfDay.getTime()
 					};
 
 					// 处理分类筛选
@@ -226,18 +236,26 @@
 						where.category = this.filters[this.activeFilter].name;
 					}
 
-					console.log('查询条件:', where);
-
 					// 云数据库查询
 					const res = await uniCloud.database()
 						.collection('add-content')
 						.where(where)
-						.orderBy('activity_time', 'desc') // 按时间倒序排列
+						.orderBy('activity_time', 'desc')
 						.skip((this.page - 1) * 5)
 						.limit(5)
 						.get();
 
-					console.log('数据库返回数据:', res.result.data);
+					// 获取用户参与状态
+					let userJoins = new Set();
+					if (userId) {
+						const joinsRes = await uniCloud.database().collection('activity_participants')
+							.where({
+								user_id: userId,
+								activity_id: uniCloud.database().command.in(res.result.data.map(a => a._id))
+							})
+							.get();
+						userJoins = new Set(joinsRes.result.data.map(j => j.activity_id));
+					}
 
 					// 处理返回数据
 					const rawActivities = res.result.data || [];
@@ -251,10 +269,9 @@
 						participants: item.attendee_count || 0,
 						tag: item.category,
 						tagClass: this.getTagClass(item.category),
-						status: this.getStatus(item.activity_time)
+						status: this.getStatus(item.activity_time),
+						hasJoined: userJoins.has(item._id) // 添加参与状态
 					}));
-
-					console.log('格式化后的数据:', formattedActivities);
 
 					if (!isLoadMore) {
 						this.activities = formattedActivities;
@@ -262,7 +279,6 @@
 						this.activities = [...this.activities, ...formattedActivities];
 					}
 
-					// 判断是否还有更多数据
 					this.noMore = rawActivities.length < 5;
 				} catch (err) {
 					console.error('获取活动失败', err);
@@ -276,7 +292,7 @@
 				}
 			},
 
-			// 新增：时间格式化方法（提取时分）
+			// 时间格式化方法（提取时分）
 			formatTime(timestamp) {
 				const date = new Date(timestamp);
 				return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
@@ -286,14 +302,14 @@
 				const month = (date.getMonth() + 1).toString().padStart(2, '0'); // 月份从0开始，+1后补零
 				return `${month}月`;
 			},
-			// 新增：日期格式化方法（输出如"05"）
+			// 日期格式化方法（输出如"05"）
 			formatDay(date) {
 				return date.getDate().toString().padStart(2, '0'); // 日期补零到两位
 			},
 			getStatusClass(item) {
 				return item.status; // 直接返回状态标识（与样式中的.status-tag.upcoming等类名对应）
 			},
-			// 新增：状态文本转换方法（将状态标识转为中文）
+			// 状态文本转换方法（将状态标识转为中文）
 			getStatusText(item) {
 				const status = item.status;
 				switch (status) {
@@ -323,7 +339,7 @@
 					url: `/pages/circle/activity-datail/activity-datail?id=${item.id}`
 				});
 			},
-			// 参与活动（关键修改）
+			// 参与活动
 			async joinActivity(item) {
 				console.log('参与活动', item);
 				try {

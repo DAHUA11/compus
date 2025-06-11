@@ -65,7 +65,7 @@ const _sfc_main = {
   methods: {
     //编辑活动跳转方法
     editActivity() {
-      common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:167", "编辑活动");
+      common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:170", "编辑活动");
       const activity = encodeURIComponent(JSON.stringify({
         _id: this.activity._id,
         title: this.activity.title,
@@ -94,30 +94,39 @@ const _sfc_main = {
       var _a, _b, _c, _d;
       try {
         const token = common_vendor.index.getStorageSync("uni_id_token");
+        let currentUserId = null;
         if (token) {
           const decodedToken = JSON.parse(atob(token.split(".")[1]));
-          this.currentUserId = decodedToken.uid;
+          currentUserId = decodedToken.uid;
         }
         const res = await common_vendor.nr.database().collection("add-content").doc(this.id).get();
         if (res.result.data && res.result.data.length > 0) {
           const rawActivity = res.result.data[0];
-          this.isCurrentUser = this.currentUserId === rawActivity.user_id;
+          this.isCurrentUser = currentUserId === rawActivity.user_id;
+          common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:215", "当前用户发布的活动", rawActivity);
+          common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:216", "当前用户ID", currentUserId);
           const userRes = await common_vendor.nr.database().collection("uni-id-users").doc(rawActivity.user_id).field("avatar_file,nickname").get();
+          let hasJoined = false;
+          if (currentUserId) {
+            const joinRes = await common_vendor.nr.database().collection("activity_participants").where({
+              user_id: currentUserId,
+              activity_id: rawActivity._id
+            }).get();
+            common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:230", "参与记录", joinRes);
+            hasJoined = joinRes.result.data.length > 0;
+            common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:232", "参与状态", hasJoined);
+          }
           this.activity = {
             ...rawActivity,
             date: new Date(rawActivity.activity_time),
-            // 完整日期对象
-            // time: this.formatTime(rawActivity.activity_time),  // 单独时间部分
             participants: rawActivity.attendee_count || 0,
-            // 从数据库字段映射
             tagClass: this.getTagClass(rawActivity.category),
-            // 新增tagClass映射
             avatar: ((_b = (_a = userRes.result.data[0]) == null ? void 0 : _a.avatar_file) == null ? void 0 : _b.url) || "/static/images/default-avatar.png",
             image: ((_c = rawActivity.files) == null ? void 0 : _c[0]) || "/static/images/activity-default.png",
-            // 取files第一张图
             publisher: ((_d = userRes.result.data[0]) == null ? void 0 : _d.nickname) || "匿名发布者",
-            formattedDate: this.formatDate(rawActivity.create_time)
-            // 使用统一日期格式化
+            formattedDate: this.formatDate(rawActivity.create_time),
+            hasJoined
+            // 添加参与状态
           };
         } else {
           common_vendor.index.showToast({
@@ -127,7 +136,7 @@ const _sfc_main = {
           common_vendor.index.navigateBack();
         }
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/circle/activity-datail/activity-datail.vue:233", "加载活动详情失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/activity-datail/activity-datail.vue:254", "加载活动详情失败", err);
         common_vendor.index.showToast({
           title: "加载失败，请重试",
           icon: "none"
@@ -156,7 +165,7 @@ const _sfc_main = {
         return "已结束";
       }
     },
-    // 参与权限判断（同步调整）
+    // 参与权限判断
     canJoin(item) {
       const currentTime = (/* @__PURE__ */ new Date()).getTime();
       const activityTime = item.date.getTime();
@@ -164,8 +173,8 @@ const _sfc_main = {
     },
     // 参与活动（关键修改）
     async joinActivity(item) {
-      common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:272", "参与活动", item);
-      common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:273", "活动信息", this.activity);
+      common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:293", "参与活动", item);
+      common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:294", "活动信息", this.activity);
       try {
         const token = common_vendor.index.getStorageSync("uni_id_token");
         if (!token) {
@@ -195,7 +204,13 @@ const _sfc_main = {
             title: "参与成功",
             icon: "success"
           });
-          this.onRefresh();
+          await this.loadActivityDetail();
+          const pages = getCurrentPages();
+          if (pages.length > 1) {
+            const prevPage = pages[pages.length - 2];
+            if (prevPage.onRefresh)
+              prevPage.onRefresh();
+          }
         } else {
           if (res.result.code === "TOKEN_INVALID") {
             common_vendor.index.showModal({
@@ -218,7 +233,7 @@ const _sfc_main = {
           }
         }
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/circle/activity-datail/activity-datail.vue:331", "参与活动失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/activity-datail/activity-datail.vue:358", "参与活动失败", err);
         common_vendor.index.showToast({
           title: "参与失败，请稍后重试",
           icon: "none"
@@ -230,7 +245,7 @@ const _sfc_main = {
       const activityTime = item.date.getTime();
       return currentTime < activityTime ? "status-upcoming" : "status-ended";
     },
-    // 日期格式化优化（原有方法增强）
+    // 日期格式化优化
     formatDate(ts) {
       const date = new Date(ts);
       const year = date.getFullYear();
@@ -239,6 +254,10 @@ const _sfc_main = {
       const hours = date.getHours().toString().padStart(2, "0");
       const minutes = date.getMinutes().toString().padStart(2, "0");
       return `${year}-${month}-${day} ${hours}:${minutes}`;
+    },
+    // 新增：详情页支持外部刷新
+    onRefresh() {
+      this.loadActivityDetail();
     }
   }
 };
@@ -287,9 +306,11 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   }, {
     w: $options.canJoin($data.activity)
   }, $options.canJoin($data.activity) ? {
-    x: common_vendor.o((...args) => $options.joinActivity && $options.joinActivity(...args))
+    x: common_vendor.t($data.activity.hasJoined ? "已参与" : "立即参与"),
+    y: $data.activity.hasJoined ? 1 : "",
+    z: common_vendor.o((...args) => $options.joinActivity && $options.joinActivity(...args))
   } : {
-    y: common_vendor.t($data.activity.status === "ended" ? "已结束" : "已参与")
+    A: common_vendor.t($data.activity.status === "ended" ? "已结束" : "已参与")
   }) : {});
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

@@ -2,7 +2,7 @@
 const common_vendor = require("../../../common/vendor.js");
 const _sfc_main = {
   data() {
-    common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:86", "data初始化");
+    common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:90", "data初始化");
     return {
       refreshing: false,
       loading: false,
@@ -40,22 +40,25 @@ const _sfc_main = {
     };
   },
   onLoad(options) {
-    common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:123", "onLoad执行", options);
+    common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:127", "onLoad执行", options);
     this.selectedDate = this.dates[0].date;
     this.fetchActivities();
   },
   mounted() {
-    common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:130", "mounted执行");
+    common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:134", "mounted执行");
     setTimeout(() => {
       this.dateAniShow = true;
       this.filterAniShow = true;
       this.cardAniShow = true;
     }, 100);
   },
+  onShow() {
+    this.onRefresh();
+  },
   methods: {
     // 生成日期数据
     generateDates() {
-      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:140", "generateDates执行");
+      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:147", "generateDates执行");
       const dates = [];
       const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
       const now = /* @__PURE__ */ new Date();
@@ -74,7 +77,7 @@ const _sfc_main = {
     },
     // 切换日期
     switchDate(index) {
-      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:162", "switchDate执行", index);
+      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:169", "switchDate执行", index);
       if (this.activeDate === index)
         return;
       this.activeDate = index;
@@ -83,7 +86,7 @@ const _sfc_main = {
     },
     // 切换筛选条件
     switchFilter(index) {
-      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:173", "switchFilter执行", index);
+      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:180", "switchFilter执行", index);
       if (this.activeFilter === index)
         return;
       this.activeFilter = index;
@@ -91,7 +94,7 @@ const _sfc_main = {
     },
     // 下拉刷新
     onRefresh() {
-      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:182", "onRefresh执行");
+      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:189", "onRefresh执行");
       if (this.refreshing)
         return;
       this.refreshing = true;
@@ -101,7 +104,7 @@ const _sfc_main = {
     },
     // 上拉加载更多
     onLoadMore() {
-      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:193", "onLoadMore执行");
+      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:200", "onLoadMore执行");
       if (this.loading || this.noMore)
         return;
       this.page++;
@@ -109,13 +112,14 @@ const _sfc_main = {
     },
     // 获取活动数据
     async fetchActivities(isLoadMore = false) {
-      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:202", "fetchActivities开始执行", {
+      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:209", "fetchActivities开始执行", {
         isLoadMore,
         page: this.page
       });
       if (isLoadMore)
         this.loading = true;
       try {
+        const userId = common_vendor.index.getStorageSync("uni-id-pages-userInfo")._id;
         const where = {
           content_type: "activity"
         };
@@ -125,16 +129,20 @@ const _sfc_main = {
         endOfDay.setHours(23, 59, 59, 999);
         where.activity_time = {
           $gte: startOfDay.getTime(),
-          // 大于等于当天0点
           $lte: endOfDay.getTime()
-          // 小于等于当天23:59:59.999
         };
         if (this.activeFilter !== 0) {
           where.category = this.filters[this.activeFilter].name;
         }
-        common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:229", "查询条件:", where);
         const res = await common_vendor.nr.database().collection("add-content").where(where).orderBy("activity_time", "desc").skip((this.page - 1) * 5).limit(5).get();
-        common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:240", "数据库返回数据:", res.result.data);
+        let userJoins = /* @__PURE__ */ new Set();
+        if (userId) {
+          const joinsRes = await common_vendor.nr.database().collection("activity_participants").where({
+            user_id: userId,
+            activity_id: common_vendor.nr.database().command.in(res.result.data.map((a) => a._id))
+          }).get();
+          userJoins = new Set(joinsRes.result.data.map((j) => j.activity_id));
+        }
         const rawActivities = res.result.data || [];
         const formattedActivities = rawActivities.map((item) => {
           var _a;
@@ -148,10 +156,11 @@ const _sfc_main = {
             participants: item.attendee_count || 0,
             tag: item.category,
             tagClass: this.getTagClass(item.category),
-            status: this.getStatus(item.activity_time)
+            status: this.getStatus(item.activity_time),
+            hasJoined: userJoins.has(item._id)
+            // 添加参与状态
           };
         });
-        common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:257", "格式化后的数据:", formattedActivities);
         if (!isLoadMore) {
           this.activities = formattedActivities;
         } else {
@@ -159,7 +168,7 @@ const _sfc_main = {
         }
         this.noMore = rawActivities.length < 5;
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/circle/activities/activities.vue:268", "获取活动失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/activities/activities.vue:284", "获取活动失败", err);
         common_vendor.index.showToast({
           title: "加载失败",
           icon: "none"
@@ -169,7 +178,7 @@ const _sfc_main = {
         this.loading = false;
       }
     },
-    // 新增：时间格式化方法（提取时分）
+    // 时间格式化方法（提取时分）
     formatTime(timestamp) {
       const date = new Date(timestamp);
       return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
@@ -179,14 +188,14 @@ const _sfc_main = {
       const month = (date.getMonth() + 1).toString().padStart(2, "0");
       return `${month}月`;
     },
-    // 新增：日期格式化方法（输出如"05"）
+    // 日期格式化方法（输出如"05"）
     formatDay(date) {
       return date.getDate().toString().padStart(2, "0");
     },
     getStatusClass(item) {
       return item.status;
     },
-    // 新增：状态文本转换方法（将状态标识转为中文）
+    // 状态文本转换方法（将状态标识转为中文）
     getStatusText(item) {
       const status = item.status;
       switch (status) {
@@ -208,14 +217,14 @@ const _sfc_main = {
     },
     // 查看活动详情
     viewDetail(item) {
-      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:320", "查看活动详情", item);
+      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:336", "查看活动详情", item);
       common_vendor.index.navigateTo({
         url: `/pages/circle/activity-datail/activity-datail?id=${item.id}`
       });
     },
-    // 参与活动（关键修改）
+    // 参与活动
     async joinActivity(item) {
-      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:328", "参与活动", item);
+      common_vendor.index.__f__("log", "at pages/circle/activities/activities.vue:344", "参与活动", item);
       try {
         const token = common_vendor.index.getStorageSync("uni_id_token");
         if (!token) {
@@ -265,7 +274,7 @@ const _sfc_main = {
           }
         }
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/circle/activities/activities.vue:383", "参与活动失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/activities/activities.vue:399", "参与活动失败", err);
         common_vendor.index.showToast({ title: "参与失败，请稍后重试", icon: "none" });
       }
     },
@@ -328,9 +337,11 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         l: common_vendor.o(($event) => $options.viewDetail(item), index),
         m: $options.canJoin(item)
       }, $options.canJoin(item) ? {
-        n: common_vendor.o(($event) => $options.joinActivity(item), index)
+        n: common_vendor.t(item.hasJoined ? "已参与" : "立即参与"),
+        o: item.hasJoined ? 1 : "",
+        p: common_vendor.o(($event) => $options.joinActivity(item), index)
       } : {}, {
-        o: index
+        q: index
       });
     }),
     d: $data.loading

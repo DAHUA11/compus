@@ -1,42 +1,15 @@
 'use strict';
 const db = uniCloud.database();
-let uniID;
-let _uniIdCommon;
-try {
-  _uniIdCommon = require('uni-id-common');
-} catch (e) {
-  _uniIdCommon = null;
-}
-if (_uniIdCommon && _uniIdCommon.uniID) {
-  uniID = _uniIdCommon.uniID;
-} else {
-  // 本地调试环境 mock
-  uniID = {
-    async checkToken(token) {
-      // 你可以根据需要自定义返回内容
-      if (!token || token === 'mock_invalid') {
-        return { code: 1, message: 'token无效' };
-      }
-      // 模拟一个用户
-      return {
-        code: 0,
-        userInfo: {
-          _id: '684639929755e3437a29d1e8',
-          nickname: 'mock_user',
-          avatar: ''
-        }
-      };
-    }
-  }
-}
 const activityCollection = db.collection('add-content');
 
 exports.main = async (event, context) => {
+  const uniIdCommon = require('uni-id-common');
+  const uniID = uniIdCommon.createInstance({ context });
   console.log('云函数接收到的参数:', event)
   
   // 1. 验证用户身份
   const { activityId, token } = event;
-  let userInfo;
+  let userId;
   
   try {
     // 从 event 中获取 token（阿里云环境）
@@ -57,8 +30,9 @@ exports.main = async (event, context) => {
         code: 'TOKEN_INVALID'
       }
     }
-    userInfo = auth.userInfo;
-    
+    userId = auth.uid;
+    console.log('checkToken 返回:', auth)
+    console.log('用户ID:', userId)
   } catch (err) {
     console.error('验证用户身份失败:', err);
     return {
@@ -99,14 +73,20 @@ exports.main = async (event, context) => {
 
     // 6. 检查用户是否已参与
     const userActivityRes = await db.collection('activity_participants')
-      .where({ activity_id: activityId, user_id: userInfo._id })
+      .where({ activity_id: activityId, user_id: userId })
       .get();
     if (userActivityRes.data.length > 0) {
-      console.log('错误：用户已参与，userId:', userInfo._id, 'activityId:', activityId);
+      console.log('错误：用户已参与，userId:', userId, 'activityId:', activityId);
       return { success: false, message: '您已经参与过该活动' };
     }
 
-    // 7. 事务操作（更新参与人数 + 记录参与信息）
+    // 7. 获取用户详细信息
+    const userDetailRes = await db.collection('uni-id-users').doc(userId).get();
+    const userDetail = userDetailRes.data && userDetailRes.data[0] ? userDetailRes.data[0] : {};
+    const nickname = userDetail.nickname || '';
+    const avatar = (userDetail.avatar_file && userDetail.avatar_file.url) || '';
+
+    // 8. 事务操作（更新参与人数 + 记录参与信息）
     const transaction = await db.startTransaction();
     try {
       // 更新活动参与人数
@@ -118,17 +98,17 @@ exports.main = async (event, context) => {
       await transaction.collection('activity_participants')
         .add({ 
           activity_id: activityId, 
-          user_id: userInfo._id,
+          user_id: userId,
           user_info: {
-            nickname: userInfo.nickname,
-            avatar: userInfo.avatar
+            nickname,
+            avatar
           },
           join_time: now, 
           status: 'joined' 
         });
 
       await transaction.commit();
-      console.log('成功：用户参与活动，userId:', userInfo._id, 'activityId:', activityId);
+      console.log('成功：用户参与活动，userId:', userId, 'activityId:', activityId);
       return { success: true, message: '参与成功' };
     } catch (transactionErr) {
       await transaction.rollback();

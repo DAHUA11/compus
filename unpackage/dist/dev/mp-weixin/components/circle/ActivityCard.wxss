@@ -176,6 +176,10 @@
   align-items: center;
   justify-content: center;
 }
+.join-btn.joined {
+  background: linear-gradient(90deg, #999 0%, #bbb 100%);
+  box-shadow: none;
+}
 .join-btn:active {
   background: linear-gradient(90deg, #2255a4 0%, #4080FF 100%);
   transform: scale(0.97);

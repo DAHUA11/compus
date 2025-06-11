@@ -33,8 +33,10 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       };
     }),
     i: common_vendor.t($props.activity.participants),
-    j: common_vendor.o(($event) => _ctx.$emit("join", $props.activity)),
-    k: common_vendor.o(($event) => _ctx.$emit("view-detail", $props.activity))
+    j: common_vendor.t($props.activity.hasJoined ? "已参与" : "立即参与"),
+    k: $props.activity.hasJoined ? 1 : "",
+    l: common_vendor.o(($event) => _ctx.$emit("join", $props.activity)),
+    m: common_vendor.o(($event) => _ctx.$emit("view-detail", $props.activity))
   };
 }
 const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

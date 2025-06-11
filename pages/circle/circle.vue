@@ -355,7 +355,10 @@ export default {
 		
 				if (res.result.success) {
 					uni.showToast({ title: '参与成功', icon: 'success' });
-					this.onRefresh();
+					// 直接调用获取活动数据的方法
+					await this.fetchActivitiesFromCloud();
+					// 同时刷新帖子列表
+					await this.fetchPostsFromCloud();
 				} else {
 					// 处理特定的错误码
 					if (res.result.code === 'TOKEN_INVALID') {
@@ -642,41 +645,65 @@ export default {
 		// 获取活动数据
 		async fetchActivitiesFromCloud() {
 			this.loading = true;
-			// 获取所有活动
-			const res = await uniCloud.database().collection('add-content')
-				.where({ content_type: 'activity', status: 'published' })
-				.orderBy('create_time', 'desc')
-				.get();
-			const activities = res.result.data;
-			// 获取所有 user_id
-			const userIds = [...new Set(activities.map(item => item.user_id).filter(Boolean))];
-			let userMap = {};
-			if (userIds.length) {
-				const userRes = await uniCloud.database().collection('uni-id-users')
-					.where({ _id: uniCloud.database().command.in(userIds) })
-					.field('_id,avatar_file,nickname')
+			try {
+				// 获取当前用户ID
+				const userId = uni.getStorageSync('uni-id-pages-userInfo')._id;
+				
+				// 获取所有活动
+				const res = await uniCloud.database().collection('add-content')
+					.where({ content_type: 'activity', status: 'published' })
+					.orderBy('create_time', 'desc')
 					.get();
-				userRes.result.data.forEach(u => {
-					userMap[u._id] = u;
-				});
-			}
-			// 组装活动数据
-			this.activities = activities.map(item => {
-				const user = userMap[item.user_id] || {};
-				return {
-					_id: item._id,
-					image: item.files && item.files.length ? item.files[0] : '/static/images/activity-default.png',
-					tag: item.category || '',
-					tagClass: item.category === '官方' ? 'official' : (item.category === '热门' ? 'hot' : ''),
-					title: item.title,
-					description: item.content,
-					time: this.formatActivityTime(item.activity_time),
-					location: item.location || '',
-					avatars: user.avatar_file && user.avatar_file.url ? [user.avatar_file.url] : [],
-					participants: item.attendee_count || 0
+				const activities = res.result.data;
+				
+				// 获取所有 user_id
+				const userIds = [...new Set(activities.map(item => item.user_id).filter(Boolean))];
+				let userMap = {};
+				if (userIds.length) {
+					const userRes = await uniCloud.database().collection('uni-id-users')
+						.where({ _id: uniCloud.database().command.in(userIds) })
+						.field('_id,avatar_file,nickname')
+						.get();
+					userRes.result.data.forEach(u => {
+						userMap[u._id] = u;
+					});
 				}
-			});
-			this.loading = false;
+				
+				// 获取用户参与状态
+				let userJoins = new Set();
+				if (userId) {
+					const joinsRes = await uniCloud.database().collection('activity_participants')
+						.where({
+							user_id: userId,
+							activity_id: uniCloud.database().command.in(activities.map(a => a._id))
+						})
+						.get();
+					userJoins = new Set(joinsRes.result.data.map(j => j.activity_id));
+				}
+				
+				// 组装活动数据
+				this.activities = activities.map(item => {
+					const user = userMap[item.user_id] || {};
+					return {
+						_id: item._id,
+						image: item.files && item.files.length ? item.files[0] : '/static/images/activity-default.png',
+						tag: item.category || '',
+						tagClass: item.category === '官方' ? 'official' : (item.category === '热门' ? 'hot' : ''),
+						title: item.title,
+						description: item.content,
+						time: this.formatActivityTime(item.activity_time),
+						location: item.location || '',
+						avatars: user.avatar_file && user.avatar_file.url ? [user.avatar_file.url] : [],
+						participants: item.attendee_count || 0,
+						hasJoined: userJoins.has(item._id) // 添加参与状态
+					}
+				});
+			} catch (err) {
+				console.error('获取活动数据失败', err);
+				uni.showToast({ title: '获取活动数据失败', icon: 'none' });
+			} finally {
+				this.loading = false;
+			}
 		},
 		// 活动时间格式化
 		formatActivityTime(ts) {

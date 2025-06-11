@@ -113,7 +113,7 @@ const _sfc_main = {
     onEditorReady() {
       common_vendor.index.createSelectorQuery().in(this).select("#editor").context((res) => {
         if (res && res.context && this.contentHtml) {
-          common_vendor.index.__f__("log", "at pages/circle/addactivities/addactivities.vue:226", "小程序富文本内容回显", this.contentHtml);
+          common_vendor.index.__f__("log", "at pages/circle/addactivities/addactivities.vue:218", "小程序富文本内容回显", this.contentHtml);
           res.context.setContents({ html: this.contentHtml });
         }
       }).exec();
@@ -197,6 +197,19 @@ const _sfc_main = {
             icon: "success"
           });
           setTimeout(() => {
+            const pages = getCurrentPages();
+            if (pages.length > 1) {
+              const prevPage = pages[pages.length - 2];
+              if (prevPage && typeof prevPage.onRefresh === "function") {
+                prevPage.onRefresh();
+              }
+              if (pages.length > 2) {
+                const detailPage = pages[pages.length - 3];
+                if (detailPage && typeof detailPage.onRefresh === "function") {
+                  detailPage.onRefresh();
+                }
+              }
+            }
             common_vendor.index.navigateBack();
           }, 800);
         } else {
@@ -247,8 +260,9 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         d: common_vendor.o(($event) => $options.toggleTag(tag), idx)
       };
     }),
-    v: !$options.canPublish ? 1 : "",
-    w: common_vendor.o(($event) => $options.canPublish ? $options.publishActivity() : null)
+    v: common_vendor.t($data.isEdit ? "保存编辑" : "确认发布"),
+    w: !$options.canPublish ? 1 : "",
+    x: common_vendor.o(($event) => $options.canPublish ? $options.publishActivity() : null)
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

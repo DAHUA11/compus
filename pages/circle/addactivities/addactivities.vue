@@ -1,14 +1,6 @@
 <template>
   <view class="add-activity-container">
-    <!-- 自定义渐变导航栏
-    <view class="custom-navbar">
-      <view class="nav-back" @tap="navigateBack">
-        <text class="iconfont icon-arrow-left"></text>
-      </view>
-      <text class="nav-title">发布活动</text>
-    </view> -->
-
-    <!-- 原顶部渐变提示（保持不变） -->
+    <!-- 顶部渐变提示 -->
     <view class="header-gradient-overlap">
       <view class="header-gradient-fade"></view>
     </view>
@@ -96,7 +88,7 @@
         :class="{ disabled: !canPublish }"
         @tap="canPublish ? publishActivity() : null"
       >
-        发布
+        {{ isEdit ? '保存编辑' : '确认发布' }} <!-- 动态切换按钮文本 -->
       </view>
     </view>
   </view>
@@ -323,6 +315,21 @@ export default {
               icon: 'success'
             });
             setTimeout(() => {
+              // 通知上级页面刷新（适配微信小程序/uni-app）
+              const pages = getCurrentPages();
+              if (pages.length > 1) {
+                const prevPage = pages[pages.length - 2];
+                if (prevPage && typeof prevPage.onRefresh === 'function') {
+                  prevPage.onRefresh();
+                }
+                // 如果是从详情页进入编辑，详情页也需要刷新
+                if (pages.length > 2) {
+                  const detailPage = pages[pages.length - 3];
+                  if (detailPage && typeof detailPage.onRefresh === 'function') {
+                    detailPage.onRefresh();
+                  }
+                }
+              }
               uni.navigateBack();
             }, 800);
           } else {

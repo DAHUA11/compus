@@ -378,7 +378,7 @@
 				// 返回完整格式：年-月-日 时:分（如2024-06-15 14:30）
 				return `${year}-${month}-${day} ${hours}:${minutes}`;
 			},
-			// 新增：详情页支持外部刷新
+			// 详情页支持外部刷新
 			onRefresh() {
 				this.loadActivityDetail();
 			}

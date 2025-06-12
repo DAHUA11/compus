@@ -2817,6 +2817,15 @@ function inject(key, defaultValue, treatDefaultAsFactory = false) {
     warn$1(`inject() can only be used inside setup() or functional components.`);
   }
 }
+/*! #__NO_SIDE_EFFECTS__ */
+// @__NO_SIDE_EFFECTS__
+function defineComponent(options, extraOptions) {
+  return isFunction(options) ? (
+    // #8326: extend call and options.name access are considered side-effects
+    // by Rollup, so we have to wrap it in a pure-annotated IIFE.
+    /* @__PURE__ */ (() => extend({ name: options.name }, extraOptions, { setup: options }))()
+  ) : options;
+}
 const isKeepAlive = (vnode) => vnode.type.__isKeepAlive;
 function onActivated(hook, target) {
   registerKeepAliveHook(hook, "a", target);
@@ -2890,21 +2899,21 @@ function injectHook(type, hook, target = currentInstance, prepend = false) {
     );
   }
 }
-const createHook = (lifecycle) => (hook, target = currentInstance) => (
+const createHook$1 = (lifecycle) => (hook, target = currentInstance) => (
   // post-create lifecycle registrations are noops during SSR (except for serverPrefetch)
   (!isInSSRComponentSetup || lifecycle === "sp") && injectHook(lifecycle, (...args) => hook(...args), target)
 );
-const onBeforeMount = createHook("bm");
-const onMounted = createHook("m");
-const onBeforeUpdate = createHook("bu");
-const onUpdated = createHook("u");
-const onBeforeUnmount = createHook("bum");
-const onUnmounted = createHook("um");
-const onServerPrefetch = createHook("sp");
-const onRenderTriggered = createHook(
+const onBeforeMount = createHook$1("bm");
+const onMounted = createHook$1("m");
+const onBeforeUpdate = createHook$1("bu");
+const onUpdated = createHook$1("u");
+const onBeforeUnmount = createHook$1("bum");
+const onUnmounted = createHook$1("um");
+const onServerPrefetch = createHook$1("sp");
+const onRenderTriggered = createHook$1(
   "rtg"
 );
-const onRenderTracked = createHook(
+const onRenderTracked = createHook$1(
   "rtc"
 );
 function onErrorCaptured(hook, target = currentInstance) {
@@ -7310,7 +7319,7 @@ function isConsoleWritable() {
 function initRuntimeSocketService() {
   const hosts = "10.46.6.8,127.0.0.1";
   const port = "8090";
-  const id = "mp-weixin_LFuD-D";
+  const id = "mp-weixin_Hwkmgw";
   const lazy = typeof swan !== "undefined";
   let restoreError = lazy ? () => {
   } : initOnError();
@@ -8266,7 +8275,68 @@ const pages = [
   {
     path: "pages/index/index",
     style: {
-      navigationBarTitleText: "uni-app"
+      navigationBarTitleText: "首页"
+    }
+  },
+  {
+    path: "pages/task/TaskChat/TaskChat",
+    style: {
+      navigationBarTitleText: "消息通知"
+    }
+  },
+  {
+    path: "pages/task/TaskRelease/TaskRelease",
+    style: {
+      navigationBarTitleText: "任务发布"
+    }
+  },
+  {
+    path: "pages/task/TaskDetail/TaskDetail",
+    style: {
+      navigationBarTitleText: "任务详情",
+      navigationStyle: "custom"
+    }
+  },
+  {
+    path: "pages/task/TaskHall/TaskHall",
+    style: {
+      navigationBarTitleText: "任务大厅"
+    }
+  },
+  {
+    path: "pages/task/MyTask/MyTask",
+    style: {
+      navigationBarTitleText: "我的任务"
+    }
+  },
+  {
+    path: "pages/task/TaskRelease/TakeoutTask/TakeoutTask",
+    style: {
+      navigationBarTitleText: "发布外卖代拿"
+    }
+  },
+  {
+    path: "pages/task/TaskRelease/DeliveryTask/DeliveryTask",
+    style: {
+      navigationBarTitleText: "发布快递代取"
+    }
+  },
+  {
+    path: "pages/task/TaskRelease/PurchaseTask/PurchaseTask",
+    style: {
+      navigationBarTitleText: "发布求购"
+    }
+  },
+  {
+    path: "pages/task/TaskRelease/OutTask/OutTask",
+    style: {
+      navigationBarTitleText: "发布出物"
+    }
+  },
+  {
+    path: "pages/message/MessageCenter/MessageCenter",
+    style: {
+      navigationBarTitleText: "消息中心"
     }
   },
   {
@@ -8439,22 +8509,6 @@ const globalStyle = {
   navigationBarBackgroundColor: "#F8F8F8",
   backgroundColor: "#F8F8F8"
 };
-const tabBar = {
-  color: "#999999",
-  selectedColor: "#7be495",
-  backgroundColor: "#FFFFFF",
-  borderStyle: "black",
-  list: [
-    {
-      pagePath: "pages/circle/circle",
-      text: "校园圈子"
-    },
-    {
-      pagePath: "pages/user/user",
-      text: "个人中心"
-    }
-  ]
-};
 const uniIdRouter = {};
 const easycom = {
   autoscan: true,
@@ -8465,7 +8519,6 @@ const easycom = {
 const pagesJson = {
   pages,
   globalStyle,
-  tabBar,
   uniIdRouter,
   easycom
 };
@@ -11308,8 +11361,18 @@ let tr = new class {
     ;
 })();
 var nr = tr;
+const createHook = (lifecycle) => (hook, target = getCurrentInstance()) => {
+  !isInSSRComponentSetup && injectHook(lifecycle, hook, target);
+};
+const onShow = /* @__PURE__ */ createHook(ON_SHOW);
+const onLoad = /* @__PURE__ */ createHook(ON_LOAD);
+const onUnload = /* @__PURE__ */ createHook(ON_UNLOAD);
+const onReachBottom = /* @__PURE__ */ createHook(ON_REACH_BOTTOM);
+const onPullDownRefresh = /* @__PURE__ */ createHook(ON_PULL_DOWN_REFRESH);
 exports._export_sfc = _export_sfc;
+exports.computed = computed;
 exports.createSSRApp = createSSRApp;
+exports.defineComponent = defineComponent;
 exports.e = e;
 exports.f = f$1;
 exports.index = index;
@@ -11318,12 +11381,20 @@ exports.m = m$1;
 exports.n = n$1;
 exports.nr = nr;
 exports.o = o$1;
+exports.onLoad = onLoad;
+exports.onMounted = onMounted;
+exports.onPullDownRefresh = onPullDownRefresh;
+exports.onReachBottom = onReachBottom;
+exports.onShow = onShow;
+exports.onUnload = onUnload;
 exports.p = p$1;
 exports.pagesJson = pagesJson;
 exports.reactive = reactive;
+exports.ref = ref;
 exports.resolveComponent = resolveComponent;
 exports.s = s$1;
 exports.sr = sr;
 exports.t = t$1;
+exports.unref = unref;
 exports.wx$1 = wx$1;
 //# sourceMappingURL=../../.sourcemap/mp-weixin/common/vendor.js.map

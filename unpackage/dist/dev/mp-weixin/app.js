@@ -4,6 +4,16 @@ const common_vendor = require("./common/vendor.js");
 if (!Math) {
   "./pages/circle/circle.js";
   "./pages/index/index.js";
+  "./pages/task/TaskChat/TaskChat.js";
+  "./pages/task/TaskRelease/TaskRelease.js";
+  "./pages/task/TaskDetail/TaskDetail.js";
+  "./pages/task/TaskHall/TaskHall.js";
+  "./pages/task/MyTask/MyTask.js";
+  "./pages/task/TaskRelease/TakeoutTask/TakeoutTask.js";
+  "./pages/task/TaskRelease/DeliveryTask/DeliveryTask.js";
+  "./pages/task/TaskRelease/PurchaseTask/PurchaseTask.js";
+  "./pages/task/TaskRelease/OutTask/OutTask.js";
+  "./pages/message/MessageCenter/MessageCenter.js";
   "./pages/user/user.js";
   "./pages/circle/activities/activities.js";
   "./pages/circle/activity-datail/activity-datail.js";

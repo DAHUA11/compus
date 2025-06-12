@@ -11,7 +11,7 @@ const _sfc_main = {
       activeFilter: 0,
       page: 1,
       dates: this.generateDates(),
-      // 新增：存储当前选中的日期对象（精确到天）
+      // 存储当前选中的日期对象（精确到天）
       selectedDate: null,
       filters: [
         {

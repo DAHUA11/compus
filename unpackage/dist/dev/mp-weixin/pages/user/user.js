@@ -163,7 +163,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     }),
     l: common_vendor.o((...args) => $options.goedituserinfo && $options.goedituserinfo(...args))
   } : {
-    m: common_assets._imports_0$1,
+    m: common_assets._imports_0$2,
     n: common_vendor.o((...args) => $options.goToLogin && $options.goToLogin(...args))
   }, {
     o: $data.isLoggedIn

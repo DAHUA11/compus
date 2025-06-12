@@ -255,7 +255,7 @@ const _sfc_main = {
       const minutes = date.getMinutes().toString().padStart(2, "0");
       return `${year}-${month}-${day} ${hours}:${minutes}`;
     },
-    // 新增：详情页支持外部刷新
+    // 详情页支持外部刷新
     onRefresh() {
       this.loadActivityDetail();
     }

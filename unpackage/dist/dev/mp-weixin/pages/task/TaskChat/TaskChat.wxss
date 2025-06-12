@@ -1,0 +1,171 @@
+
+.container {
+  flex: 1;
+  background-color: #f5f5f5;
+}
+.navbar {
+  padding: 20rpx;
+  background-color: #ffffff;
+  border-bottom: 1rpx solid #eeeeee;
+}
+.navbar-left {
+  flex-direction: row;
+  align-items: center;
+}
+.navbar-title {
+  font-size: 36rpx;
+  font-weight: bold;
+}
+.navbar-action {
+  margin-left: 20rpx;
+  flex-direction: row;
+  align-items: center;
+}
+.action-icon {
+  font-size: 32rpx;
+  margin-right: 8rpx;
+}
+.action-text {
+  font-size: 28rpx;
+  color: #666666;
+}
+.search-bar {
+  margin: 20rpx;
+  padding: 20rpx;
+  background-color: #ffffff;
+  border-radius: 10rpx;
+  flex-direction: row;
+  align-items: center;
+}
+.search-icon {
+  font-size: 32rpx;
+  margin-right: 10rpx;
+}
+.search-input {
+  flex: 1;
+  height: 60rpx;
+  font-size: 28rpx;
+}
+.search-history {
+  margin-top: 20rpx;
+}
+.history-item {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10rpx 0;
+}
+.delete-icon {
+  color: #999999;
+  font-size: 32rpx;
+}
+.message-content {
+  flex: 1;
+}
+.section {
+  margin: 20rpx;
+  background-color: #ffffff;
+  border-radius: 10rpx;
+}
+.section-header {
+  padding: 20rpx;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1rpx solid #eeeeee;
+}
+.section-title-wrapper {
+  flex-direction: row;
+  align-items: center;
+}
+.section-icon {
+  font-size: 32rpx;
+  margin-right: 10rpx;
+}
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+.unread-count {
+  background-color: #ff4d4f;
+  color: #ffffff;
+  font-size: 24rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 20rpx;
+}
+.message-group {
+  padding: 20rpx;
+}
+.message-item {
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  background-color: #f9f9f9;
+  border-radius: 10rpx;
+}
+.message-header {
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 10rpx;
+}
+.pin-icon {
+  font-size: 28rpx;
+  margin-right: 10rpx;
+}
+.avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  margin-right: 20rpx;
+}
+.interaction-details {
+  flex: 1;
+}
+.interaction-content {
+  font-size: 28rpx;
+  color: #333333;
+}
+.message-time {
+  font-size: 24rpx;
+  color: #999999;
+  margin-top: 10rpx;
+}
+.transaction-success {
+  color: #52c41a;
+  font-size: 28rpx;
+  margin-bottom: 10rpx;
+}
+.review-button {
+  margin-top: 20rpx;
+  background-color: #1890ff;
+  color: #ffffff;
+  font-size: 28rpx;
+  padding: 10rpx 30rpx;
+  border-radius: 30rpx;
+}
+.empty-state {
+  padding: 40rpx;
+  align-items: center;
+}
+.loading-state {
+  padding: 20rpx;
+  align-items: center;
+}
+.loading-skeleton {
+  width: 100%;
+}
+.skeleton-item {
+  height: 100rpx;
+  background-color: #f0f0f0;
+  margin-bottom: 20rpx;
+  border-radius: 10rpx;
+}
+.no-more-state {
+  padding: 20rpx;
+  align-items: center;
+}
+.unread {
+  background-color: #e6f7ff;
+}
+.pinned {
+  border-left: 4rpx solid #1890ff;
+}

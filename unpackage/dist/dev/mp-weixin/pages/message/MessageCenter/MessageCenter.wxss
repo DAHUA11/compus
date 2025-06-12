@@ -1,0 +1,227 @@
+
+/* 页面容器 */
+.message-center-container.data-v-bad41071 {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* 最小高度为视口高度 */
+  background-color: #f8f8f8;
+  padding-bottom: 20rpx; /* 底部留白 */
+}
+
+/* 顶部导航栏 */
+.header.data-v-bad41071 {
+  height: 100rpx;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30rpx;
+  border-bottom: 1rpx solid #eeeeee;
+  position: -webkit-sticky;
+  position: sticky; /* 吸顶 */
+  top: 0;
+  z-index: 10;
+}
+.header-title.data-v-bad41071 {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+.header-settings-icon.data-v-bad41071 {
+  font-size: 36rpx; /* 图标大小 */
+  color: #666; /* 图标颜色 */
+}
+
+/* 消息区域通用样式 */
+.message-section.data-v-bad41071 {
+  margin: 20rpx 30rpx 0; /* 上左右外边距 */
+  padding: 25rpx; /* 内边距 */
+  background-color: #ffffff;
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.05);
+  display: flex;
+  align-items: center;
+  position: relative; /* 用于定位红点 */
+}
+.message-section .section-icon.data-v-bad41071 {
+  width: 60rpx; /* 图标区域宽度 */
+  height: 60rpx;
+  margin-right: 25rpx;
+  /* background-color: #e0e0e0; /* 图标背景 */
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 36rpx; /* 模拟图标大小 */
+}
+.message-section .section-content.data-v-bad41071 {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.message-section .section-title.data-v-bad41071 {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+.message-section .section-prompt.data-v-bad41071 {
+  font-size: 26rpx;
+  color: #ff7d00; /* 强调色 */
+}
+
+/* 未读红点 */
+.unread-dot.data-v-bad41071 {
+  position: absolute;
+  top: 15rpx; /* 根据需要调整位置 */
+  right: 15rpx; /* 根据需要调整位置 */
+  width: 20rpx; 
+  height: 20rpx;
+  background-color: #ff4d4f; /* 红色 */
+  border-radius: 50%;
+  /* border: 2rpx solid #ffffff; */
+  z-index: 5;
+}
+/* 未读红点（带数字） */
+.unread-dot.small.data-v-bad41071 {
+   width: 16rpx; 
+   height: 16rpx;
+}
+.section-header.data-v-bad41071 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 15rpx;
+}
+.section-header .unread-dot.data-v-bad41071 {
+    position: static;
+    width: auto;
+    height: auto;
+    background: none;
+    border-radius: 0;
+    color: #ff4d4f; /* 红色数字 */
+    font-size: 26rpx;
+    font-weight: bold;
+    margin-left: 10rpx;
+}
+
+/* 互动消息列表 */
+.interaction-messages.data-v-bad41071 {
+    flex-direction: column; /* 垂直布局 */
+    align-items: flex-start; /* 左对齐 */
+}
+.interaction-list.data-v-bad41071 {
+    width: 100%; /* 占据父容器宽度 */
+    /* height: 300rpx; /* 示例高度，可根据内容调整或使用flex */
+}
+.interaction-item.data-v-bad41071 {
+    display: flex;
+    align-items: center;
+    padding: 15rpx 0;
+    border-bottom: 1rpx solid #f5f5f5; /* 列表项分隔线 */
+     position: relative;
+}
+.interaction-item .item-icon.data-v-bad41071 {
+    width: 50rpx;
+    height: 50rpx;
+    margin-right: 20rpx;
+    /* background-color: #d0d0d0; */
+    border-radius: 50%;
+     display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30rpx;
+}
+.interaction-item .item-content.data-v-bad41071 {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.interaction-item .item-title.data-v-bad41071 {
+    font-size: 28rpx;
+    color: #333;
+    margin-bottom: 5rpx;
+}
+.interaction-item .item-title.is-read.data-v-bad41071 {
+    font-weight: normal;
+    color: #666;
+}
+.interaction-item .item-snippet.data-v-bad41071 {
+    font-size: 24rpx;
+    color: #999;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.interaction-item .item-time.data-v-bad41071 {
+    font-size: 22rpx;
+    color: #999;
+    margin-left: 20rpx;
+    flex-shrink: 0; /* 防止时间被压缩 */
+}
+.empty-state.data-v-bad41071 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}
+.empty-icon.data-v-bad41071 {
+    width: 100rpx;
+    height: 100rpx;
+     margin-bottom: 15rpx;
+}
+
+/* 评价提醒样式 */
+.review-prompts.data-v-bad41071 {
+    flex-direction: column;
+     align-items: flex-start;
+}
+.review-item.data-v-bad41071 {
+    display: flex;
+    align-items: center;
+    padding: 15rpx 0;
+     border-bottom: 1rpx solid #f5f5f5;
+     width: 100%; /* 占据父容器宽度 */
+}
+.review-item .item-icon.data-v-bad41071 {
+    width: 50rpx;
+    height: 50rpx;
+    margin-right: 20rpx;
+    /* background-color: #ffcc00; /* 星星颜色 */ 
+     border-radius: 50%;
+     display: flex;
+    justify-content: center;
+    align-items: center;
+     font-size: 30rpx;
+}
+.review-item .item-content.data-v-bad41071 {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.review-item .item-prompt-text.data-v-bad41071 {
+    font-size: 28rpx;
+    color: #333;
+}
+.review-button.data-v-bad41071 {
+    background-color: #00bfff; /* 柔和的蓝色 */
+    color: white;
+    font-size: 26rpx;
+    padding: 8rpx 20rpx;
+    border-radius: 30rpx;
+    margin-left: 20rpx;
+    flex-shrink: 0;
+}
+
+/* 加载更多提示 */
+.loading-more.data-v-bad41071 {
+    text-align: center;
+    padding: 20rpx;
+    font-size: 28rpx;
+    color: #999;
+}
+

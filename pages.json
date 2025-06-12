@@ -8,9 +8,71 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "uni-app"
+				"navigationBarTitleText": "首页"
 			}
 		},
+		{
+			"path": "pages/task/TaskChat/TaskChat",
+			"style": {
+				"navigationBarTitleText": "消息通知"
+			}
+		},
+		{
+			"path": "pages/task/TaskRelease/TaskRelease",
+			"style": {
+				"navigationBarTitleText": "任务发布"
+			}
+		},
+		{
+			"path": "pages/task/TaskDetail/TaskDetail",
+			"style": {
+				"navigationBarTitleText": "任务详情",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/task/TaskHall/TaskHall",
+			"style": {
+				"navigationBarTitleText": "任务大厅"
+			}
+		},
+		{
+			"path": "pages/task/MyTask/MyTask",
+			"style": {
+				"navigationBarTitleText": "我的任务"
+			}
+		},
+
+		{
+			"path": "pages/task/TaskRelease/TakeoutTask/TakeoutTask",
+			"style": {
+				"navigationBarTitleText": "发布外卖代拿"
+			}
+		},
+		{
+			"path": "pages/task/TaskRelease/DeliveryTask/DeliveryTask",
+			"style": {
+				"navigationBarTitleText": "发布快递代取"
+			}
+		},
+		{
+			"path": "pages/task/TaskRelease/PurchaseTask/PurchaseTask",
+			"style": {
+				"navigationBarTitleText": "发布求购"
+			}
+		},
+		{
+			"path": "pages/task/TaskRelease/OutTask/OutTask",
+			"style": {
+				"navigationBarTitleText": "发布出物"
+			}
+		},
+		{
+			"path": "pages/message/MessageCenter/MessageCenter",
+			"style": {
+				"navigationBarTitleText": "消息中心"
+			}
+		}
 		{
 			"path": "pages/user/user",
 			"style": {
@@ -49,7 +111,7 @@
 				"navigationBarTitleText": "任务中心"
 			}
 		}
-		
+
 		, {
 			"path": "uni_modules/uni-id-pages/pages/register/register",
 			"style": {
@@ -137,35 +199,31 @@
 			}
 		},
 		{
-			"path" : "pages/user/user-pointsdetails/user-pointsdetails",
-			"style" : 
-			{
-				"navigationBarTitleText" : "积分详情"
+			"path": "pages/user/user-pointsdetails/user-pointsdetails",
+			"style": {
+				"navigationBarTitleText": "积分详情"
 			}
 		},
 		{
-			"path" : "pages/user/user-creditdetails/user-creditdetails",
-			"style" : 
-			{
-				"navigationBarTitleText" : "信用等级"
+			"path": "pages/user/user-creditdetails/user-creditdetails",
+			"style": {
+				"navigationBarTitleText": "信用等级"
 			}
 		},
 		{
-			"path" : "pages/circle/addactivities/addactivities",
-			"style" : 
-			{
-				"navigationBarTitleText" : "发布活动"
-			
+			"path": "pages/circle/addactivities/addactivities",
+			"style": {
+				"navigationBarTitleText": "发布活动"
+
 			}
 		},
 		{
-			"path" : "pages/circle/post-create/post-create",
-			"style" : 
-			{
-				"navigationBarTitleText" : "发布帖子"
+			"path": "pages/circle/post-create/post-create",
+			"style": {
+				"navigationBarTitleText": "发布帖子"
 			}
 		}
-		
+
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
@@ -173,19 +231,7 @@
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8"
 	},
-	"tabBar": {
-		"color": "#999999",
-		"selectedColor": "#7be495",
-		"backgroundColor": "#FFFFFF",
-		"borderStyle": "black",
-		"list": [{
-			"pagePath": "pages/circle/circle",
-			"text": "校园圈子"
-		}, {
-			"pagePath": "pages/user/user",
-			"text": "个人中心"
-		}]
-	},
+	
 	"uniIdRouter": {},
 	"easycom": {
 		"autoscan": true,

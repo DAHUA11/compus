@@ -126,11 +126,11 @@ export default {
       place: '',
       tagOptions: ['户外', '运动', '娱乐', '交友', '学习', '比赛', '官方', '自发'],
       selectedTags: [],
-      maxAttendees: '', // 新增：最大参与人数
+      maxAttendees: '', // 最大参与人数
       contentHtml: '',  // 存储富文本内容
       currentWordCount: 0 , // 当前输入字数
       isEdit: false, // 是否为编辑状态
-      editId: '', // 新增：编辑时的活动ID
+      editId: '', // 编辑时的活动ID
     };
   },
   onLoad(options) {

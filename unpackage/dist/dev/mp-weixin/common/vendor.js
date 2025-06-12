@@ -7319,7 +7319,7 @@ function isConsoleWritable() {
 function initRuntimeSocketService() {
   const hosts = "10.46.6.8,127.0.0.1";
   const port = "8090";
-  const id = "mp-weixin_Hwkmgw";
+  const id = "mp-weixin_yPEDV-";
   const lazy = typeof swan !== "undefined";
   let restoreError = lazy ? () => {
   } : initOnError();
@@ -8267,15 +8267,15 @@ const createSubpackageApp = initCreateSubpackageApp();
 }
 const pages = [
   {
-    path: "pages/circle/circle",
-    style: {
-      navigationBarTitleText: "校园圈子"
-    }
-  },
-  {
     path: "pages/index/index",
     style: {
       navigationBarTitleText: "首页"
+    }
+  },
+  {
+    path: "pages/circle/circle",
+    style: {
+      navigationBarTitleText: "校园圈子"
     }
   },
   {

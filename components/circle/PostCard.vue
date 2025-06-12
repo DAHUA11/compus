@@ -8,7 +8,12 @@
           <text class="post-meta">{{post.time}}</text>
         </view>
       </view>
-      <text class="post-tag" :class="post.tagClass">{{post.tag}}</text>
+      <view class="post-header-right">
+        <text class="post-tag" :class="post.tagClass">{{post.tag}}</text>
+        <view v-if="isPostOwner" class="more-btn clickable-mp" @tap.stop="showMoreActions">
+          <text class="iconfont icon-gengduo"></text>
+        </view>
+      </view>
     </view>
     <text class="post-content">{{post.content}}</text>
     <view class="post-images" v-if="post.images && post.images.length">
@@ -49,6 +54,12 @@ export default {
       required: true
     }
   },
+  computed: {
+    isPostOwner() {
+      const userId = uni.getStorageSync('uni-id-pages-userInfo')?._id;
+      return userId && this.post.user_id === userId;
+    }
+  },
   methods: {
     previewImage(images, index) {
       // 预览图片
@@ -87,72 +98,290 @@ export default {
           .then(res => {
             if (res.result.data.length > 0) {
               const likeId = res.result.data[0]._id;
-              uniCloud.database().collection('user-likes')
-                .doc(likeId)
-                .remove()
-                .then(() => {
-                  uniCloud.database().collection('add-content')
-                    .doc(post._id)
-                    .update({
-                      like_count: post.likes
-                    })
-                    .then(() => {
-                      uni.showToast({ title: '已取消点赞', icon: 'none' });
-                      post.likeLoading = false;
-                    })
-                    .catch(() => {
-                      // 回滚
-                      post.isLiked = originLiked;
-                      post.likes = originLikes;
-                      post.likeLoading = false;
-                    });
-                })
-                .catch(() => {
-                  post.isLiked = originLiked;
-                  post.likes = originLikes;
-                  post.likeLoading = false;
-                });
+              // 使用Promise
+              Promise.all([
+                // 删除点赞记录
+                uniCloud.database().collection('user-likes')
+                  .doc(likeId)
+                  .remove(),
+                // 更新帖子点赞数
+                uniCloud.database().collection('add-content')
+                  .doc(post._id)
+                  .update({
+                    like_count: post.likes
+                  }),
+                // 扣除作者积分
+                uniCloud.database().collection('user-score')
+                  .add({
+                    user_id: post.user_id,
+                    score: -5,
+                    type: 'post_like',
+                    description: '帖子被取消点赞',
+                    related_id: post._id,
+                    create_time: Date.now()
+                  })
+              ])
+              .then(() => {
+                uni.showToast({ title: '已取消点赞', icon: 'none' });
+                post.likeLoading = false;
+              })
+              .catch(err => {
+                console.error('取消点赞失败:', err);
+                // 回滚
+                post.isLiked = originLiked;
+                post.likes = originLikes;
+                post.likeLoading = false;
+                uni.showToast({ title: '操作失败', icon: 'none' });
+              });
             } else {
               post.likeLoading = false;
             }
           })
-          .catch(() => {
+          .catch(err => {
+            console.error('查询点赞记录失败:', err);
             post.isLiked = originLiked;
             post.likes = originLikes;
             post.likeLoading = false;
+            uni.showToast({ title: '操作失败', icon: 'none' });
           });
       } else {
         // 先本地加
         post.isLiked = true;
         post.likes += 1;
-        uniCloud.database().collection('user-likes')
-          .add({
-            user_id: userId,
-            post_id: post._id,
-            create_time: Date.now()
-          })
-          .then(() => {
-            uniCloud.database().collection('add-content')
-              .doc(post._id)
-              .update({
-                like_count: post.likes
-              })
-              .then(() => {
-                uni.showToast({ title: '已点赞', icon: 'none' });
-                post.likeLoading = false;
-              })
-              .catch(() => {
-                post.isLiked = originLiked;
-                post.likes = originLikes;
-                post.likeLoading = false;
-              });
-          })
-          .catch(() => {
-            post.isLiked = originLiked;
-            post.likes = originLikes;
-            post.likeLoading = false;
-          });
+        // 使用Promise.all确保所有操作都成功
+        Promise.all([
+          // 添加点赞记录
+          uniCloud.database().collection('user-likes')
+            .add({
+              user_id: userId,
+              post_id: post._id,
+              create_time: Date.now()
+            }),
+          // 更新帖子点赞数
+          uniCloud.database().collection('add-content')
+            .doc(post._id)
+            .update({
+              like_count: post.likes
+            }),
+          // 给作者增加积分
+          uniCloud.database().collection('user-score')
+            .add({
+              user_id: post.user_id,
+              score: 5,
+              type: 'post_like',
+              description: '帖子获赞',
+              related_id: post._id,
+              create_time: Date.now()
+            })
+        ])
+        .then(() => {
+          uni.showToast({ title: '已点赞', icon: 'none' });
+          post.likeLoading = false;
+        })
+        .catch(err => {
+          console.error('点赞失败:', err);
+          // 回滚
+          post.isLiked = originLiked;
+          post.likes = originLikes;
+          post.likeLoading = false;
+          uni.showToast({ title: '操作失败', icon: 'none' });
+        });
       }
+    },
+    showMoreActions() {
+      uni.showActionSheet({
+        itemList: ['删除帖子', '置顶帖子'],
+        success: (res) => {
+          switch (res.tapIndex) {
+            case 0:
+              this.deletePost();
+              break;
+            case 1:
+              this.pinPost();
+              break;
+          }
+        }
+      });
+    },
+    deletePost() {
+      uni.showModal({
+        title: '确认删除',
+        content: '确定要删除这条帖子吗？',
+        success: (res) => {
+          if (res.confirm) {
+            // 显示加载提示
+            uni.showLoading({
+              title: '删除中...'
+            });
+            
+            // 获取当前用户ID
+            const userId = uni.getStorageSync('uni-id-pages-userInfo')?._id;
+            if (!userId) {
+              uni.hideLoading();
+              uni.showToast({ title: '请先登录', icon: 'none' });
+              return;
+            }
+
+            // 验证是否是帖子作者
+            if (userId !== this.post.user_id) {
+              uni.hideLoading();
+              uni.showToast({ title: '无权删除此帖子', icon: 'none' });
+              return;
+            }
+
+            // 删除帖子
+            uniCloud.database().collection('add-content')
+              .doc(this.post._id)
+              .remove()
+              .then(() => {
+                uni.hideLoading();
+                uni.showToast({ title: '删除成功', icon: 'success' });
+                // 通知父组件帖子已删除
+                this.$emit('post-deleted', this.post._id);
+              })
+              .catch((err) => {
+                uni.hideLoading();
+                console.error('删除帖子失败:', err);
+                uni.showToast({ 
+                  title: err.message || '删除失败', 
+                  icon: 'none' 
+                });
+              });
+          }
+        }
+      });
+    },
+    pinPost() {
+      // 先检查是否是置顶帖子
+      if (this.post.content_type === 'pinned') {
+        uni.showModal({
+          title: '取消置顶',
+          content: '确定要取消置顶吗？',
+          success: (res) => {
+            if (res.confirm) {
+              this.updatePinStatus(false);
+            }
+          }
+        });
+        return;
+      }
+
+      // 显示置顶确认对话框
+      uni.showModal({
+        title: '置顶帖子',
+        content: '置顶需要消耗20积分，是否继续？',
+        success: (res) => {
+          if (res.confirm) {
+            // 获取用户ID
+            const userId = uni.getStorageSync('uni-id-pages-userInfo')?._id;
+            if (!userId) {
+              uni.showToast({ title: '请先登录', icon: 'none' });
+              return;
+            }
+
+            // 显示加载提示
+            uni.showLoading({
+              title: '处理中...'
+            });
+
+            // 获取用户当前积分
+            uniCloud.database().collection('user-score')
+              .where({
+                user_id: userId
+              })
+              .get()
+              .then(res => {
+                // 计算当前总积分
+                const totalScore = res.result.data.reduce((sum, record) => sum + record.score, 0);
+                
+                if (totalScore < 20) {
+                  
+                  uni.hideLoading();
+                  uni.showToast({ 
+                    title: '积分不足，无法置顶', 
+                    icon: 'none' 
+                  });
+                  return;
+                }
+
+                // 扣除积分并置顶帖子
+                Promise.all([
+                  // 记录积分变动
+                  uniCloud.database().collection('user-score')
+                    .add({
+                      user_id: userId,
+                      score: -20,
+                      type: 'post_pin',
+                      description: '帖子置顶消耗',
+                      related_id: this.post._id,
+                      create_time: Date.now()
+                    }),
+                  // 更新帖子状态
+                  uniCloud.database().collection('add-content')
+                    .doc(this.post._id)
+                    .update({
+                      content_type: 'pinned'
+                    })
+                ])
+                .then(() => {
+                  uni.hideLoading();
+                  uni.showToast({ 
+                    title: '置顶成功', 
+                    icon: 'success' 
+                  });
+                  // 通知父组件帖子已更新
+                  this.$emit('post-updated', this.post._id);
+                })
+                .catch(err => {
+                  uni.hideLoading();
+                  console.error('置顶失败:', err);
+                  uni.showToast({ 
+                    title: err.message || '置顶失败', 
+                    icon: 'none' 
+                  });
+                });
+              })
+              .catch(err => {
+                uni.hideLoading();
+                console.error('获取积分记录失败:', err);
+                uni.showToast({ 
+                  title: '操作失败', 
+                  icon: 'none' 
+                });
+              });
+          }
+        }
+      });
+    },
+
+    // 更新置顶状态
+    updatePinStatus(isPinned) {
+      uni.showLoading({
+        title: '处理中...'
+      });
+
+      uniCloud.database().collection('add-content')
+        .doc(this.post._id)
+        .update({
+          content_type: isPinned ? 'pinned' : 'post'
+        })
+        .then(() => {
+          uni.hideLoading();
+          uni.showToast({ 
+            title: isPinned ? '置顶成功' : '已取消置顶', 
+            icon: 'success' 
+          });
+          // 通知父组件帖子已更新
+          this.$emit('post-updated', this.post._id);
+        })
+        .catch(err => {
+          uni.hideLoading();
+          console.error('更新置顶状态失败:', err);
+          uni.showToast({ 
+            title: err.message || '操作失败', 
+            icon: 'none' 
+          });
+        });
     }
   }
 }
@@ -220,6 +449,12 @@ export default {
     }
   }
 
+  .post-header-right {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+  }
+
   .post-tag {
     padding: 4rpx 16rpx;
     border-radius: $border-radius-lg;
@@ -254,6 +489,22 @@ export default {
     &.promotion {
       background: rgba($purple-color, 0.1);
       color: $purple-color;
+    }
+  }
+
+  .more-btn {
+    padding: 8rpx;
+    border-radius: $border-radius-circle;
+    transition: all $transition-fast;
+    
+    .iconfont {
+      font-size: 36rpx;
+      color: $gray;
+    }
+    
+    &:active {
+      background-color: rgba(0, 0, 0, 0.05);
+      transform: scale(0.95);
     }
   }
 }

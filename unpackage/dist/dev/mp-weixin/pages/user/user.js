@@ -58,10 +58,6 @@ const _sfc_main = {
     };
   },
   methods: {
-    // 切换深色模式
-    toggleDarkMode(e) {
-      this.isDarkMode = e.detail.value;
-    },
     // 检查登录状态
     checkLoginStatus() {
       const token = common_vendor.index.getStorageSync("uni_id_token");
@@ -102,11 +98,56 @@ const _sfc_main = {
       const info = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
       this.userInfo = info && info._id ? {
         ...info,
-        score: info.score || 2580,
-        // mock数据
+        score: 0,
+        // 初始化为0，等待计算
         creditLevel: info.creditLevel || "A级"
-        // mock数据
       } : {};
+      if (this.isLoggedIn && this.userInfo._id) {
+        this.getUserScore();
+      }
+    },
+    // 获取用户积分明细并计算总积分
+    async getUserScore() {
+      try {
+        const db = common_vendor.nr.database();
+        const scoreCollection = db.collection("user-score");
+        if (!this.userInfo._id) {
+          common_vendor.index.__f__("log", "at pages/user/user.vue:206", "用户未登录或ID不存在");
+          this.userInfo.score = 0;
+          return;
+        }
+        common_vendor.index.__f__("log", "at pages/user/user.vue:211", "正在查询用户积分，用户ID:", this.userInfo._id);
+        const { result } = await scoreCollection.where({
+          user_id: this.userInfo._id
+        }).orderBy("create_time", "desc").get();
+        common_vendor.index.__f__("log", "at pages/user/user.vue:221", "查询结果:", result);
+        if (!result || !result.data || !Array.isArray(result.data)) {
+          common_vendor.index.__f__("log", "at pages/user/user.vue:225", "未找到积分记录或数据格式不正确");
+          this.userInfo.score = 0;
+          return;
+        }
+        const scoreRecords = result.data;
+        common_vendor.index.__f__("log", "at pages/user/user.vue:231", "积分记录:", scoreRecords);
+        const totalScore = scoreRecords.reduce((sum, record) => {
+          const score = Number(record.score) || 0;
+          common_vendor.index.__f__("log", "at pages/user/user.vue:237", "当前记录积分:", score, "记录类型:", record.type);
+          return sum + score;
+        }, 0);
+        common_vendor.index.__f__("log", "at pages/user/user.vue:241", "计算得到的总积分:", totalScore);
+        this.userInfo.score = totalScore;
+        const storedUserInfo = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
+        if (storedUserInfo) {
+          storedUserInfo.score = totalScore;
+          common_vendor.index.setStorageSync("uni-id-pages-userInfo", storedUserInfo);
+        }
+      } catch (error) {
+        common_vendor.index.__f__("error", "at pages/user/user.vue:254", "获取积分明细失败：", error);
+        this.userInfo.score = 0;
+        common_vendor.index.showToast({
+          title: "获取积分失败",
+          icon: "none"
+        });
+      }
     }
   },
   // 生命周期钩子

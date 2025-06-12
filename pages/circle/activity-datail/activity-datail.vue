@@ -291,7 +291,6 @@
 			// 参与活动（关键修改）
 			async joinActivity(item) {
 				console.log('参与活动', item);
-				console.log("活动信息", this.activity)
 				try {
 					// 检查登录状态
 					const token = uni.getStorageSync('uni_id_token');
@@ -321,9 +320,22 @@
 					});
 
 					if (res.result.success) {
+						// 添加积分记录
+						const userInfo = uni.getStorageSync('uni-id-pages-userInfo');
+						await uniCloud.database().collection('user-score')
+							.add({
+								user_id: userInfo._id,
+								score: 10,
+								type: 'activity_join',
+								description: '参与活动奖励',
+								related_id: this.activity._id,
+								create_time: Date.now()
+							});
+
 						uni.showToast({
-							title: '参与成功',
-							icon: 'success'
+							title: '参与成功 +10分',
+							icon: 'success',
+							duration: 2000
 						});
 						await this.loadActivityDetail(); // 参与后刷新详情
 						// 通知上级页面刷新

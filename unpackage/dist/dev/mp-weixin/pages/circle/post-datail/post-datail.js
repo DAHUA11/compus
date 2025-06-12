@@ -128,6 +128,7 @@ const _sfc_main = {
         return "question";
       return "";
     },
+    // 评论
     async fetchComments(postId) {
       const res = await common_vendor.nr.database().collection("user-comment").where({ target_id: postId }).orderBy("create_time", "asc").get();
       const all = res.result.data;
@@ -145,11 +146,15 @@ const _sfc_main = {
       }
       const top = all.filter((c) => !c.parent_id).map((item) => ({
         ...item,
+        user_id: item.author_id,
+        // 确保user_id字段存在
         liked: likedMap[item._id] || false
       }));
       top.forEach((parent) => {
         parent.replies = all.filter((c) => c.parent_id === parent._id).map((item) => ({
           ...item,
+          user_id: item.author_id,
+          // 确保user_id字段存在
           liked: likedMap[item._id] || false
         }));
       });
@@ -161,36 +166,68 @@ const _sfc_main = {
         current: images[index]
       });
     },
-    //点赞评论
-    async likeComment(comment, idx) {
-      if (!this.userInfo || !this.userInfo._id) {
+    // 点赞评论
+    async likeComment(comment) {
+      if (comment.likeLoading)
+        return;
+      comment.likeLoading = true;
+      common_vendor.index.__f__("log", "at pages/circle/post-datail/post-datail.vue:290", this.userInfo);
+      const userId = this.userInfo._id;
+      if (!userId) {
         common_vendor.index.showToast({ title: "请先登录", icon: "none" });
+        comment.likeLoading = false;
         return;
       }
-      const userId = this.userInfo._id;
-      const commentId = comment._id;
-      const likeRes = await common_vendor.nr.database().collection("user-commentlikes").where({ user_id: userId, comment_id: commentId }).get();
-      if (likeRes.result.data.length > 0) {
-        const likeId = likeRes.result.data[0]._id;
-        await common_vendor.nr.database().collection("user-commentlikes").doc(likeId).remove();
-        await common_vendor.nr.database().collection("user-comment").doc(commentId).update({
-          like_count: Math.max(0, comment.like_count - 1)
-        });
-        this.comments[idx].like_count = Math.max(0, this.comments[idx].like_count - 1);
-        this.comments[idx].liked = false;
-        common_vendor.index.showToast({ title: "已取消点赞", icon: "none" });
-      } else {
-        await common_vendor.nr.database().collection("user-commentlikes").add({
-          user_id: userId,
-          comment_id: commentId,
-          create_time: Date.now()
-        });
-        await common_vendor.nr.database().collection("user-comment").doc(commentId).update({
-          like_count: comment.like_count + 1
-        });
-        this.comments[idx].like_count += 1;
-        this.comments[idx].liked = true;
-        common_vendor.index.showToast({ title: "已点赞", icon: "none" });
+      try {
+        if (comment.liked) {
+          const likeRes = await common_vendor.nr.database().collection("user-commentlikes").where({
+            user_id: userId,
+            comment_id: comment._id
+          }).get();
+          if (likeRes.result.data.length > 0) {
+            const likeId = likeRes.result.data[0]._id;
+            await common_vendor.nr.database().collection("user-commentlikes").doc(likeId).remove();
+            await common_vendor.nr.database().collection("user-comment").doc(comment._id).update({
+              like_count: (comment.like_count || 0) - 1
+            });
+            await common_vendor.nr.database().collection("user-score").add({
+              user_id: comment.user_id || comment.userId,
+              score: -2,
+              type: "comment_like",
+              description: "评论被取消点赞",
+              related_id: comment._id,
+              create_time: Date.now()
+            });
+            comment.liked = false;
+            comment.like_count = (comment.like_count || 0) - 1;
+            common_vendor.index.showToast({ title: "已取消点赞", icon: "none" });
+          }
+        } else {
+          await common_vendor.nr.database().collection("user-commentlikes").add({
+            user_id: userId,
+            comment_id: comment._id,
+            create_time: Date.now()
+          });
+          await common_vendor.nr.database().collection("user-comment").doc(comment._id).update({
+            like_count: (comment.like_count || 0) + 1
+          });
+          await common_vendor.nr.database().collection("user-score").add({
+            user_id: comment.user_id || comment.userId,
+            score: 2,
+            type: "comment_like",
+            description: "评论获赞",
+            related_id: comment._id,
+            create_time: Date.now()
+          });
+          comment.liked = true;
+          comment.like_count = (comment.like_count || 0) + 1;
+          common_vendor.index.showToast({ title: "已点赞", icon: "none" });
+        }
+      } catch (err) {
+        common_vendor.index.__f__("error", "at pages/circle/post-datail/post-datail.vue:368", "点赞操作失败:", err);
+        common_vendor.index.showToast({ title: "操作失败", icon: "none" });
+      } finally {
+        comment.likeLoading = false;
       }
     },
     focusCommentInput() {
@@ -270,7 +307,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         e: common_vendor.o(($event) => $options.replyToComment(comment), comment._id),
         f: common_vendor.n(comment.liked ? "icon-aixin4 liked" : "icon-aixin3"),
         g: common_vendor.n(comment.likeAnimate ? "like-animate" : ""),
-        h: common_vendor.o(($event) => $options.likeComment(comment, index), comment._id),
+        h: common_vendor.o(($event) => $options.likeComment(comment), comment._id),
         i: common_vendor.t(comment.like_count),
         j: comment.liked ? 1 : "",
         k: comment.replies && comment.replies.length

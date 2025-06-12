@@ -118,6 +118,7 @@ const _sfc_main = {
         }
       }).exec();
     },
+    //发布活动
     publishActivity() {
       if (!this.canPublish)
         return;

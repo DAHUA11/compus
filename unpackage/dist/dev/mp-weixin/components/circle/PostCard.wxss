@@ -88,6 +88,11 @@
   color: #86909C;
   line-height: 1.2;
 }
+.post-header .post-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
 .post-header .post-tag {
   padding: 4rpx 16rpx;
   border-radius: 30rpx;
@@ -117,6 +122,19 @@
 .post-header .post-tag.promotion {
   background: rgba(162, 89, 236, 0.1);
   color: #a259ec;
+}
+.post-header .more-btn {
+  padding: 8rpx;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+.post-header .more-btn .iconfont {
+  font-size: 36rpx;
+  color: #86909C;
+}
+.post-header .more-btn:active {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: scale(0.95);
 }
 .post-content {
   font-size: 28rpx;

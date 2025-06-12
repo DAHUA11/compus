@@ -1,0 +1,41 @@
+{
+	"bsonType": "object",
+	"required": ["user_id", "score", "type", "create_time"],
+	"permission": {
+		"read": "true",
+		"create": "auth.uid != null",
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"bsonType": "string",
+			"description": "ID，系统自动生成"
+		},
+		"user_id": {
+			"bsonType": "string",
+			"description": "用户ID"
+		},
+		"score": {
+			"bsonType": "int",
+			"description": "积分变动值，正数表示增加，负数表示减少"
+		},
+		"type": {
+			"bsonType": "string",
+			"description": "积分变动类型：post_pin-帖子置顶，post_like-帖子获赞，comment_like-评论获赞，daily_sign-每日签到,activity_join-活动参与，task-finished-任务完成,task-review-任务评价",
+			"enum": ["post_pin", "post_like", "comment_like", "daily_sign", "task-review","activity_create","activity_join","task-finished"]
+		},
+		"description": {
+			"bsonType": "string",
+			"description": "积分变动说明"
+		},
+		"related_id": {
+			"bsonType": "string",
+			"description": "关联ID，如帖子ID、评论ID等"
+		},
+		"create_time": {
+			"bsonType": "number",
+			"description": "变动时间"
+		}
+	}
+}

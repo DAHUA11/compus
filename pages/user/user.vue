@@ -139,11 +139,6 @@ export default {
 	},
 
 	methods: {
-		// 切换深色模式
-		toggleDarkMode(e) {
-			this.isDarkMode = e.detail.value
-		},
-
 		// 检查登录状态
 		checkLoginStatus() {
 			const token = uni.getStorageSync('uni_id_token')
@@ -190,9 +185,80 @@ export default {
 			const info = uni.getStorageSync('uni-id-pages-userInfo')
 			this.userInfo = info && info._id ? {
 				...info,
-				score: info.score || 2580, // mock数据
-				creditLevel: info.creditLevel || 'A级' // mock数据
+				score: 0, // 初始化为0，等待计算
+				creditLevel: info.creditLevel || 'A级'
 			} : {}
+			
+			// 如果用户已登录，获取积分明细
+			if (this.isLoggedIn && this.userInfo._id) {
+				this.getUserScore()
+			}
+		},
+
+		// 获取用户积分明细并计算总积分
+		async getUserScore() {
+			try {
+				const db = uniCloud.database()
+				const scoreCollection = db.collection('user-score')
+				
+				// 检查用户ID
+				if (!this.userInfo._id) {
+					console.log('用户未登录或ID不存在')
+					this.userInfo.score = 0
+					return
+				}
+				
+				console.log('正在查询用户积分，用户ID:', this.userInfo._id)
+				
+				// 获取用户的所有积分记录
+				const { result } = await scoreCollection
+					.where({
+						user_id: this.userInfo._id
+					})
+					.orderBy('create_time', 'desc')
+					.get()
+				
+				console.log('查询结果:', result)
+				
+				// 验证数据
+				if (!result || !result.data || !Array.isArray(result.data)) {
+					console.log('未找到积分记录或数据格式不正确')
+					this.userInfo.score = 0
+					return
+				}
+				
+				const scoreRecords = result.data
+				console.log('积分记录:', scoreRecords)
+				
+				// 计算总积分
+				const totalScore = scoreRecords.reduce((sum, record) => {
+					// 确保record.score是数字
+					const score = Number(record.score) || 0
+					console.log('当前记录积分:', score, '记录类型:', record.type)
+					return sum + score
+				}, 0)
+				
+				console.log('计算得到的总积分:', totalScore)
+				
+				// 更新用户信息中的积分
+				this.userInfo.score = totalScore
+				
+				// 更新本地存储中的用户信息
+				const storedUserInfo = uni.getStorageSync('uni-id-pages-userInfo')
+				if (storedUserInfo) {
+					storedUserInfo.score = totalScore
+					uni.setStorageSync('uni-id-pages-userInfo', storedUserInfo)
+				}
+				
+			} catch (error) {
+				console.error('获取积分明细失败：', error)
+				// 发生错误时设置积分为0
+				this.userInfo.score = 0
+				uni.showToast({
+					title: '获取积分失败',
+					icon: 'none'
+				})
+			}
 		}
 	},
 

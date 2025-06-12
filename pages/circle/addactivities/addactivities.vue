@@ -227,6 +227,7 @@ export default {
       }
       // #endif
     },
+    //发布活动
     publishActivity() {
       if (!this.canPublish) return;
       

@@ -18,8 +18,8 @@
 		},
 		"content_type": {
 			"bsonType": "string",
-			"description": "内容类型：post-普通帖子，activity-活动帖子",
-			"enum": ["post", "activity"]
+			"description": "内容类型：post-普通帖子，activity-活动帖子 ,pinned-置顶帖子",
+			"enum": ["post", "activity", "pinned"]
 		},
 		"title": {
 			"bsonType": "string",

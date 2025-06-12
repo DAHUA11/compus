@@ -66,7 +66,7 @@
                   <view class="like-btn-wrapper flex items-center">
                     <text class="iconfont like-btn"
                       :class="[comment.liked ? 'icon-aixin4 liked' : 'icon-aixin3', comment.likeAnimate ? 'like-animate' : '']"
-                      @tap="likeComment(comment, index)"></text>
+                      @tap="likeComment(comment)"></text>
                     <text class="like-count ml-xs" :class="{'liked': comment.liked}">{{ comment.like_count }}</text>
                   </view>
                 </view>
@@ -237,6 +237,7 @@ export default {
       if (category === '问答') return 'question';
       return '';
     },
+    // 评论
     async fetchComments(postId) {
       const res = await uniCloud.database().collection('user-comment')
         .where({ target_id: postId })
@@ -263,12 +264,14 @@ export default {
       // 一级评论
       const top = all.filter(c => !c.parent_id).map(item => ({
         ...item,
+        user_id: item.author_id, // 确保user_id字段存在
         liked: likedMap[item._id] || false
       }));
       // 二级评论分组
       top.forEach(parent => {
         parent.replies = all.filter(c => c.parent_id === parent._id).map(item => ({
           ...item,
+          user_id: item.author_id, // 确保user_id字段存在
           liked: likedMap[item._id] || false
         }));
       });
@@ -280,43 +283,92 @@ export default {
         current: images[index]
       });
     },
-    //点赞评论
-    async likeComment(comment, idx) {
-      if (!this.userInfo || !this.userInfo._id) {
+    // 点赞评论
+    async likeComment(comment) {
+      if (comment.likeLoading) return;
+      comment.likeLoading = true;
+      console.log(this.userInfo)
+      const userId = this.userInfo._id;
+      if (!userId) {
         uni.showToast({ title: '请先登录', icon: 'none' });
+        comment.likeLoading = false;
         return;
       }
-      const userId = this.userInfo._id;
-      const commentId = comment._id;
 
-      // 先查是否已点赞
-      const likeRes = await uniCloud.database().collection('user-commentlikes')
-        .where({ user_id: userId, comment_id: commentId })
-        .get();
+      try {
+        if (comment.liked) {
+          // 取消点赞
+          const likeRes = await uniCloud.database().collection('user-commentlikes')
+            .where({
+              user_id: userId,
+              comment_id: comment._id
+            })
+            .get();
 
-      if (likeRes.result.data.length > 0) {
-        // 已点赞，执行取消点赞
-        const likeId = likeRes.result.data[0]._id;
-        await uniCloud.database().collection('user-commentlikes').doc(likeId).remove();
-        await uniCloud.database().collection('user-comment').doc(commentId).update({
-          like_count: Math.max(0, comment.like_count - 1)
-        });
-        this.comments[idx].like_count = Math.max(0, this.comments[idx].like_count - 1);
-        this.comments[idx].liked = false;
-        uni.showToast({ title: '已取消点赞', icon: 'none' });
-      } else {
-        // 未点赞，执行点赞
-        await uniCloud.database().collection('user-commentlikes').add({
-          user_id: userId,
-          comment_id: commentId,
-          create_time: Date.now()
-        });
-        await uniCloud.database().collection('user-comment').doc(commentId).update({
-          like_count: comment.like_count + 1
-        });
-        this.comments[idx].like_count += 1;
-        this.comments[idx].liked = true;
-        uni.showToast({ title: '已点赞', icon: 'none' });
+          if (likeRes.result.data.length > 0) {
+            const likeId = likeRes.result.data[0]._id;
+            await uniCloud.database().collection('user-commentlikes')
+              .doc(likeId)
+              .remove();
+
+            // 更新评论点赞数
+            await uniCloud.database().collection('user-comment')
+              .doc(comment._id)
+              .update({
+                like_count: (comment.like_count || 0) - 1
+              });
+
+            // 扣除评论作者积分
+            await uniCloud.database().collection('user-score')
+              .add({
+                user_id: comment.user_id || comment.userId,
+                score: -2,
+                type: 'comment_like',
+                description: '评论被取消点赞',
+                related_id: comment._id,
+                create_time: Date.now()
+              });
+
+            comment.liked = false;
+            comment.like_count = (comment.like_count || 0) - 1;
+            uni.showToast({ title: '已取消点赞', icon: 'none' });
+          }
+        } else {
+          // 添加点赞
+          await uniCloud.database().collection('user-commentlikes')
+            .add({
+              user_id: userId,
+              comment_id: comment._id,
+              create_time: Date.now()
+            });
+
+            // 更新评论点赞数
+            await uniCloud.database().collection('user-comment')
+              .doc(comment._id)
+              .update({
+                like_count: (comment.like_count || 0) + 1
+              });
+
+            // 给评论作者增加积分
+            await uniCloud.database().collection('user-score')
+              .add({
+                user_id: comment.user_id || comment.userId,
+                score: 2,
+                type: 'comment_like',
+                description: '评论获赞',
+                related_id: comment._id,
+                create_time: Date.now()
+              });
+
+            comment.liked = true;
+            comment.like_count = (comment.like_count || 0) + 1;
+            uni.showToast({ title: '已点赞', icon: 'none' });
+        }
+      } catch (err) {
+        console.error('点赞操作失败:', err);
+        uni.showToast({ title: '操作失败', icon: 'none' });
+      } finally {
+        comment.likeLoading = false;
       }
     },
     focusCommentInput() {

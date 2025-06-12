@@ -68,7 +68,7 @@
 	export default {
 		data() {
 			return {
-				tags: ['讨论', '失物招领', '表白', '吐槽', '问答', '其他'],
+				tags: ['讨论', '失物招领', '表白', '吐槽', '问答', '官方','商家'],
 				selectedTag: '',
 				content: '',
 				images: []

@@ -174,7 +174,6 @@ const _sfc_main = {
     // 参与活动（关键修改）
     async joinActivity(item) {
       common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:293", "参与活动", item);
-      common_vendor.index.__f__("log", "at pages/circle/activity-datail/activity-datail.vue:294", "活动信息", this.activity);
       try {
         const token = common_vendor.index.getStorageSync("uni_id_token");
         if (!token) {
@@ -200,9 +199,19 @@ const _sfc_main = {
           }
         });
         if (res.result.success) {
+          const userInfo = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
+          await common_vendor.nr.database().collection("user-score").add({
+            user_id: userInfo._id,
+            score: 10,
+            type: "activity_join",
+            description: "参与活动奖励",
+            related_id: this.activity._id,
+            create_time: Date.now()
+          });
           common_vendor.index.showToast({
-            title: "参与成功",
-            icon: "success"
+            title: "参与成功 +10分",
+            icon: "success",
+            duration: 2e3
           });
           await this.loadActivityDetail();
           const pages = getCurrentPages();
@@ -233,7 +242,7 @@ const _sfc_main = {
           }
         }
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/circle/activity-datail/activity-datail.vue:358", "参与活动失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/activity-datail/activity-datail.vue:370", "参与活动失败", err);
         common_vendor.index.showToast({
           title: "参与失败，请稍后重试",
           icon: "none"

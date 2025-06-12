@@ -122,6 +122,8 @@
 						@like="likePost($event, index)"
 						@comment="commentPost"
 						@share="sharePost"
+						@post-deleted="handlePostDeleted"
+						@post-updated="handlePostUpdated"
 					></post-card>
 				</view>
 				
@@ -322,7 +324,7 @@ export default {
 			});
 		},
 		
-		// 参与活动（关键修改）
+		// 参与活动
 		async joinActivity(item) {
 			console.log('参与活动', item);
 			try {
@@ -493,10 +495,8 @@ export default {
 		// 评论帖子
 		commentPost(post) {
 			console.log('评论帖子', post);
-			// 实际项目中应弹出评论输入框或跳转到评论页面
-			uni.showToast({
-				title: '评论功能开发中',
-				icon: 'none'
+			uni.navigateTo({
+				url: `/pages/circle/post-datail/post-datail?id=${post._id}`
 			});
 		},
 		
@@ -528,16 +528,17 @@ export default {
 			});
 		},
 		
+		// 打开发布活动菜单
 		toggleFabMenu() {
 			this.showFabMenu = !this.showFabMenu;
 		},
+		//关闭发布活动菜单
 		closeFabMenu() {
 			this.showFabMenu = false;
 		},
+		//发布活动
 		publishActivity() {
 			this.showFabMenu = false;
-			// 跳转到发活动页面
-			uni.showToast({ title: '发活动功能开发中', icon: 'none' });
 			uni.navigateTo({
 				url: '/pages/circle/addactivities/addactivities'
 			});
@@ -602,6 +603,7 @@ export default {
 								const user = userMap[item.user_id] || {};
 								return {
 									_id: item._id,
+									user_id: item.user_id,
 									avatar: user.avatar_file && user.avatar_file.url ? user.avatar_file.url : '/static/images/default-avatar.png',
 									name: user.nickname || '匿名用户',
 									time: this.formatTime(item.create_time),
@@ -710,6 +712,28 @@ export default {
 			if (!ts) return '';
 			const date = new Date(ts);
 			return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
+		},
+		// 删除帖子
+		handlePostDeleted(post) {
+			// 从帖子列表中移除被删除的帖子
+			const index = this.posts.findIndex(p => p._id === post._id);
+			if (index !== -1) {
+				this.posts.splice(index, 1);
+			}
+			// 显示删除成功提示
+			uni.showToast({
+				title: '删除成功',
+				icon: 'success'
+			});
+			
+			// 重新获取帖子列表
+			this.fetchPostsFromCloud();
+		},
+		// 更新帖子
+		handlePostUpdated(post) {
+			// 处理帖子更新后的逻辑
+			console.log('帖子已更新', post);
+			// 这里可以添加一些逻辑，比如刷新帖子列表
 		}
 	}
 };

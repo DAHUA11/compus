@@ -133,12 +133,12 @@ export default {
   },
   methods: {
     handleQuickTask(type) {
-      this.selectedTask = type;
+      this.selectedTask = type
       // 这里可以直接跳转到对应的发布页面
     },
 
     handleSelectTask(type) {
-      this.selectedTask = type;
+      this.selectedTask = type
       
       // 根据任务类型跳转到对应页面
       const taskMap = {
@@ -147,23 +147,23 @@ export default {
         'exchange': '/pages/task/TaskRelease/ExchangeTask/ExchangeTask',
         'express': '/pages/task/TaskRelease/DeliveryTask/DeliveryTask',
         'takeout': '/pages/task/TaskRelease/TakeoutTask/TakeoutTask'
-      };
+      }
 
-      const targetPath = taskMap[type];
+      const targetPath = taskMap[type]
       if (targetPath) {
         uni.navigateTo({
           url: targetPath,
           success: () => {
-            console.log('跳转成功:', type);
+            console.log('跳转成功:', type)
           },
           fail: (err) => {
-            console.error('跳转失败:', err);
+            console.error('跳转失败:', err)
             uni.showToast({
               title: '页面跳转失败',
               icon: 'none'
-            });
+            })
           }
-        });
+        })
       }
     },
 
@@ -171,20 +171,20 @@ export default {
       uni.navigateTo({
         url: task.path,
         success: () => {
-          console.log('跳转成功:', task.name);
+          console.log('跳转成功:', task.name)
         },
         fail: (err) => {
-          console.error('跳转失败:', err);
+          console.error('跳转失败:', err)
           uni.showToast({
             title: '页面跳转失败',
             icon: 'none'
-          });
+          })
         }
-      });
+      })
     },
 
     getCurrentUser() {
-      const TEST_MODE = true; // 确保这里的TEST_MODE也为true
+      const TEST_MODE = true // 确保这里的TEST_MODE也为true
       const TEST_USER = {
         publisher: {
           id: 'test_publisher_id',
@@ -201,17 +201,17 @@ export default {
           nickname: '测试用户',
           avatar: '/static/avatar/default.png'
         }
-      };
+      }
       
       if (TEST_MODE) {
-        const testRole = uni.getStorageSync('testRole') || 'user';
-        return TEST_USER[testRole] || TEST_USER.user;
+        const testRole = uni.getStorageSync('testRole') || 'user'
+        return TEST_USER[testRole] || TEST_USER.user
       } else {
         return {
           id: uni.getStorageSync('userId'),
           nickname: uni.getStorageSync('userNickname'),
           avatar: uni.getStorageSync('userAvatar')
-        };
+        }
       }
     },
 
@@ -219,7 +219,7 @@ export default {
       try {
         // 表单验证
         if (!this.validateForm()) {
-          return;
+          return
         }
 
         // 构建任务数据
@@ -245,22 +245,22 @@ export default {
           } : {}),
           // 添加发布者信息，使用getCurrentUser()获取
           publisher: this.getCurrentUser()
-        };
+        }
 
-        console.log('发布任务:', taskData);
+        console.log('发布任务:', taskData)
 
         // 将任务数据传递给TaskHall和MyTask页面
-        const taskInfo = encodeURIComponent(JSON.stringify(taskData));
+        const taskInfo = encodeURIComponent(JSON.stringify(taskData))
         
         // 使用事件总线发送任务数据
-        uni.$emit('newTaskPublished', taskData);
+        uni.$emit('newTaskPublished', taskData)
 
         // 显示成功提示
         uni.showToast({
           title: '发布成功',
           icon: 'success',
           duration: 2000
-        });
+        })
 
         // 延迟跳转，让用户看到成功提示
         setTimeout(() => {
@@ -268,26 +268,26 @@ export default {
           uni.switchTab({
             url: '/pages/task/TaskHall/TaskHall',
             success: () => {
-              console.log('跳转到任务大厅成功');
+              console.log('跳转到任务大厅成功')
               // 在跳转成功后，通过事件总线传递任务数据
-              uni.$emit('newTaskPublished', taskData);
+              uni.$emit('newTaskPublished', taskData)
             },
             fail: (err) => {
-              console.error('跳转失败:', err);
+              console.error('跳转失败:', err)
               uni.showToast({
                 title: '页面跳转失败',
                 icon: 'none'
-              });
+              })
             }
-          });
-        }, 1500);
+          })
+        }, 1500)
 
       } catch (error) {
-        console.error('发布任务失败:', error);
+        console.error('发布任务失败:', error)
         uni.showToast({
           title: '发布失败，请重试',
           icon: 'error'
-        });
+        })
       }
     }
   }
@@ -296,7 +296,7 @@ export default {
 
 <style>
 page {
-height: 100%;
+height: 100%
 }
 .container {
 min-height: 100%;

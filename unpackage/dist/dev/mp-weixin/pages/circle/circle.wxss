@@ -857,28 +857,6 @@ to {
   align-items: center;
   justify-content: center;
 }
-.filter-tabs {
-  display: flex;
-  background-color: rgba(0, 0, 0, 0.03);
-  border-radius: 30rpx;
-  padding: 4rpx;
-}
-.filter-tab {
-  padding: 15rpx 20rpx;
-  margin-left: 0;
-  border-radius: 30rpx;
-  font-size: 24rpx;
-  color: #4E5969;
-  transition: all 0.2s;
-}
-.filter-tab.active {
-  background-color: #4D7CBF;
-  color: #FFFFFF;
-  box-shadow: 0 2rpx 8rpx rgba(77, 124, 191, 0.25);
-}
-.filter-tab-active {
-  opacity: 0.8;
-}
 .activity-scroll {
   white-space: nowrap;
   margin: -15rpx;

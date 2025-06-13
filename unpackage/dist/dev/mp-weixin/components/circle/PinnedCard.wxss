@@ -160,11 +160,17 @@
 }
 .post-actions .action-item .action-icon.liked {
   color: #C25B5B;
+}
+.post-actions .action-item .action-icon.like-animate {
   animation: likeAnimation 0.5s ease;
 }
 .post-actions .action-item .action-text {
   font-size: 24rpx;
   color: #86909C;
+  transition: color 0.3s ease;
+}
+.post-actions .action-item .action-text.liked {
+  color: #C25B5B;
 }
 .post-actions .action-item:active {
   background-color: #F2F3F5;

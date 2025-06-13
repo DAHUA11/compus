@@ -79,6 +79,11 @@
 			"description": "评论数量",
 			"default": 0,
 			"minimum": 0
+		},
+		"postType": {
+			"bsonType": "string",
+			"description": "发布类型：post-普通帖子，activity-活动帖子 ,pinned-置顶帖子",
+			"enum": ["post", "activity", "pinned"]
 		}
 	}
 }

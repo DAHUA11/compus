@@ -29,33 +29,7 @@ const _sfc_main = {
       ],
       filterTabs: ["最新", "热门", "关注"],
       activities: [],
-      pinnedPosts: [
-        {
-          id: 1,
-          avatar: "https://picsum.photos/id/1/48/48",
-          name: "校园公告",
-          type: "官方",
-          time: "2小时前",
-          content: "各位同学请注意，学校将于5月25日至5月27日进行教学楼维修改造工程，期间相关教室将暂停使用，请大家合理安排学习时间。",
-          likes: 128,
-          comments: 36
-        },
-        {
-          id: 2,
-          avatar: "https://picsum.photos/id/2/48/48",
-          name: "校园超市",
-          type: "商家",
-          time: "昨天",
-          content: "校园超市将于本周进行夏季大促销活动，各类饮料、零食、生活用品均有优惠，欢迎同学们前来选购！",
-          images: [
-            "https://picsum.photos/id/20/200/200",
-            "https://picsum.photos/id/21/200/200",
-            "https://picsum.photos/id/22/200/200"
-          ],
-          likes: 86,
-          comments: 24
-        }
-      ],
+      pinnedPosts: [],
       posts: [],
       showFabMenu: false
     };
@@ -65,6 +39,7 @@ const _sfc_main = {
     this.fetchPostsFromCloud();
     common_vendor.index.setStorageSync("posts", this.posts);
     await this.fetchActivitiesFromCloud();
+    await this.fetchPinnedPosts();
   },
   onShow() {
     this.fetchPostsFromCloud();
@@ -137,14 +112,14 @@ const _sfc_main = {
     },
     // 查看活动详情
     viewActivityDetail(activity) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:321", "查看活动详情", activity);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:287", "查看活动详情", activity);
       common_vendor.index.navigateTo({
         url: `/pages/circle/activity-datail/activity-datail?id=${activity._id}`
       });
     },
     // 参与活动
     async joinActivity(item) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:329", "参与活动", item);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:295", "参与活动", item);
       try {
         const token = common_vendor.index.getStorageSync("uni_id_token");
         if (!token) {
@@ -195,14 +170,14 @@ const _sfc_main = {
           }
         }
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/circle/circle.vue:387", "参与活动失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:353", "参与活动失败", err);
         common_vendor.index.showToast({ title: "参与失败，请稍后重试", icon: "none" });
       }
     },
     // 查看置顶帖子详情
     viewPinnedDetail(post) {
       common_vendor.index.navigateTo({
-        url: `/pages/circle/pinned-datail/pinned-datail?id=${post.id}`
+        url: `/pages/circle/pinned-datail/pinned-datail?id=${post._id}`
       });
     },
     // 查看帖子详情
@@ -277,20 +252,20 @@ const _sfc_main = {
         }
       }).catch((err) => {
         common_vendor.index.showToast({ title: "操作失败", icon: "none" });
-        common_vendor.index.__f__("error", "at pages/circle/circle.vue:490", "点赞操作失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:456", "点赞操作失败", err);
         post.likeLoading = false;
       });
     },
     // 评论帖子
     commentPost(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:497", "评论帖子", post);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:463", "评论帖子", post);
       common_vendor.index.navigateTo({
         url: `/pages/circle/post-datail/post-datail?id=${post._id}`
       });
     },
     // 分享帖子
     sharePost(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:505", "分享帖子", post);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:471", "分享帖子", post);
       common_vendor.index.showToast({
         title: "分享功能开发中",
         icon: "none"
@@ -305,7 +280,7 @@ const _sfc_main = {
     },
     // 查看全部活动
     viewAllActivities() {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:525", "查看全部活动");
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:491", "查看全部活动");
       common_vendor.index.navigateTo({
         url: "/pages/circle/activities/activities"
       });
@@ -376,13 +351,13 @@ const _sfc_main = {
           });
           this.loading = false;
         }).catch((err) => {
-          common_vendor.index.__f__("error", "at pages/circle/circle.vue:622", "帖子加载失败", err);
+          common_vendor.index.__f__("error", "at pages/circle/circle.vue:588", "帖子加载失败", err);
           this.loading = false;
           common_vendor.index.showToast({ title: "数据加载失败", icon: "none" });
         });
       }).catch((err) => {
         this.loading = false;
-        common_vendor.index.__f__("error", "at pages/circle/circle.vue:629", "帖子加载失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:595", "帖子加载失败", err);
         common_vendor.index.showToast({ title: "帖子加载失败", icon: "none" });
       });
     },
@@ -441,7 +416,7 @@ const _sfc_main = {
           };
         });
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/circle/circle.vue:704", "获取活动数据失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:670", "获取活动数据失败", err);
         common_vendor.index.showToast({ title: "获取活动数据失败", icon: "none" });
       } finally {
         this.loading = false;
@@ -468,7 +443,55 @@ const _sfc_main = {
     },
     // 更新帖子
     handlePostUpdated(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:735", "帖子已更新", post);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:701", "帖子已更新", post);
+    },
+    // 获取置顶帖子
+    async fetchPinnedPosts() {
+      try {
+        const res = await common_vendor.nr.database().collection("add-content").where({
+          content_type: "pinned",
+          status: "published"
+        }).orderBy("create_time", "desc").get();
+        const pinnedPosts = res.result.data;
+        const userIds = [...new Set(pinnedPosts.map((item) => item.user_id).filter(Boolean))];
+        let userMap = {};
+        if (userIds.length) {
+          const userRes = await common_vendor.nr.database().collection("uni-id-users").where({ _id: common_vendor.nr.database().command.in(userIds) }).field("_id,avatar_file,nickname").get();
+          userRes.result.data.forEach((u) => {
+            userMap[u._id] = u;
+          });
+        }
+        const userInfo = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
+        let likedMap = {};
+        if (userInfo && userInfo._id && pinnedPosts.length) {
+          const likeRes = await common_vendor.nr.database().collection("user-likes").where({
+            user_id: userInfo._id,
+            post_id: common_vendor.nr.database().command.in(pinnedPosts.map((p) => p._id))
+          }).get();
+          likeRes.result.data.forEach((like) => {
+            likedMap[like.post_id] = true;
+          });
+        }
+        this.pinnedPosts = pinnedPosts.map((item) => {
+          const user = userMap[item.user_id] || {};
+          return {
+            _id: item._id || "",
+            avatar: user.avatar_file && user.avatar_file.url ? user.avatar_file.url : "/static/images/default-avatar.png",
+            name: user.nickname || "匿名用户",
+            type: item.category || "官方",
+            time: this.formatTime(item.create_time),
+            content: item.content || "",
+            images: item.files || [],
+            likes: item.like_count || 0,
+            comments: item.comment_count || 0,
+            isLiked: likedMap[item._id] || false
+          };
+        });
+      } catch (err) {
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:759", "获取置顶帖子失败", err);
+        common_vendor.index.showToast({ title: "获取置顶帖子失败", icon: "none" });
+        this.pinnedPosts = [];
+      }
     }
   }
 };
@@ -515,19 +538,11 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     h: common_vendor.p({
       post: $data.pinnedPosts[1]
     }),
-    i: common_vendor.f($data.filterTabs, (tab, index, i0) => {
-      return {
-        a: common_vendor.t(tab),
-        b: index,
-        c: $data.activeTab === index ? 1 : "",
-        d: common_vendor.o(($event) => $options.switchTab(index), index)
-      };
-    }),
-    j: $data.posts.length === 0 && !$data.loading
+    i: $data.posts.length === 0 && !$data.loading
   }, $data.posts.length === 0 && !$data.loading ? {
-    k: common_vendor.o((...args) => $options.onRefresh && $options.onRefresh(...args))
+    j: common_vendor.o((...args) => $options.onRefresh && $options.onRefresh(...args))
   } : {
-    l: common_vendor.f($data.posts, (post, index, i0) => {
+    k: common_vendor.f($data.posts, (post, index, i0) => {
       return {
         a: index,
         b: common_vendor.o($options.viewPostDetail, index),
@@ -543,21 +558,21 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       };
     })
   }, {
-    m: $data.loading
+    l: $data.loading
   }, $data.loading ? {} : {}, {
-    n: $data.noMore && $data.posts.length > 0
+    m: $data.noMore && $data.posts.length > 0
   }, $data.noMore && $data.posts.length > 0 ? {} : {}, {
-    o: $data.showFabMenu
+    n: $data.showFabMenu
   }, $data.showFabMenu ? {
-    p: common_vendor.o((...args) => $options.closeFabMenu && $options.closeFabMenu(...args))
+    o: common_vendor.o((...args) => $options.closeFabMenu && $options.closeFabMenu(...args))
   } : {}, {
-    q: $data.showFabMenu
+    p: $data.showFabMenu
   }, $data.showFabMenu ? {
-    r: common_vendor.o((...args) => $options.publishPost && $options.publishPost(...args)),
-    s: common_vendor.o((...args) => $options.publishActivity && $options.publishActivity(...args))
+    q: common_vendor.o((...args) => $options.publishPost && $options.publishPost(...args)),
+    r: common_vendor.o((...args) => $options.publishActivity && $options.publishActivity(...args))
   } : {}, {
-    t: common_vendor.n($data.showFabMenu ? "icon-jianshao" : "icon-a-chuangjiantianjiapiliangtianjia"),
-    v: common_vendor.o((...args) => $options.toggleFabMenu && $options.toggleFabMenu(...args))
+    s: common_vendor.n($data.showFabMenu ? "icon-jianshao" : "icon-a-chuangjiantianjiapiliangtianjia"),
+    t: common_vendor.o((...args) => $options.toggleFabMenu && $options.toggleFabMenu(...args))
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

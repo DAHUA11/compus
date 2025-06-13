@@ -1,34 +1,34 @@
 <template>
-  <view class="pinned-card mp-rounded" @tap="$emit('view-detail', post)">
+  <view class="pinned-card mp-rounded" @tap="handleViewDetail">
     <view class="pinned-indicator" v-if="isPin">
       <text class="iconfont icon-zhiding"></text>
     </view>
-    <view class="post-header" @tap="$emit('view-detail', post)">
+    <view class="post-header" @tap.stop="handleViewDetail">
       <view class="post-avatar-bg">
-        <image :src="post.avatar" class="post-avatar mp-rounded"></image>
+        <image :src="post.avatar || '/static/images/default-avatar.png'" class="post-avatar mp-rounded"></image>
       </view>
       <view class="post-info">
-        <text class="post-name">{{post.name}}</text>
-        <text class="post-meta">{{post.type}} · {{post.time}}</text>
+        <text class="post-name">{{post.name || '匿名用户'}}</text>
+        <text class="post-meta">{{post.type || '官方'}} · {{post.time || '刚刚'}}</text>
       </view>
       <view class="tag-container">
         <text class="post-tag pin" v-if="isPin">置顶</text>
-        <text class="post-tag" :class="getTagClass(post.type)">{{post.type}}</text>
+        <text class="post-tag" :class="getTagClass(post.type)">{{post.type || '官方'}}</text>
       </view>
     </view>
-    <text class="post-content">{{post.content}}</text>
+    <text class="post-content">{{post.content || ''}}</text>
     <view class="post-images" v-if="post.images && post.images.length">
       <image v-for="(img, idx) in post.images" :key="idx" :src="img" mode="aspectFill" class="post-image mp-rounded"
         @tap.stop="previewImage(post.images, idx)"></image>
     </view>
     <view class="post-actions">
       <view class="action-item like-btn clickable-mp" @tap.stop="handleLike">
-        <text class="action-icon iconfont icon-dianzan" :class="{'liked': isLiked}"></text>
-        <text class="action-text">{{ post.likes }}</text>
+        <text class="action-icon iconfont icon-dianzan" :class="{'liked': isLiked, 'like-animate': post.likeAnimate}"></text>
+        <text class="action-text" :class="{'liked': isLiked}">{{ post.likes || 0 }}</text>
       </view>
-      <view class="action-item comment-btn clickable-mp" @tap.stop="$emit('view-detail', post)">
+      <view class="action-item comment-btn clickable-mp" @tap.stop="handleViewDetail">
         <text class="action-icon iconfont icon-icon_comment"></text>
-        <text class="action-text">{{post.comments}}</text>
+        <text class="action-text">{{post.comments || 0}}</text>
       </view>
       <view class="action-item share-btn clickable-mp" @tap.stop>
         <text class="action-icon iconfont icon-fasong"></text>
@@ -45,7 +45,19 @@ export default {
   props: {
     post: {
       type: Object,
-      required: true
+      required: true,
+      default: () => ({
+        avatar: '/static/images/default-avatar.png',
+        name: '匿名用户',
+        type: '官方',
+        time: '刚刚',
+        content: '',
+        images: [],
+        likes: 0,
+        comments: 0,
+        isLiked: false,
+        likeAnimate: false
+      })
     },
     isPin: {
       type: Boolean,
@@ -58,16 +70,128 @@ export default {
   },
   data() {
     return {
-      isLiked: false
+      likeLoading: false
     }
   },
+  computed: {
+    isLiked() {
+      return this.post.isLiked || false;
+    }
+  },
+  async created() {
+    // 组件创建时检查用户点赞状态
+    await this.checkUserLikeStatus();
+  },
   methods: {
-    handleLike() {
-      this.isLiked = !this.isLiked;
-      if (this.isLiked) {
-        this.post.likes++;
-      } else {
-        this.post.likes--;
+    async checkUserLikeStatus() {
+      const userInfo = uni.getStorageSync('uni-id-pages-userInfo');
+      if (!userInfo || !userInfo._id || !this.post._id) return;
+
+      try {
+        const likeRes = await uniCloud.database().collection('user-likes')
+          .where({
+            user_id: userInfo._id,
+            post_id: this.post._id
+          })
+          .get();
+
+        // 更新点赞状态
+        this.post.isLiked = likeRes.result.data.length > 0;
+      } catch (e) {
+        console.error('检查点赞状态失败:', e);
+      }
+    },
+    async handleViewDetail() {
+      try {
+        // 确保数据已更新
+        await this.$nextTick();
+        
+        // 使用 Promise 包装导航操作
+        await new Promise((resolve, reject) => {
+          uni.navigateTo({
+            url: `/pages/circle/pinned-datail/pinned-datail?id=${this.post._id}`,
+            success: resolve,
+            fail: (err) => {
+              console.error('导航失败:', err);
+              // 如果导航失败，尝试使用 redirectTo
+              uni.redirectTo({
+                url: `/pages/circle/pinned-datail/pinned-datail?id=${this.post._id}`,
+                success: resolve,
+                fail: reject
+              });
+            }
+          });
+        });
+      } catch (error) {
+        console.error('页面跳转失败:', error);
+        uni.showToast({
+          title: '页面跳转失败，请重试',
+          icon: 'none',
+          duration: 2000
+        });
+      }
+    },
+    async handleLike() {
+      if (this.likeLoading) return;
+      this.likeLoading = true;
+
+      const userInfo = uni.getStorageSync('uni-id-pages-userInfo');
+      if (!userInfo || !userInfo._id) {
+        uni.showToast({ title: '请先登录', icon: 'none' });
+        this.likeLoading = false;
+        return;
+      }
+
+      const userId = userInfo._id;
+      const postId = this.post._id;
+
+      try {
+        // 添加点赞动画
+        this.post.likeAnimate = true;
+        setTimeout(() => {
+          this.post.likeAnimate = false;
+        }, 500);
+
+        // 先检查是否已点赞
+        const likeRes = await uniCloud.database().collection('user-likes')
+          .where({
+            user_id: userId,
+            post_id: postId
+          })
+          .get();
+
+        if (likeRes.result.data.length > 0) {
+          // 已点赞，执行取消点赞
+          const likeId = likeRes.result.data[0]._id;
+          await uniCloud.database().collection('user-likes').doc(likeId).remove();
+          await uniCloud.database().collection('add-content').doc(postId).update({
+            like_count: this.post.likes - 1
+          });
+          this.post.isLiked = false;
+          this.post.likes -= 1;
+          uni.showToast({ title: '已取消点赞', icon: 'none' });
+        } else {
+          // 未点赞，执行点赞
+          await uniCloud.database().collection('user-likes').add({
+            user_id: userId,
+            post_id: postId,
+            create_time: Date.now()
+          });
+          await uniCloud.database().collection('add-content').doc(postId).update({
+            like_count: this.post.likes + 1
+          });
+          this.post.isLiked = true;
+          this.post.likes += 1;
+          uni.showToast({ title: '已点赞', icon: 'none' });
+        }
+
+        // 触发父组件的更新
+        this.$emit('post-updated', this.post);
+      } catch (e) {
+        console.error('点赞操作失败:', e);
+        uni.showToast({ title: '操作失败', icon: 'none' });
+      } finally {
+        this.likeLoading = false;
       }
     },
     previewImage(images, index) {
@@ -227,6 +351,9 @@ export default {
       
       &.liked {
         color: $error-color;
+      }
+      
+      &.like-animate {
         animation: likeAnimation 0.5s ease;
       }
     }
@@ -234,6 +361,11 @@ export default {
     .action-text {
       font-size: $font-size-sm;
       color: $gray;
+      transition: color 0.3s ease;
+      
+      &.liked {
+        color: $error-color;
+      }
     }
     
     &:active {
@@ -331,14 +463,8 @@ export default {
 }
 
 @keyframes likeAnimation {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.4);
-  }
-  100% {
-    transform: scale(1);
-  }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+  100% { transform: scale(1); }
 }
 </style> 

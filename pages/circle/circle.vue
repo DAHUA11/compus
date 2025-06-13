@@ -93,15 +93,6 @@
 						</view>
 						<text class="text-dark">最新动态</text>
 					</view>
-					<view class="filter-tabs">
-						<text 
-							v-for="(tab, index) in filterTabs" 
-							:key="index" 
-							class="filter-tab" 
-							:class="{ active: activeTab === index }"
-							@tap="switchTab(index)"
-						>{{ tab }}</text>
-					</view>
 				</view>
 				
 				<!-- 空状态显示 -->
@@ -192,33 +183,7 @@ export default {
 			],
 			filterTabs: ['最新', '热门', '关注'],
 			activities: [],
-			pinnedPosts: [
-				{
-					id: 1,
-					avatar: 'https://picsum.photos/id/1/48/48',
-					name: '校园公告',
-					type: '官方',
-					time: '2小时前',
-					content: '各位同学请注意，学校将于5月25日至5月27日进行教学楼维修改造工程，期间相关教室将暂停使用，请大家合理安排学习时间。',
-					likes: 128,
-					comments: 36
-				},
-				{
-					id: 2,
-					avatar: 'https://picsum.photos/id/2/48/48',
-					name: '校园超市',
-					type: '商家',
-					time: '昨天',
-					content: '校园超市将于本周进行夏季大促销活动，各类饮料、零食、生活用品均有优惠，欢迎同学们前来选购！',
-					images: [
-						'https://picsum.photos/id/20/200/200',
-						'https://picsum.photos/id/21/200/200',
-						'https://picsum.photos/id/22/200/200'
-					],
-					likes: 86,
-					comments: 24
-				}
-			],
+			pinnedPosts: [],
 			posts: [],
 			showFabMenu: false
 		};
@@ -229,6 +194,7 @@ export default {
 		this.fetchPostsFromCloud();
 		uni.setStorageSync('posts', this.posts);
 		await this.fetchActivitiesFromCloud();
+		await this.fetchPinnedPosts();
 	},
 	onShow() {
 		this.fetchPostsFromCloud();
@@ -392,7 +358,7 @@ export default {
 		// 查看置顶帖子详情
 		viewPinnedDetail(post) {
 			uni.navigateTo({
-				url: `/pages/circle/pinned-datail/pinned-datail?id=${post.id}`
+				url: `/pages/circle/pinned-datail/pinned-datail?id=${post._id}`
 			});
 		},
 		
@@ -734,6 +700,66 @@ export default {
 			// 处理帖子更新后的逻辑
 			console.log('帖子已更新', post);
 			// 这里可以添加一些逻辑，比如刷新帖子列表
+		},
+		// 获取置顶帖子
+		async fetchPinnedPosts() {
+			try {
+				// 获取置顶帖子
+				const res = await uniCloud.database().collection('add-content')
+					.where({
+						content_type: 'pinned',
+						status: 'published'
+					})
+					.orderBy('create_time', 'desc')
+					.get();
+				const pinnedPosts = res.result.data;
+				// 获取所有 user_id
+				const userIds = [...new Set(pinnedPosts.map(item => item.user_id).filter(Boolean))];
+				let userMap = {};
+				if (userIds.length) {
+					const userRes = await uniCloud.database().collection('uni-id-users')
+						.where({ _id: uniCloud.database().command.in(userIds) })
+						.field('_id,avatar_file,nickname')
+						.get();
+					userRes.result.data.forEach(u => {
+						userMap[u._id] = u;
+					});
+				}
+				// 获取当前用户点赞状态
+				const userInfo = uni.getStorageSync('uni-id-pages-userInfo');
+				let likedMap = {};
+				if (userInfo && userInfo._id && pinnedPosts.length) {
+					const likeRes = await uniCloud.database().collection('user-likes')
+						.where({
+							user_id: userInfo._id,
+							post_id: uniCloud.database().command.in(pinnedPosts.map(p => p._id))
+						})
+						.get();
+					likeRes.result.data.forEach(like => {
+						likedMap[like.post_id] = true;
+					});
+				}
+				// 组装置顶帖子数据
+				this.pinnedPosts = pinnedPosts.map(item => {
+					const user = userMap[item.user_id] || {};
+					return {
+						_id: item._id || '',
+						avatar: user.avatar_file && user.avatar_file.url ? user.avatar_file.url : '/static/images/default-avatar.png',
+						name: user.nickname || '匿名用户',
+						type: item.category || '官方',
+						time: this.formatTime(item.create_time),
+						content: item.content || '',
+						images: item.files || [],
+						likes: item.like_count || 0,
+						comments: item.comment_count || 0,
+						isLiked: likedMap[item._id] || false
+					};
+				});
+			} catch (err) {
+				console.error('获取置顶帖子失败', err);
+				uni.showToast({ title: '获取置顶帖子失败', icon: 'none' });
+				this.pinnedPosts = [];
+			}
 		}
 	}
 };
@@ -961,33 +987,6 @@ export default {
 	align-items: center;
 	justify-content: center;
 }
-
-.filter-tabs {
-	display: flex;
-	background-color: rgba(0, 0, 0, 0.03);
-	border-radius: $border-radius-lg;
-	padding: 4rpx;
-}
-
-.filter-tab {
-	padding: $spacing-xs $spacing-base;
-	margin-left: 0;
-	border-radius: $border-radius-lg;
-	font-size: $font-size-sm;
-	color: $dark-gray;
-	transition: all $transition-fast;
-}
-
-.filter-tab.active {
-	background-color: $primary-color;
-	color: $white;
-	box-shadow: 0 2rpx 8rpx rgba(77, 124, 191, 0.25);
-}
-
-.filter-tab-active {
-	opacity: 0.8;
-}
-
 .activity-scroll {
 	white-space: nowrap;
 	margin: 0 -$spacing-xs;

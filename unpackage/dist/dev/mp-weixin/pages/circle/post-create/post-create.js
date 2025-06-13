@@ -6,7 +6,8 @@ const _sfc_main = {
       tags: ["讨论", "失物招领", "表白", "吐槽", "问答", "官方", "商家"],
       selectedTag: "",
       content: "",
-      images: []
+      images: [],
+      postType: "post"
     };
   },
   computed: {
@@ -34,9 +35,60 @@ const _sfc_main = {
     removeImage(idx) {
       this.images.splice(idx, 1);
     },
+    //选择类型
+    choosePostType() {
+      common_vendor.index.showActionSheet({
+        itemList: ["最新动态", "置顶帖子（消耗20积分）"],
+        success: (res) => {
+          if (res.tapIndex === 0) {
+            this.postType = "post";
+          } else if (res.tapIndex === 1) {
+            common_vendor.index.showModal({
+              title: "温馨提示",
+              content: "发布置顶帖子需要消耗20积分，是否继续？",
+              success: (modalRes) => {
+                if (modalRes.confirm) {
+                  this.postType = "pinned";
+                }
+              }
+            });
+          }
+        }
+      });
+    },
     publishPost() {
       if (!this.canPublish)
         return;
+      if (this.postType === "pinned") {
+        const userInfo = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
+        const userId = userInfo && userInfo._id ? userInfo._id : "";
+        if (!userId) {
+          common_vendor.index.showToast({ title: "请先登录", icon: "none" });
+          return;
+        }
+        common_vendor.index.showLoading({ title: "积分校验中..." });
+        common_vendor.nr.database().collection("user-score").where({ user_id: userId }).get().then((res) => {
+          let totalScore = 0;
+          res.result.data.forEach((item) => {
+            totalScore += item.score;
+          });
+          if (totalScore < 20) {
+            common_vendor.index.hideLoading();
+            common_vendor.index.showToast({ title: "积分不足，无法发布置顶帖", icon: "none" });
+            return;
+          } else {
+            common_vendor.index.hideLoading();
+            this._doPublishPost();
+          }
+        }).catch(() => {
+          common_vendor.index.hideLoading();
+          common_vendor.index.showToast({ title: "积分校验失败", icon: "none" });
+        });
+      } else {
+        this._doPublishPost();
+      }
+    },
+    _doPublishPost() {
       common_vendor.index.showLoading({
         title: "发布中..."
       });
@@ -61,7 +113,7 @@ const _sfc_main = {
         return common_vendor.nr.callFunction({
           name: "add-content",
           data: {
-            content_type: "post",
+            content_type: this.postType,
             category: this.selectedTag,
             content: this.content,
             user_id: userId,
@@ -111,8 +163,10 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   }, $data.images.length < 9 ? {
     g: common_vendor.o((...args) => $options.chooseImage && $options.chooseImage(...args))
   } : {}, {
-    h: !$options.canPublish ? 1 : "",
-    i: common_vendor.o(($event) => $options.canPublish ? $options.publishPost() : null)
+    h: common_vendor.t($data.postType === "pinned" ? "置顶帖子（消耗20积分）" : "最新动态"),
+    i: common_vendor.o((...args) => $options.choosePostType && $options.choosePostType(...args)),
+    j: !$options.canPublish ? 1 : "",
+    k: common_vendor.o(($event) => $options.canPublish ? $options.publishPost() : null)
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

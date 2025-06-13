@@ -50,7 +50,16 @@
 				</view>
 			</view>
 		</view>
-
+		<view class="post-type-section">
+  <view class="post-type-label">
+    <text class="iconfont icon-tixing" style="margin-right: 8rpx;"></text>
+    发布类型：
+  </view>
+  <view class="post-type-choose" @tap="choosePostType">
+    <text>{{ postType === 'pinned' ? '置顶帖子（消耗20积分）' : '最新动态' }}</text>
+    <text class="choose-arrow">去选择 ></text>
+  </view>
+</view>
 		<!-- 发布按钮 -->
 		<view class="footer">
 			<view
@@ -71,7 +80,8 @@
 				tags: ['讨论', '失物招领', '表白', '吐槽', '问答', '官方','商家'],
 				selectedTag: '',
 				content: '',
-				images: []
+				images: [],
+				postType: 'post'
 			};
 		},
 		computed: {
@@ -99,9 +109,66 @@
 			removeImage(idx) {
 				this.images.splice(idx, 1);
 			},
+				//选择类型
+				choosePostType() {
+				uni.showActionSheet({
+					itemList: ['最新动态', '置顶帖子（消耗20积分）'],
+					success: (res) => {
+						if (res.tapIndex === 0) {
+							this.postType = 'post';
+						} else if (res.tapIndex === 1) {
+							uni.showModal({
+								title: '温馨提示',
+								content: '发布置顶帖子需要消耗20积分，是否继续？',
+								success: (modalRes) => {
+									if (modalRes.confirm) {
+										this.postType = 'pinned';
+									}
+								}
+							});
+						}
+					}
+				});
+			},
 			publishPost() {
 				if (!this.canPublish) return;
-				
+
+				// 如果是置顶帖子，先校验积分
+				if (this.postType === 'pinned') {
+					const userInfo = uni.getStorageSync('uni-id-pages-userInfo')
+					const userId = userInfo && userInfo._id ? userInfo._id : ''
+					if (!userId) {
+						uni.showToast({ title: '请先登录', icon: 'none' });
+						return;
+					}
+					uni.showLoading({ title: '积分校验中...' });
+					// 查询user-score表，统计积分
+					uniCloud.database().collection('user-score')
+						.where({ user_id: userId })
+						.get()
+						.then(res => {
+							let totalScore = 0;
+							res.result.data.forEach(item => {
+								totalScore += item.score;
+							});
+							if (totalScore < 20) {
+								uni.hideLoading();
+								uni.showToast({ title: '积分不足，无法发布置顶帖', icon: 'none' });
+								return;
+							} else {
+								uni.hideLoading();
+								this._doPublishPost(); // 通过校验，执行真正的发布
+							}
+						})
+						.catch(() => {
+							uni.hideLoading();
+							uni.showToast({ title: '积分校验失败', icon: 'none' });
+						});
+				} else {
+					this._doPublishPost(); // 普通帖直接发布
+				}
+			},
+			_doPublishPost() {
 				// 显示加载提示
 				uni.showLoading({
 					title: '发布中...'
@@ -132,7 +199,7 @@
 						return uniCloud.callFunction({
 							name: 'add-content',
 							data: {
-								content_type: 'post',
+								content_type: this.postType,
 								category: this.selectedTag,
 								content: this.content,
 								user_id: userId,
@@ -155,7 +222,8 @@
 							uni.showToast({ title: err.message || '发布失败', icon: 'none' });
 						}
 					});
-			}
+			},
+		
 		}
 	}
 </script>
@@ -324,5 +392,34 @@
 		color: #dadde3 !important;
 		opacity: 0.7;
 		pointer-events: none;
+	}
+	.post-type-section {
+		display: flex;
+		align-items: center;
+		background: #fff;
+		padding: 24rpx;
+		border-bottom: 1rpx solid #f5f6fa;
+	}
+	.post-type-label {
+		font-size: 28rpx;
+		color: #333;
+		font-weight: 600;
+		margin-right: 12rpx;
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+	}
+	.post-type-choose {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		color: #888;
+		font-size: 26rpx;
+		justify-content: space-between;
+	}
+	.choose-arrow {
+		color: #b0b6be;
+		font-size: 24rpx;
+		margin-left: 12rpx;
 	}
 </style>

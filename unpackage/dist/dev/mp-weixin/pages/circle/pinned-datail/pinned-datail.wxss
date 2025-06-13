@@ -734,10 +734,32 @@ to {
 .interaction-bar .interaction-item .iconfont {
   font-size: 32rpx;
   color: #86909C;
+  transition: all 0.3s ease;
+}
+.interaction-bar .interaction-item .iconfont.liked {
+  color: #FF4D4F;
+}
+.interaction-bar .interaction-item .iconfont.like-animate {
+  animation: likeAnimation 0.5s ease;
 }
 .interaction-bar .interaction-item .count {
   font-size: 24rpx;
   color: #86909C;
+  transition: color 0.3s ease;
+}
+.interaction-bar .interaction-item .count.liked {
+  color: #FF4D4F;
+}
+@keyframes likeAnimation {
+0% {
+    transform: scale(1);
+}
+50% {
+    transform: scale(1.4);
+}
+100% {
+    transform: scale(1);
+}
 }
 .comments-section {
   padding: 0 24rpx;
@@ -926,4 +948,43 @@ to {
   font-size: 26rpx;
   margin-top: 4rpx;
   line-height: 1.6;
+}
+/* 添加加载状态样式 */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 6rpx solid #f3f3f3;
+  border-top: 6rpx solid #4D7CBF;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+0% {
+    transform: rotate(0deg);
+}
+100% {
+    transform: rotate(360deg);
+}
+}
+/* 优化列表渲染性能 */
+.comment-list {
+  will-change: transform;
+  transform: translateZ(0);
+}
+.comment-item {
+  will-change: transform;
+  transform: translateZ(0);
+  contain: layout style paint;
 }

@@ -11,7 +11,9 @@
     "pages/task/TaskRelease/DeliveryTask/DeliveryTask",
     "pages/task/TaskRelease/PurchaseTask/PurchaseTask",
     "pages/task/TaskRelease/OutTask/OutTask",
+    "pages/task/TaskRelease/QuickRelease/QuickRelease",
     "pages/message/MessageCenter/MessageCenter",
+    "pages/message/Chat/Chat",
     "pages/user/user",
     "pages/circle/activities/activities",
     "pages/circle/activity-datail/activity-datail",
@@ -37,13 +39,39 @@
     "pages/user/user-pointsdetails/user-pointsdetails",
     "pages/user/user-creditdetails/user-creditdetails",
     "pages/circle/addactivities/addactivities",
-    "pages/circle/post-create/post-create"
+    "pages/circle/post-create/post-create",
+    "pages/user/user-quanzi/user-quanzi",
+    "pages/user/user-activity/user-activity"
   ],
   "window": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "校园圈子",
     "navigationBarBackgroundColor": "#F8F8F8",
     "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#3B7FF3",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "任务大厅"
+      },
+      {
+        "pagePath": "pages/circle/circle",
+        "text": "校园圈子"
+      },
+      {
+        "pagePath": "pages/message/MessageCenter/MessageCenter",
+        "text": "消息"
+      },
+      {
+        "pagePath": "pages/user/user",
+        "text": "我的"
+      }
+    ]
   },
   "usingComponents": {}
 }

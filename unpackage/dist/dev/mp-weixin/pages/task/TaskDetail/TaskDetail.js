@@ -4,24 +4,8 @@ const _sfc_main = {
   data() {
     return {
       currentUserRole: "user",
-      TEST_MODE: true,
-      TEST_USER: {
-        publisher: {
-          id: "test_publisher_id",
-          nickname: "测试发布者",
-          avatar: "/static/avatar/default.png"
-        },
-        claimer: {
-          id: "test_claimer_id",
-          nickname: "测试接单者",
-          avatar: "/static/avatar/default.png"
-        },
-        user: {
-          id: "test_user_id",
-          nickname: "测试用户",
-          avatar: "/static/avatar/default.png"
-        }
-      },
+      taskId: "",
+      taskData: null,
       task: {
         id: "",
         type: "",
@@ -70,32 +54,25 @@ const _sfc_main = {
     },
     showCancelButton() {
       return this.isPublisher && ["pending", "in_progress"].includes(this.task.status);
-    },
-    showTestButtons() {
-      return this.TEST_MODE;
     }
   },
   methods: {
     getCurrentUser() {
-      if (this.TEST_MODE) {
-        const testRole = common_vendor.index.getStorageSync("testRole") || "user";
-        const user = this.TEST_USER[testRole] || this.TEST_USER.user;
-        common_vendor.index.setStorageSync("userToken", "test_token");
-        common_vendor.index.setStorageSync("userId", user.id);
-        common_vendor.index.setStorageSync("userNickname", user.nickname);
-        common_vendor.index.setStorageSync("userAvatar", user.avatar);
-        return user;
-      } else {
+      const userInfo = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
+      if (userInfo) {
         return {
-          id: common_vendor.index.getStorageSync("userId"),
-          nickname: common_vendor.index.getStorageSync("userNickname"),
-          avatar: common_vendor.index.getStorageSync("userAvatar")
+          id: userInfo._id,
+          nickname: userInfo.nickname,
+          avatar: userInfo.avatar_file && userInfo.avatar_file.url ? userInfo.avatar_file.url : "/static/images/avatar1.png"
+          // 使用默认头像
         };
+      } else {
+        return null;
       }
     },
     getRole(task, user) {
       var _a, _b;
-      if (!task || !user.id)
+      if (!task || !user || !user.id)
         return "user";
       if (((_a = task.publisher) == null ? void 0 : _a.id) === user.id)
         return "publisher";
@@ -104,9 +81,13 @@ const _sfc_main = {
       return "user";
     },
     determineUserRole() {
+      var _a;
       const user = this.getCurrentUser();
       const role = this.getRole(this.task, user);
-      common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:271", "[角色判断] 当前用户:", user.nickname, "任务状态:", this.task.status, "角色:", role);
+      common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:236", "[角色判断] 当前用户ID:", user ? user.id : "未登录");
+      common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:237", "[角色判断] 任务发布者ID:", (_a = this.task.publisher) == null ? void 0 : _a.id);
+      common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:238", "[角色判断] 任务状态:", this.task.status);
+      common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:239", "[角色判断] 最终角色:", role);
       this.currentUserRole = role;
     },
     getTaskTypeText(type) {
@@ -114,7 +95,8 @@ const _sfc_main = {
         "express": "快递代取",
         "takeout": "外卖代拿",
         "buy": "求购",
-        "sell": "出物"
+        "sell": "出物",
+        "other": "其他"
       };
       return typeMap[type] || type;
     },
@@ -125,7 +107,7 @@ const _sfc_main = {
         "good": "八成新",
         "fair": "七成新"
       };
-      return conditionMap[condition] || condition;
+      return conditionMap[condition] || "";
     },
     getTaskStatusText(status) {
       const statusMap = {
@@ -136,21 +118,11 @@ const _sfc_main = {
       };
       return statusMap[status] || status;
     },
-    switchTestRole(role) {
-      common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:302", "[切换角色] 目标角色:", role);
-      common_vendor.index.setStorageSync("testRole", role);
-      const user = this.TEST_USER[role] || this.TEST_USER.user;
-      common_vendor.index.setStorageSync("userId", user.id);
-      common_vendor.index.setStorageSync("userNickname", user.nickname);
-      common_vendor.index.setStorageSync("userAvatar", user.avatar);
-      this.determineUserRole();
-      common_vendor.index.showToast({ title: `已切换至${role}角色`, icon: "none" });
-    },
     navigateToPickup() {
-      common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:312", "导航到取件地址");
+      common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:271", "导航到取件地址");
     },
     navigateToDelivery() {
-      common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:315", "导航到送达地址");
+      common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:274", "导航到送达地址");
     },
     copyPickupAddress() {
       common_vendor.index.setClipboardData({
@@ -175,31 +147,74 @@ const _sfc_main = {
       });
     },
     handleImageError(e) {
-      common_vendor.index.__f__("error", "at pages/task/TaskDetail/TaskDetail.vue:340", "图片加载失败:", e);
+      common_vendor.index.__f__("error", "at pages/task/TaskDetail/TaskDetail.vue:299", "图片加载失败:", e);
       common_vendor.index.showToast({
         title: "图片加载失败",
         icon: "none"
       });
     },
+    getFormattedTitle(task) {
+      if (!task)
+        return "未知任务";
+      switch (task.type) {
+        case "buy":
+          return `求购${task.itemName || ""}${task.selectedCondition ? `(${this.getConditionText(task.selectedCondition)})` : ""}`;
+        case "express":
+          return `${task.pickupAddress || ""}快递代取`;
+        case "sell":
+          return `出${task.selectedCondition ? this.getConditionText(task.selectedCondition) : ""}${task.itemName || ""}`;
+        case "takeout":
+          return `${task.pickupAddress || ""}外卖代拿`;
+        default:
+          return task.title || "未知任务";
+      }
+    },
     startTask() {
       if (this.task) {
-        const taskId = Date.now().toString();
+        const taskId = this.task.id || "task_" + Date.now().toString();
         const currentUser = this.getCurrentUser();
+        if (!currentUser) {
+          common_vendor.index.showToast({
+            title: "请先登录",
+            icon: "none"
+          });
+          return;
+        }
+        if (!this.task.itemName && this.task.type === "buy") {
+          common_vendor.index.showToast({
+            title: "物品名称不能为空",
+            icon: "none"
+          });
+          return;
+        }
+        if (!this.task.pickupAddress && (this.task.type === "express" || this.task.type === "takeout")) {
+          common_vendor.index.showToast({
+            title: "取件地址不能为空",
+            icon: "none"
+          });
+          return;
+        }
         const taskData = {
-          ...this.task,
           id: taskId,
+          type: this.task.type || "unknown",
+          title: this.getFormattedTitle(this.task),
+          // 使用格式化后的标题
+          itemName: this.task.itemName || "",
+          selectedCondition: this.task.selectedCondition || "",
+          pickupAddress: this.task.pickupAddress || "",
+          deliveryAddress: this.task.deliveryAddress || "",
+          price: this.task.price || 0,
+          description: this.task.description || "",
+          images: this.task.images || [],
           status: "pending",
-          publishTime: (/* @__PURE__ */ new Date()).toLocaleString(),
+          createTime: (/* @__PURE__ */ new Date()).toISOString(),
           publisher: {
-            id: currentUser.id,
-            nickname: currentUser.nickname,
-            avatar: currentUser.avatar,
-            level: 1,
-            credit: 100
-          },
-          ownerType: "published"
+            id: currentUser._id,
+            nickname: currentUser.nickname || "匿名用户",
+            avatar: currentUser.avatar_file && currentUser.avatar_file.url || "/static/images/avatar1.png"
+          }
         };
-        common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:366", "发布任务:", taskData);
+        common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:373", "[TaskDetail.vue] 即将发布任务数据:", taskData);
         common_vendor.index.$emit("newTaskPublished", taskData);
         common_vendor.index.showToast({
           title: "发布成功",
@@ -208,21 +223,26 @@ const _sfc_main = {
         });
         setTimeout(() => {
           common_vendor.index.redirectTo({
-            url: "/pages/TaskHall/TaskHall",
+            url: "/pages/index/index",
             success: () => {
-              common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:378", "跳转到任务大厅成功");
+              common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:385", "跳转到首页成功");
               try {
                 const existingTasks = common_vendor.index.getStorageSync("myTasks") || "[]";
                 const tasks = JSON.parse(existingTasks);
-                tasks.unshift(taskData);
-                common_vendor.index.setStorageSync("myTasks", JSON.stringify(tasks));
-                common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:384", "任务已保存到本地存储");
+                const myTasksExistingIndex = tasks.findIndex((t) => t.id === taskData.id);
+                if (myTasksExistingIndex === -1) {
+                  tasks.unshift(taskData);
+                  common_vendor.index.setStorageSync("myTasks", JSON.stringify(tasks));
+                  common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:393", "任务已保存到本地存储 myTasks");
+                } else {
+                  common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:395", "任务已存在于 myTasks，跳过添加");
+                }
               } catch (error) {
-                common_vendor.index.__f__("error", "at pages/task/TaskDetail/TaskDetail.vue:386", "保存任务到本地存储失败:", error);
+                common_vendor.index.__f__("error", "at pages/task/TaskDetail/TaskDetail.vue:398", "保存任务到本地存储 myTasks 失败:", error);
               }
             },
             fail: (err) => {
-              common_vendor.index.__f__("error", "at pages/task/TaskDetail/TaskDetail.vue:390", "跳转失败:", err);
+              common_vendor.index.__f__("error", "at pages/task/TaskDetail/TaskDetail.vue:402", "跳转失败:", err);
               common_vendor.index.showToast({
                 title: "页面跳转失败",
                 icon: "none"
@@ -231,7 +251,7 @@ const _sfc_main = {
           });
         }, 1500);
       } else {
-        common_vendor.index.__f__("warn", "at pages/task/TaskDetail/TaskDetail.vue:399", "任务数据为空");
+        common_vendor.index.__f__("warn", "at pages/task/TaskDetail/TaskDetail.vue:411", "任务数据为空");
         common_vendor.index.showToast({
           title: "任务数据获取失败",
           icon: "none"
@@ -239,7 +259,7 @@ const _sfc_main = {
       }
     },
     submitTask() {
-      common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:407", "提交任务");
+      common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:419", "提交任务");
     },
     cancelTask() {
       let releasePagePath = "";
@@ -257,7 +277,7 @@ const _sfc_main = {
           releasePagePath = "/pages/TaskRelease/OutTask/OutTask";
           break;
         default:
-          common_vendor.index.__f__("warn", "at pages/task/TaskDetail/TaskDetail.vue:425", "未知任务类型，无法跳转到修改页面:", this.task.type);
+          common_vendor.index.__f__("warn", "at pages/task/TaskDetail/TaskDetail.vue:437", "未知任务类型，无法跳转到修改页面:", this.task.type);
           common_vendor.index.showToast({
             title: "该任务类型不支持修改",
             icon: "none"
@@ -270,16 +290,25 @@ const _sfc_main = {
     },
     confirmClaimTask() {
       const currentUser = this.getCurrentUser();
-      if (!common_vendor.index.getStorageSync("userToken")) {
-        common_vendor.index.showToast({ title: "请先登录", icon: "none" });
+      if (!currentUser || !currentUser.id) {
+        common_vendor.index.showToast({
+          title: "请先登录",
+          icon: "none"
+        });
         return;
       }
       if (this.task.status !== "pending") {
-        common_vendor.index.showToast({ title: "任务状态已变更", icon: "none" });
+        common_vendor.index.showToast({
+          title: "任务状态已变更",
+          icon: "none"
+        });
         return;
       }
       if (!this.canClaimTask) {
-        common_vendor.index.showToast({ title: "您不能接此任务", icon: "none" });
+        common_vendor.index.showToast({
+          title: "您不能接此任务",
+          icon: "none"
+        });
         return;
       }
       common_vendor.index.showModal({
@@ -289,7 +318,7 @@ const _sfc_main = {
         cancelText: "取消",
         success: (res) => {
           if (res.confirm) {
-            common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:460", "调用接单API:", { taskId: this.task.id, userId: currentUser.id });
+            common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:481", "调用接单API:", { taskId: this.task.id, userId: currentUser.id });
             const newTask = JSON.parse(JSON.stringify(this.task));
             newTask.status = "in_progress";
             newTask.accepter = currentUser;
@@ -309,7 +338,7 @@ const _sfc_main = {
                 common_vendor.index.setStorageSync("myTasks", JSON.stringify(tasks));
               }
             } catch (error) {
-              common_vendor.index.__f__("error", "at pages/task/TaskDetail/TaskDetail.vue:484", "更新本地任务状态失败:", error);
+              common_vendor.index.__f__("error", "at pages/task/TaskDetail/TaskDetail.vue:505", "更新本地任务状态失败:", error);
             }
             setTimeout(() => {
               const navUrl = "/pages/MyTask/MyTask?acceptedTask=" + encodeURIComponent(JSON.stringify(newTask)) + "&activeTab=received";
@@ -326,7 +355,7 @@ const _sfc_main = {
     },
     async getTaskDetail(taskId) {
       try {
-        common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:502", "获取任务详情 (模拟):", taskId);
+        common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:523", "获取任务详情 (模拟):", taskId);
         const mockTask = {
           id: taskId,
           type: "express",
@@ -352,94 +381,54 @@ const _sfc_main = {
         };
         return mockTask;
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/task/TaskDetail/TaskDetail.vue:530", "获取任务详情失败:", error);
+        common_vendor.index.__f__("error", "at pages/task/TaskDetail/TaskDetail.vue:551", "获取任务详情失败:", error);
         common_vendor.index.showToast({
           title: "获取任务详情失败",
           icon: "error"
         });
         return null;
       }
+    },
+    formatPublishTime(time) {
+      if (!time)
+        return "";
+      const date = new Date(time);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
     }
   },
   onLoad(options) {
-    common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:540", "[页面加载] 参数:", options);
-    const currentTestRole = this.TEST_MODE ? common_vendor.index.getStorageSync("testRole") || "user" : null;
-    common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:543", "[页面加载] 当前测试角色:", currentTestRole);
-    if (this.TEST_MODE) {
-      this.getCurrentUser();
-    }
+    common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:570", "[页面加载] 参数:", options);
     const currentUser = this.getCurrentUser();
+    common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:573", "[页面加载] 获取到的当前用户:", currentUser);
     if (options.taskInfo) {
       try {
         const taskInfo = JSON.parse(decodeURIComponent(options.taskInfo));
-        common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:553", "[页面加载] 解析后的任务信息:", taskInfo);
-        const modifiedTask = JSON.parse(JSON.stringify(taskInfo));
-        if (this.TEST_MODE) {
-          const user = this.getCurrentUser();
-          if (currentTestRole === "publisher") {
-            modifiedTask.publisher = user;
-            modifiedTask.accepter = null;
-            modifiedTask.status = modifiedTask.status === "in_progress" ? "in_progress" : "pending";
-          } else if (currentTestRole === "claimer") {
-            modifiedTask.accepter = user;
-            if (modifiedTask.status === "pending")
-              modifiedTask.status = "in_progress";
-          } else {
-            modifiedTask.publisher = this.TEST_USER.publisher;
-            modifiedTask.accepter = null;
-            modifiedTask.status = "pending";
-            if (modifiedTask.publisher.id === currentUser.id) {
-              modifiedTask.publisher = this.TEST_USER.user;
-            }
-          }
-        }
-        this.task = modifiedTask;
+        common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:578", "[页面加载] 解析后的任务信息:", taskInfo);
+        this.task = taskInfo;
         this.determineUserRole();
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/task/TaskDetail/TaskDetail.vue:580", "[页面加载] 解析任务信息失败:", error);
+        common_vendor.index.__f__("error", "at pages/task/TaskDetail/TaskDetail.vue:584", "[页面加载] 解析任务信息失败:", error);
         common_vendor.index.showToast({
           title: "获取任务信息失败",
           icon: "error"
         });
       }
     } else if (options.id) {
-      this.getTaskDetail(options.id).then((taskData) => {
-        if (taskData) {
-          if (this.TEST_MODE) {
-            const user = this.getCurrentUser();
-            const modifiedTask = JSON.parse(JSON.stringify(taskData));
-            if (currentTestRole === "publisher") {
-              modifiedTask.publisher = user;
-              modifiedTask.accepter = null;
-              modifiedTask.status = "pending";
-            } else if (currentTestRole === "claimer") {
-              modifiedTask.accepter = user;
-              modifiedTask.status = "in_progress";
-            } else {
-              modifiedTask.accepter = null;
-              modifiedTask.status = "pending";
-            }
-            this.task = modifiedTask;
-          } else {
-            this.task = taskData;
-          }
+      this.taskId = options.id;
+      const eventChannel = this.getOpenerEventChannel();
+      eventChannel.on("taskData", (data) => {
+        this.taskData = data.task;
+        common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:597", "[页面加载] 从index页面接收到的任务数据:", this.taskData);
+        if (this.taskData) {
+          this.task = this.taskData;
           this.determineUserRole();
-        } else {
-          common_vendor.index.__f__("error", "at pages/task/TaskDetail/TaskDetail.vue:612", "[页面加载] 获取任务详情返回空数据:", options.id);
-          common_vendor.index.showToast({
-            title: "任务不存在",
-            icon: "none"
-          });
         }
-      }).catch((error) => {
-        common_vendor.index.__f__("error", "at pages/task/TaskDetail/TaskDetail.vue:619", "[页面加载] 获取任务详情失败:", error);
-        common_vendor.index.showToast({
-          title: "获取任务详情失败",
-          icon: "error"
-        });
       });
     } else {
-      common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:626", "[页面加载] 没有任务信息，创建默认任务");
+      common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:605", "[页面加载] 没有任务信息，创建默认任务");
       const currentUser2 = this.getCurrentUser();
       let defaultTask = {
         id: "default_task_id",
@@ -458,19 +447,15 @@ const _sfc_main = {
         publisher: null,
         accepter: null
       };
-      if (this.TEST_MODE) {
-        if (currentTestRole === "publisher") {
-          defaultTask.publisher = currentUser2;
-          defaultTask.status = "pending";
-        } else if (currentTestRole === "claimer") {
-          defaultTask.accepter = currentUser2;
-          defaultTask.status = "in_progress";
-        } else {
-          defaultTask.publisher = { id: "other_publisher", nickname: "其他发布者", avatar: "/static/avatar/default.png" };
-          defaultTask.status = "pending";
-        }
+      if (currentUser2 && currentUser2.id) {
+        defaultTask.publisher = {
+          id: currentUser2.id,
+          nickname: currentUser2.nickname,
+          avatar: currentUser2.avatar,
+          creditRating: 4.5
+        };
       } else {
-        defaultTask.publisher = { id: "default_publisher", nickname: "默认发布者", avatar: "/static/avatar/default.png", creditRating: 4.5 };
+        defaultTask.publisher = { id: "default_publisher", nickname: "默认发布者", avatar: "/static/images/avatar1.png", creditRating: 4.5 };
       }
       this.task = defaultTask;
       this.determineUserRole();
@@ -480,7 +465,7 @@ const _sfc_main = {
     task: {
       handler(newTask) {
         if (newTask) {
-          common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:670", "[任务数据变化] 重新判断角色");
+          common_vendor.index.__f__("log", "at pages/task/TaskDetail/TaskDetail.vue:645", "[任务数据变化] 重新判断角色");
           this.determineUserRole();
         }
       },
@@ -488,27 +473,40 @@ const _sfc_main = {
     }
   }
 };
-if (!Array) {
-  const _easycom_uni_icons2 = common_vendor.resolveComponent("uni-icons");
-  _easycom_uni_icons2();
-}
-const _easycom_uni_icons = () => "../../../uni_modules/uni-icons/components/uni-icons/uni-icons.js";
-if (!Math) {
-  _easycom_uni_icons();
-}
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: common_vendor.p({
-      type: "left",
-      size: "24",
-      color: "#000000"
-    }),
-    b: common_vendor.o((...args) => $options.goBack && $options.goBack(...args)),
-    c: common_vendor.t($options.getTaskStatusText($data.task.status)),
-    d: common_vendor.n($data.task.status),
-    e: $data.task.images && $data.task.images.length > 0 && ["buy", "sell", "takeout"].includes($data.task.type)
+    a: $data.task.type === "buy"
+  }, $data.task.type === "buy" ? {
+    b: common_vendor.t($data.task.title)
+  } : $data.task.type === "sell" ? {
+    d: common_vendor.t($data.task.title)
+  } : ["express", "takeout"].includes($data.task.type) ? {
+    f: common_vendor.t($data.task.title),
+    g: common_vendor.t($data.task.pickupAddress)
+  } : {
+    h: common_vendor.t($data.task.title)
+  }, {
+    c: $data.task.type === "sell",
+    e: ["express", "takeout"].includes($data.task.type),
+    i: common_vendor.t($options.getTaskTypeText($data.task.type)),
+    j: common_vendor.n($data.task.type),
+    k: $data.task.tags && $data.task.tags.includes("加急")
+  }, $data.task.tags && $data.task.tags.includes("加急") ? {} : {}, {
+    l: common_vendor.t($options.getTaskStatusText($data.task.status)),
+    m: common_vendor.n($data.task.status),
+    n: common_vendor.t($options.formatPublishTime($data.task.publishTime)),
+    o: ["express", "takeout"].includes($data.task.type)
+  }, ["express", "takeout"].includes($data.task.type) ? {
+    p: common_vendor.t($data.task.expectedDeliveryTime)
+  } : {}, {
+    q: common_vendor.t($data.task.reward),
+    r: ["sell", "buy"].includes($data.task.type)
+  }, ["sell", "buy"].includes($data.task.type) ? {
+    s: common_vendor.t($options.getConditionText($data.task.selectedCondition))
+  } : {}, {
+    t: $data.task.images && $data.task.images.length > 0 && ["buy", "sell", "takeout"].includes($data.task.type)
   }, $data.task.images && $data.task.images.length > 0 && ["buy", "sell", "takeout"].includes($data.task.type) ? {
-    f: common_vendor.f($data.task.images, (image, index, i0) => {
+    v: common_vendor.f($data.task.images, (image, index, i0) => {
       return {
         a: image,
         b: common_vendor.o((...args) => $options.handleImageError && $options.handleImageError(...args), index),
@@ -516,87 +514,56 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       };
     })
   } : {}, {
-    g: $data.task.type === "buy"
-  }, $data.task.type === "buy" ? {
-    h: common_vendor.t($data.task.title)
-  } : $data.task.type === "sell" ? {
-    j: common_vendor.t($data.task.title),
-    k: common_vendor.t($options.getConditionText($data.task.selectedCondition))
-  } : ["express", "takeout"].includes($data.task.type) ? {
-    m: common_vendor.t($data.task.title),
-    n: common_vendor.t($data.task.pickupAddress)
-  } : {
-    o: common_vendor.t($data.task.title)
-  }, {
-    i: $data.task.type === "sell",
-    l: ["express", "takeout"].includes($data.task.type),
-    p: common_vendor.t($options.getTaskTypeText($data.task.type)),
-    q: common_vendor.n($data.task.type),
-    r: $data.task.tags && $data.task.tags.includes("加急")
-  }, $data.task.tags && $data.task.tags.includes("加急") ? {} : {}, {
-    s: common_vendor.t($data.task.publishTime),
-    t: ["express", "takeout"].includes($data.task.type)
-  }, ["express", "takeout"].includes($data.task.type) ? {
-    v: common_vendor.t($data.task.expectedDeliveryTime)
+    w: $data.task.type !== "other"
+  }, $data.task.type !== "other" ? {
+    x: common_vendor.t($data.task.description)
   } : {}, {
-    w: common_vendor.t($data.task.reward),
-    x: ["sell", "buy"].includes($data.task.type)
-  }, ["sell", "buy"].includes($data.task.type) ? {
-    y: common_vendor.t($options.getConditionText($data.task.selectedCondition))
-  } : {}, {
-    z: common_vendor.t($data.task.description),
-    A: ["express", "takeout"].includes($data.task.type)
+    y: ["express", "takeout"].includes($data.task.type)
   }, ["express", "takeout"].includes($data.task.type) ? common_vendor.e({
-    B: common_vendor.t($data.task.pickupAddress),
-    C: $data.task.type === "express"
+    z: common_vendor.t($data.task.pickupAddress),
+    A: $data.task.type === "express"
   }, $data.task.type === "express" ? {
-    D: common_vendor.t($data.task.trackingNumber)
+    B: common_vendor.t($data.task.trackingNumber)
   } : {}, {
-    E: common_vendor.t($data.task.deliveryAddress)
+    C: common_vendor.t($data.task.deliveryAddress)
   }) : {}, {
-    F: common_vendor.t($data.task.type === "express" ? "收件人信息" : "联系信息"),
-    G: ["express", "sell", "buy", "takeout"].includes($data.task.type)
-  }, ["express", "sell", "buy", "takeout"].includes($data.task.type) ? common_vendor.e({
-    H: $options.isPublisher
+    D: common_vendor.t($data.task.type === "express" ? "收件人信息" : "联系信息"),
+    E: ["express", "sell", "buy", "takeout", "other"].includes($data.task.type)
+  }, ["express", "sell", "buy", "takeout", "other"].includes($data.task.type) ? common_vendor.e({
+    F: $options.isPublisher
   }, $options.isPublisher ? {
-    I: common_vendor.t(["express", "takeout"].includes($data.task.type) ? "收件人姓名" : "联系人姓名"),
-    J: common_vendor.t($data.task.contactName),
-    K: common_vendor.t($data.task.contactPhone)
+    G: common_vendor.t(["express", "takeout"].includes($data.task.type) ? "收件人姓名" : "联系人姓名"),
+    H: common_vendor.t($data.task.contactName),
+    I: common_vendor.t($data.task.contactPhone)
   } : $options.isClaimer ? {
-    M: common_vendor.t(["express", "takeout"].includes($data.task.type) ? "收件人姓名" : "联系人姓名"),
-    N: common_vendor.t($data.task.contactName),
-    O: common_vendor.t($data.task.contactPhone)
+    K: common_vendor.t(["express", "takeout"].includes($data.task.type) ? "收件人姓名" : "联系人姓名"),
+    L: common_vendor.t($data.task.contactName),
+    M: common_vendor.t($data.task.contactPhone)
   } : {
-    P: common_vendor.t(["express", "takeout"].includes($data.task.type) ? "收件人姓名" : "联系人姓名"),
-    Q: common_vendor.t($data.task.contactName)
+    N: common_vendor.t(["express", "takeout"].includes($data.task.type) ? "收件人姓名" : "联系人姓名"),
+    O: common_vendor.t($data.task.contactName)
   }, {
-    L: $options.isClaimer
+    J: $options.isClaimer
   }) : {
-    R: $data.task.publisher.avatar,
-    S: common_vendor.t($data.task.publisher.nickname),
-    T: common_vendor.t($data.task.publisher.creditRating)
+    P: $data.task.publisher.avatar,
+    Q: common_vendor.t($data.task.publisher.nickname),
+    R: common_vendor.t($data.task.publisher.creditRating)
   }, {
+    S: $options.showClaimButton
+  }, $options.showClaimButton ? {
+    T: common_vendor.o((...args) => $options.confirmClaimTask && $options.confirmClaimTask(...args))
+  } : {}, {
     U: $options.showClaimButton
   }, $options.showClaimButton ? {
-    V: common_vendor.o((...args) => $options.confirmClaimTask && $options.confirmClaimTask(...args))
+    V: common_vendor.o((...args) => $options.goBack && $options.goBack(...args))
   } : {}, {
-    W: $options.showClaimButton
-  }, $options.showClaimButton ? {
-    X: common_vendor.o((...args) => $options.goBack && $options.goBack(...args))
-  } : {}, {
-    Y: $options.isPublisher && $options.showStartButton
+    W: $options.isPublisher && $options.showStartButton
   }, $options.isPublisher && $options.showStartButton ? {
-    Z: common_vendor.o((...args) => $options.startTask && $options.startTask(...args))
+    X: common_vendor.o((...args) => $options.startTask && $options.startTask(...args))
   } : {}, {
-    aa: $options.isPublisher && $options.showCancelButton
+    Y: $options.isPublisher && $options.showCancelButton
   }, $options.isPublisher && $options.showCancelButton ? {
-    ab: common_vendor.o((...args) => $options.cancelTask && $options.cancelTask(...args))
-  } : {}, {
-    ac: $options.showTestButtons
-  }, $options.showTestButtons ? {
-    ad: common_vendor.o(($event) => $options.switchTestRole("publisher")),
-    ae: common_vendor.o(($event) => $options.switchTestRole("claimer")),
-    af: common_vendor.o(($event) => $options.switchTestRole("user"))
+    Z: common_vendor.o((...args) => $options.cancelTask && $options.cancelTask(...args))
   } : {});
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

@@ -100,7 +100,7 @@
 				</view>
 
 				<!-- 任务标题 -->
-				<view class="task-title">{{ task.title }}</view>
+				<view class="task-title">{{ getFormattedTitle(task) }}</view>
 
 				<!-- 任务关键信息 -->
 				<view class="task-info">
@@ -342,6 +342,29 @@ export default {
       };
       return statusMap[status] || '未知状态';
     },
+    getConditionText(condition) {
+      const conditionMap = {
+        'new': '全新',
+        'like-new': '九成新',
+        'good': '八成新',
+        'fair': '七成新'
+      };
+      return conditionMap[condition] || '';
+    },
+    getFormattedTitle(task) {
+      switch (task.type) {
+        case 'buy':
+          return `求购${task.itemName}${task.selectedCondition ? `(${this.getConditionText(task.selectedCondition)})` : ''}`;
+        case 'express':
+          return `${task.pickupAddress}快递代取`;
+        case 'sell':
+          return `出${task.selectedCondition ? this.getConditionText(task.selectedCondition) : ''}${task.itemName}`;
+        case 'takeout':
+          return `${task.pickupAddress}外卖代拿`;
+        default:
+          return task.title;
+      }
+    },
     formatTime(time) {
       if (!time) return '';
       const date = new Date(time);
@@ -436,7 +459,24 @@ export default {
   onLoad(options) {
     console.log('TaskHall - onLoad: 页面加载开始, 参数:', options);
     
-    if (options.taskInfo) {
+    if (options.newTask) {
+      try {
+        const newTaskData = JSON.parse(decodeURIComponent(options.newTask));
+        console.log('TaskHall接收到URL传递的新任务数据:', newTaskData);
+        this.tasks.unshift(newTaskData);
+        this.saveTasks();
+        // 如果当前不在"全部"标签，切换到"全部"以显示新任务
+        if (this.activeTab !== 'all') {
+          this.activeTab = 'all';
+        }
+      } catch (error) {
+        console.error('TaskHall - 解析URL任务数据失败:', error);
+        uni.showToast({
+          title: '加载新任务数据失败',
+          icon: 'none'
+        });
+      }
+    } else if (options.taskInfo) {
       try {
         const taskData = JSON.parse(decodeURIComponent(options.taskInfo));
         console.log('TaskHall接收到URL传递的任务数据:', taskData);
@@ -458,20 +498,9 @@ export default {
   onMounted() {
     console.log('TaskHall - onMounted: 页面挂载');
     this.loadStoredTasks();
-    
-    uni.$on('newTaskPublished', (taskData) => {
-      console.log('TaskHall接收到新任务数据:', taskData);
-      this.tasks.unshift(taskData);
-      this.saveTasks();
-      
-      if (this.activeTab !== 'all') {
-        this.activeTab = 'all';
-      }
-    });
   },
   onUnmounted() {
     console.log('TaskHall - onUnmounted: 页面卸载');
-    uni.$off('newTaskPublished');
   }
 }
 </script>

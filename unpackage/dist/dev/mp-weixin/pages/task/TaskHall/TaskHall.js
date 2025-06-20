@@ -174,6 +174,29 @@ const _sfc_main = {
       };
       return statusMap[status] || "未知状态";
     },
+    getConditionText(condition) {
+      const conditionMap = {
+        "new": "全新",
+        "like-new": "九成新",
+        "good": "八成新",
+        "fair": "七成新"
+      };
+      return conditionMap[condition] || "";
+    },
+    getFormattedTitle(task) {
+      switch (task.type) {
+        case "buy":
+          return `求购${task.itemName}${task.selectedCondition ? `(${this.getConditionText(task.selectedCondition)})` : ""}`;
+        case "express":
+          return `${task.pickupAddress}快递代取`;
+        case "sell":
+          return `出${task.selectedCondition ? this.getConditionText(task.selectedCondition) : ""}${task.itemName}`;
+        case "takeout":
+          return `${task.pickupAddress}外卖代拿`;
+        default:
+          return task.title;
+      }
+    },
     formatTime(time) {
       if (!time)
         return "";
@@ -213,7 +236,7 @@ const _sfc_main = {
       common_vendor.index.showActionSheet({
         itemList: ["按距离排序", "按悬赏排序", "按时间排序", "只看急单"],
         success: (res) => {
-          common_vendor.index.__f__("log", "at pages/task/TaskHall/TaskHall.vue:381", "选择筛选选项：", res.tapIndex);
+          common_vendor.index.__f__("log", "at pages/task/TaskHall/TaskHall.vue:404", "选择筛选选项：", res.tapIndex);
         }
       });
     },
@@ -268,39 +291,46 @@ const _sfc_main = {
     }
   },
   onLoad(options) {
-    common_vendor.index.__f__("log", "at pages/task/TaskHall/TaskHall.vue:437", "TaskHall - onLoad: 页面加载开始, 参数:", options);
-    if (options.taskInfo) {
+    common_vendor.index.__f__("log", "at pages/task/TaskHall/TaskHall.vue:460", "TaskHall - onLoad: 页面加载开始, 参数:", options);
+    if (options.newTask) {
       try {
-        const taskData = JSON.parse(decodeURIComponent(options.taskInfo));
-        common_vendor.index.__f__("log", "at pages/task/TaskHall/TaskHall.vue:442", "TaskHall接收到URL传递的任务数据:", taskData);
+        const newTaskData = JSON.parse(decodeURIComponent(options.newTask));
+        common_vendor.index.__f__("log", "at pages/task/TaskHall/TaskHall.vue:465", "TaskHall接收到URL传递的新任务数据:", newTaskData);
+        this.tasks.unshift(newTaskData);
+        this.saveTasks();
         if (this.activeTab !== "all") {
           this.activeTab = "all";
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/task/TaskHall/TaskHall.vue:448", "TaskHall - 解析任务数据失败:", error);
+        common_vendor.index.__f__("error", "at pages/task/TaskHall/TaskHall.vue:473", "TaskHall - 解析URL任务数据失败:", error);
+        common_vendor.index.showToast({
+          title: "加载新任务数据失败",
+          icon: "none"
+        });
+      }
+    } else if (options.taskInfo) {
+      try {
+        const taskData = JSON.parse(decodeURIComponent(options.taskInfo));
+        common_vendor.index.__f__("log", "at pages/task/TaskHall/TaskHall.vue:482", "TaskHall接收到URL传递的任务数据:", taskData);
+        if (this.activeTab !== "all") {
+          this.activeTab = "all";
+        }
+      } catch (error) {
+        common_vendor.index.__f__("error", "at pages/task/TaskHall/TaskHall.vue:488", "TaskHall - 解析任务数据失败:", error);
         common_vendor.index.showToast({
           title: "加载任务数据失败",
           icon: "none"
         });
       }
     }
-    common_vendor.index.__f__("log", "at pages/task/TaskHall/TaskHall.vue:456", "TaskHall - onLoad: 页面加载完成");
+    common_vendor.index.__f__("log", "at pages/task/TaskHall/TaskHall.vue:496", "TaskHall - onLoad: 页面加载完成");
   },
   onMounted() {
-    common_vendor.index.__f__("log", "at pages/task/TaskHall/TaskHall.vue:459", "TaskHall - onMounted: 页面挂载");
+    common_vendor.index.__f__("log", "at pages/task/TaskHall/TaskHall.vue:499", "TaskHall - onMounted: 页面挂载");
     this.loadStoredTasks();
-    common_vendor.index.$on("newTaskPublished", (taskData) => {
-      common_vendor.index.__f__("log", "at pages/task/TaskHall/TaskHall.vue:463", "TaskHall接收到新任务数据:", taskData);
-      this.tasks.unshift(taskData);
-      this.saveTasks();
-      if (this.activeTab !== "all") {
-        this.activeTab = "all";
-      }
-    });
   },
   onUnmounted() {
-    common_vendor.index.__f__("log", "at pages/task/TaskHall/TaskHall.vue:473", "TaskHall - onUnmounted: 页面卸载");
-    common_vendor.index.$off("newTaskPublished");
+    common_vendor.index.__f__("log", "at pages/task/TaskHall/TaskHall.vue:503", "TaskHall - onUnmounted: 页面卸载");
   }
 };
 if (!Array) {
@@ -369,7 +399,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         h: $options.getTaskTypeColor(task.type),
         i: common_vendor.t($options.getTaskStatusText(task.status)),
         j: common_vendor.n(task.status),
-        k: common_vendor.t(task.title),
+        k: common_vendor.t($options.getFormattedTitle(task)),
         l: task.type === "express" || task.type === "takeout"
       }, task.type === "express" || task.type === "takeout" ? {
         m: "44200ff9-4-" + i0,

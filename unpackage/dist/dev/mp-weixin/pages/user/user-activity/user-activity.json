@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "活动中心",
+  "usingComponents": {
+    "user-activity-card": "../../../components/circle/UserActivityCard",
+    "uni-icons": "../../../uni_modules/uni-icons/components/uni-icons/uni-icons"
+  }
+}

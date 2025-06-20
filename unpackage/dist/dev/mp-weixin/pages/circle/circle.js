@@ -45,6 +45,15 @@ const _sfc_main = {
     this.fetchPostsFromCloud();
   },
   methods: {
+    goIndex() {
+      common_vendor.index.navigateTo({ url: "/pages/index/index" });
+    },
+    gomessage() {
+      common_vendor.index.navigateTo({ url: "/pages/message/MessageCenter/MessageCenter" });
+    },
+    gouser() {
+      common_vendor.index.navigateTo({ url: "/pages/user/user" });
+    },
     // 初始化数据
     initData() {
       this.fetchData();
@@ -112,14 +121,14 @@ const _sfc_main = {
     },
     // 查看活动详情
     viewActivityDetail(activity) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:287", "查看活动详情", activity);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:296", "查看活动详情", activity);
       common_vendor.index.navigateTo({
         url: `/pages/circle/activity-datail/activity-datail?id=${activity._id}`
       });
     },
     // 参与活动
     async joinActivity(item) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:295", "参与活动", item);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:304", "参与活动", item);
       try {
         const token = common_vendor.index.getStorageSync("uni_id_token");
         if (!token) {
@@ -170,7 +179,7 @@ const _sfc_main = {
           }
         }
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/circle/circle.vue:353", "参与活动失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:362", "参与活动失败", err);
         common_vendor.index.showToast({ title: "参与失败，请稍后重试", icon: "none" });
       }
     },
@@ -252,20 +261,20 @@ const _sfc_main = {
         }
       }).catch((err) => {
         common_vendor.index.showToast({ title: "操作失败", icon: "none" });
-        common_vendor.index.__f__("error", "at pages/circle/circle.vue:456", "点赞操作失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:465", "点赞操作失败", err);
         post.likeLoading = false;
       });
     },
     // 评论帖子
     commentPost(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:463", "评论帖子", post);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:472", "评论帖子", post);
       common_vendor.index.navigateTo({
         url: `/pages/circle/post-datail/post-datail?id=${post._id}`
       });
     },
     // 分享帖子
     sharePost(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:471", "分享帖子", post);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:480", "分享帖子", post);
       common_vendor.index.showToast({
         title: "分享功能开发中",
         icon: "none"
@@ -280,7 +289,7 @@ const _sfc_main = {
     },
     // 查看全部活动
     viewAllActivities() {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:491", "查看全部活动");
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:500", "查看全部活动");
       common_vendor.index.navigateTo({
         url: "/pages/circle/activities/activities"
       });
@@ -351,13 +360,13 @@ const _sfc_main = {
           });
           this.loading = false;
         }).catch((err) => {
-          common_vendor.index.__f__("error", "at pages/circle/circle.vue:588", "帖子加载失败", err);
+          common_vendor.index.__f__("error", "at pages/circle/circle.vue:597", "帖子加载失败", err);
           this.loading = false;
           common_vendor.index.showToast({ title: "数据加载失败", icon: "none" });
         });
       }).catch((err) => {
         this.loading = false;
-        common_vendor.index.__f__("error", "at pages/circle/circle.vue:595", "帖子加载失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:604", "帖子加载失败", err);
         common_vendor.index.showToast({ title: "帖子加载失败", icon: "none" });
       });
     },
@@ -416,7 +425,7 @@ const _sfc_main = {
           };
         });
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/circle/circle.vue:670", "获取活动数据失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:679", "获取活动数据失败", err);
         common_vendor.index.showToast({ title: "获取活动数据失败", icon: "none" });
       } finally {
         this.loading = false;
@@ -443,7 +452,7 @@ const _sfc_main = {
     },
     // 更新帖子
     handlePostUpdated(post) {
-      common_vendor.index.__f__("log", "at pages/circle/circle.vue:701", "帖子已更新", post);
+      common_vendor.index.__f__("log", "at pages/circle/circle.vue:710", "帖子已更新", post);
     },
     // 获取置顶帖子
     async fetchPinnedPosts() {
@@ -488,7 +497,7 @@ const _sfc_main = {
           };
         });
       } catch (err) {
-        common_vendor.index.__f__("error", "at pages/circle/circle.vue:759", "获取置顶帖子失败", err);
+        common_vendor.index.__f__("error", "at pages/circle/circle.vue:768", "获取置顶帖子失败", err);
         common_vendor.index.showToast({ title: "获取置顶帖子失败", icon: "none" });
         this.pinnedPosts = [];
       }

@@ -26,8 +26,7 @@
 		{
 			"path": "pages/task/TaskDetail/TaskDetail",
 			"style": {
-				"navigationBarTitleText": "任务详情",
-				"navigationStyle": "custom"
+				"navigationBarTitleText": "任务详情"
 			}
 		},
 		{
@@ -68,9 +67,21 @@
 			}
 		},
 		{
+			"path": "pages/task/TaskRelease/QuickRelease/QuickRelease",
+			"style": {
+				"navigationBarTitleText": "快速发布"
+			}
+		},
+		{
 			"path": "pages/message/MessageCenter/MessageCenter",
 			"style": {
 				"navigationBarTitleText": "消息中心"
+			}
+		},
+		{
+			"path": "pages/message/Chat/Chat",
+			"style": {
+				"navigationBarTitleText": "对话"
 			}
 		},
 		{
@@ -221,6 +232,20 @@
 			"style": {
 				"navigationBarTitleText": "发布帖子"
 			}
+		},
+		{
+			"path" : "pages/user/user-quanzi/user-quanzi",
+			"style" : 
+			{
+				"navigationBarTitleText" : "圈子贡献"
+			}
+		},
+		{
+			"path" : "pages/user/user-activity/user-activity",
+			"style" : 
+			{
+				"navigationBarTitleText" : "活动中心"
+			}
 		}
 
 	],
@@ -230,7 +255,34 @@
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8"
 	},
-	
+	"tabBar": {
+  "color": "#999999",
+  "selectedColor": "#3B7FF3",
+  "backgroundColor": "#FFFFFF",
+  "borderStyle": "black",
+  "list": [
+    {
+      "pagePath": "pages/index/index",
+      
+      "text": "任务大厅"
+    },
+    {
+      "pagePath": "pages/circle/circle",
+     
+      "text": "校园圈子"
+    },
+    {
+      "pagePath": "pages/message/MessageCenter/MessageCenter",
+			
+      "text": "消息"
+    },
+    {
+      "pagePath": "pages/user/user",
+    
+      "text": "我的"
+    }
+  ]
+},
 	"uniIdRouter": {},
 	"easycom": {
 		"autoscan": true,

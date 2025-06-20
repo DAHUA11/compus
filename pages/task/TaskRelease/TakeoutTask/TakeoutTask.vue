@@ -147,6 +147,35 @@
           </view>
         </view>
 
+        <!-- 时间选择器弹窗 -->
+        <uni-popup ref="timePicker" type="bottom" @change="handleCloseTimePicker">
+          <view class="time-picker-container">
+            <view class="time-picker-header">
+              <text class="time-picker-title">选择送达时间</text>
+              <view class="time-picker-close" @tap="handleCloseTimePicker">
+                <uni-icons type="close" size="20" color="#999999" />
+              </view>
+            </view>
+            <scroll-view scroll-y class="time-slots-list">
+              <view 
+                v-for="(time, index) in timeSlots" 
+                :key="index"
+                class="time-slot-item"
+                :class="{ 'selected': time === expectedDeliveryTime }"
+                @tap="handleTimeSelect(time)"
+              >
+                <text>{{ time }}</text>
+                <uni-icons 
+                  v-if="time === expectedDeliveryTime" 
+                  type="checkmarkempty" 
+                  size="16" 
+                  color="#3B7FF3" 
+                />
+              </view>
+            </scroll-view>
+          </view>
+        </uni-popup>
+
         <!-- 特殊要求 -->
         <view class="form-item">
           <view class="item-label setting-label">
@@ -281,7 +310,18 @@ export default {
       realPhone: '', // 真实电话号码
       virtualPhone: '', // 虚拟电话号码
       orderImages: [], // 订单截图 (多张，使用数组)
-      expectedDeliveryTime: '', // 期望送达时间段
+      expectedDeliveryTime: '',
+      timeSlots: [
+        '11:30-12:00',
+        '12:00-12:30',
+        '12:30-13:00',
+        '13:00-13:30',
+        '17:30-18:00',
+        '18:00-18:30',
+        '18:30-19:00',
+        '19:00-19:30'
+      ],
+      showTimePicker: false,
       specialRequirements: '', // 特殊要求
       hidePhoneNumber: true, // 默认隐藏真实号码
       rewardAmount: '', // 悬赏金额
@@ -292,9 +332,11 @@ export default {
       basePrice: 5, // 基础价格
       perUnitPrice: 2, // 每份加价
       distanceSurcharge: 3, // 远距离加价
-      rushFeeRate: 0.3 // 加急费率
+      rushFeeRate: 0.3, // 加急费率
+      userInfo: null, // 确保 userInfo 是响应式数据
     }
   },
+
   computed: {
     // 计算预估价格
     calculatePrice() {
@@ -339,6 +381,49 @@ export default {
         this.virtualPhone = this.generateVirtualPhone();
       }
     }
+  },
+  onShow() { // 将登录检查移到 onShow
+    let userInfo = uni.getStorageSync('uni-id-pages-userInfo');
+    console.log('--- Debugging onShow ---');
+    console.log('1. Raw userInfo from storage:', userInfo);
+    console.log('2. Type of raw userInfo:', typeof userInfo);
+
+    // 尝试解析JSON字符串，如果它是一个字符串的话
+    if (typeof userInfo === 'string') {
+      try {
+        userInfo = JSON.parse(userInfo);
+      } catch (e) {
+        console.error('5. Error parsing userInfo:', e);
+        userInfo = null;
+      }
+    }
+
+    // 用户已登录，将用户信息存储到组件数据中，并确保头像URL正确
+    if (userInfo && userInfo._id) {
+      this.userInfo = {
+        _id: userInfo._id,
+        username: userInfo.username,
+        nickname: userInfo.nickname || userInfo.username || '用户',
+        // 优先使用 avatar_file.url，否则使用 avatar 字段，最后提供默认头像
+        avatar: (userInfo.avatar_file && userInfo.avatar_file.url) 
+                  ? userInfo.avatar_file.url 
+                  : (userInfo.avatar || '/static/images/default_avatar.png') // 确保有一个默认头像
+      };
+      console.log('11. User is logged in. ID:', this.userInfo._id, 'Avatar:', this.userInfo.avatar);
+    } else {
+      console.log('10. Condition `!userInfo || !userInfo._id` is TRUE. Redirecting...');
+      uni.showToast({
+        title: '请先登录',
+        icon: 'none'
+      });
+      setTimeout(() => {
+        uni.navigateTo({
+          url: '/uni_modules/uni-id-pages/pages/login/login-withoutpwd'
+        });
+      }, 1500);
+      return;
+    }
+    console.log('--- End Debugging onShow ---');
   },
   methods: {
     // 处理返回按钮点击
@@ -437,33 +522,19 @@ export default {
 
     // 处理选择送达时间
     handleSelectDeliveryTime() {
-      const timeOptions = [];
-      // 从10:30开始到20:30，每15分钟一档
-      const startHour = 10;
-      const startMinute = 30;
-      const endHour = 20;
-      const endMinute = 30;
-      
-      let currentHour = startHour;
-      let currentMinute = startMinute;
-      
-      while (currentHour < endHour || (currentHour === endHour && currentMinute <= endMinute)) {
-        timeOptions.push(`${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`);
-        
-        // 增加15分钟
-        currentMinute += 15;
-        if (currentMinute >= 60) {
-          currentMinute = 0;
-          currentHour++;
-        }
-      }
-
-      uni.showActionSheet({
-        itemList: timeOptions,
-        success: (res) => {
-          this.expectedDeliveryTime = timeOptions[res.tapIndex];
-        }
+      this.showTimePicker = true;
+      this.$nextTick(() => {
+        this.$refs.timePicker.open('bottom');
       });
+    },
+
+    handleTimeSelect(time) {
+      this.expectedDeliveryTime = time;
+      this.showTimePicker = false;
+    },
+
+    handleCloseTimePicker() {
+      this.showTimePicker = false;
     },
 
     // 处理提交
@@ -519,48 +590,75 @@ export default {
         return;
       }
 
-      // 收集数据
+      // 直接使用 this.userInfo
       const taskData = {
-        type: 'takeout', // 外卖代拿任务类型
-        status: 'pending', // 初始状态为待接单
-        title: '外卖代拿', // 固定标题
-        description: this.specialRequirements || '无特殊要求', // 特殊要求，如果没有则显示"无特殊要求"
-        reward: parseFloat(this.rewardAmount) || 0, // 赏金金额
-        publishTime: new Date().toLocaleString('zh-CN'), // 发布时间
-        expectedDeliveryTime: this.expectedDeliveryTime, // 期望送达时间段
-        pickupAddress: this.pickupAddress, // 取货地址
-        deliveryAddress: this.deliveryAddress, // 送达地址
-        latestUpdate: '等待接单中', // 添加初始最新动态
-        images: this.orderImages, // 添加订单截图数组
-        contactName: this.recipientName, // 添加收件人姓名
-        contactPhone: this.realPhone, // 添加联系电话
-        publisher: { // 发布者信息
-          id: 'currentUserId',
-          nickname: '当前用户昵称',
-          avatar: '/static/avatar.png',
-          creditRating: 5
-        }
+        type: 'takeout',
+        title: '外卖代拿',
+        description: this.specialRequirements || '',
+        reward: Number(this.rewardAmount),
+        status: 'pending',
+        publisher_id: this.userInfo._id,
+        publisher_name: this.userInfo.nickname,
+        publisher_avatar: this.userInfo.avatar,
+        publish_time: new Date(),
+        is_urgent: this.isRush || false,
+        tags: this.isRush ? ['urgent'] : [],
+        pickup_address: this.pickupAddress,
+        delivery_address: this.deliveryAddress,
+        expected_time: this.expectedDeliveryTime,
+        contact_name: this.recipientName,
+        contact_phone: this.realPhone,
+        food_quantity: Number(this.foodQuantity),
+        order_images: this.orderImages
       };
 
-      // 模拟提交成功
-      uni.showLoading({
-        title: '发布中...'
-      });
+      // 调用云函数
+      try {
+        uni.showLoading({
+          title: '发布中...'
+        });
 
-      setTimeout(() => {
-        uni.hideLoading();
-        uni.showToast({
-          title: '发布成功',
-          icon: 'success',
-          success: () => {
-            // 跳转并传递数据
-            const taskInfoString = encodeURIComponent(JSON.stringify(taskData));
-            uni.navigateTo({
-              url: `/pages/task/TaskDetail/TaskDetail?taskInfo=${taskInfoString}`
+        uniCloud.callFunction({
+          name: 'addTask',
+          data: {
+            taskData
+          }
+        }).then(res => {
+          uni.hideLoading();
+          if (res.result.code === 200) {
+            uni.showToast({
+              title: '发布成功',
+              icon: 'success'
+            });
+            
+            // 发布成功后跳转到首页
+            setTimeout(() => {
+              uni.switchTab({
+                url: '/pages/index/index'
+              });
+            }, 1500);
+          } else {
+            uni.showToast({
+              title: res.result.msg || '发布失败',
+              icon: 'none'
             });
           }
+        }).catch(err => {
+          uni.hideLoading();
+          uni.showToast({
+            title: '发布失败，请重试',
+            icon: 'none'
+          });
+          console.error('发布任务失败：', err);
         });
-      }, 1500);
+      } catch (e) {
+        uni.hideLoading();
+        uni.showToast({
+          title: '发布失败，请重试',
+          icon: 'none'
+        });
+        console.error('发布任务失败：', e);
+      }
     }
   }
 }
@@ -912,25 +1010,25 @@ export default {
 }
 
 .submit-btn {
-  flex: 1;
-  height: 88rpx;
-  line-height: 88rpx;
-  text-align: center;
-  background-color: var(--primary-color);
+  width: 100%;
+  height: 90rpx;
+  background: linear-gradient(135deg, #00BFFF, #0099FF);
+  border-radius: 45rpx;
   color: #ffffff;
-  font-size: 16px;
-  border-radius: 44rpx;
-  box-shadow: 0 8px 24px rgba(0, 191, 255, 0.3);
-  transition: all 0.2s;
-  position: relative;
-  z-index: 2;
-  cursor: pointer;
-  border: none
+  font-size: 32rpx;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(0, 191, 255, 0.2);
+  transition: all 0.3s;
+  border: none;
+  line-height: 1;
 }
 
 .submit-btn:active {
-  transform: translateY(2px);
-  box-shadow: 0 4px 12px rgba(0, 191, 255, 0.2)
+  transform: scale(0.98);
+  box-shadow: 0 4px 8px rgba(0, 191, 255, 0.15);
 }
 
 .reward-unit {
@@ -1364,5 +1462,71 @@ textarea:focus {
 
 .delete-btn:active {
   transform: scale(0.95)
+}
+
+.time-picker-container {
+  background-color: #FFFFFF;
+  border-radius: 24rpx 24rpx 0 0;
+  padding: 30rpx;
+  max-height: 60vh;
+}
+
+.time-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #EEEEEE;
+  margin-bottom: 20rpx;
+}
+
+.time-picker-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333333;
+}
+
+.time-picker-close {
+  padding: 10rpx;
+}
+
+.time-slots-list {
+  max-height: 50vh;
+}
+
+.time-slot-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #EEEEEE;
+}
+
+.time-slot-item:last-child {
+  border-bottom: none;
+}
+
+.time-slot-item text {
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.time-slot-item.selected {
+  color: #3B7FF3;
+}
+
+.time-slot-item.selected text {
+  color: #3B7FF3;
+  font-weight: bold;
+}
+
+.select-input {
+  font-size: 28rpx;
+  color: #999999;
+  flex: 1;
+}
+
+.select-input.has-value {
+  color: #333333;
 }
 </style>

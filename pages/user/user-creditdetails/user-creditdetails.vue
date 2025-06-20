@@ -121,7 +121,7 @@ export default {
   background: #fff;
   border-radius: 22rpx;
   box-shadow: 0 6px 24px rgba(64,128,255,0.10);
-  margin: 36rpx 24rpx 0 24rpx;
+  margin: 0 24rpx 0 24rpx;
   padding: 38rpx 24rpx 28rpx 24rpx;
   display: flex;
   flex-direction: column;
@@ -204,7 +204,7 @@ export default {
 .silver .level-label { color: #B0C4DE; }
 .blacklist .level-label { color: #FF5252; }
 .credit-tab {
-  margin: 36rpx 24rpx 0 24rpx;
+  margin: 0rpx 24rpx 0 24rpx;
 }
 .tab-bar {
   display: flex;

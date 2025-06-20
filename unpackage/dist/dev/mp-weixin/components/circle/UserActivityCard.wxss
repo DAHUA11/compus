@@ -1,0 +1,127 @@
+
+.activity-card-wrapper.data-v-6a122881 {
+		background-color: #ffffff;
+		border-radius: 16rpx;
+		margin-bottom: 24rpx;
+		box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+		overflow: hidden;
+		transition: transform 0.2s ease-in-out;
+}
+.activity-card-wrapper.data-v-6a122881:active {
+		transform: scale(0.98);
+}
+.activity-card.data-v-6a122881 {
+		padding: 24rpx;
+}
+.activity-header.data-v-6a122881 {
+		display: flex;
+		align-items: center;
+		margin-bottom: 20rpx;
+}
+.avatar.data-v-6a122881 {
+		width: 80rpx;
+		height: 80rpx;
+		border-radius: 50%;
+		margin-right: 20rpx;
+}
+.user-info.data-v-6a122881 {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+}
+.username.data-v-6a122881 {
+		font-size: 15px;
+		font-weight: 500;
+		color: #303133;
+}
+.publish-time.data-v-6a122881 {
+		font-size: 12px;
+		color: #909399;
+}
+.status-badge.data-v-6a122881 {
+		padding: 6rpx 16rpx;
+		border-radius: 100rpx;
+		font-size: 12px;
+		font-weight: 500;
+}
+.status-ongoing.data-v-6a122881 { background-color: #E6F7FF; color: #1890FF;
+}
+.status-ended.data-v-6a122881 { background-color: #F0F2F5; color: #909399;
+}
+.status-full.data-v-6a122881 { background-color: #FFF0F0; color: #F56C6C;
+}
+.status-unknown.data-v-6a122881 { background-color: #F4F4F5; color: #909399;
+}
+.activity-title.data-v-6a122881 {
+		font-size: 16px;
+		font-weight: 600;
+		color: #303133;
+		margin-bottom: 12rpx;
+		line-height: 1.4;
+}
+.activity-content.data-v-6a122881 {
+		margin-bottom: 24rpx;
+}
+.content-text.data-v-6a122881 {
+		font-size: 14px;
+		color: #606266;
+		line-height: 1.6;
+}
+.activity-footer.data-v-6a122881 {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		border-top: 1rpx solid #F0F2F5;
+		padding-top: 20rpx;
+}
+.footer-item.data-v-6a122881 {
+		display: flex;
+		align-items: center;
+		font-size: 12px;
+		color: #8A8A8A;
+}
+.footer-text.data-v-6a122881 {
+		margin-left: 8rpx;
+}
+	
+	/* 骨架屏样式 */
+.skeleton-card.data-v-6a122881 {
+		padding: 24rpx;
+}
+.skeleton-header.data-v-6a122881 {
+		display: flex;
+		align-items: center;
+		margin-bottom: 20rpx;
+}
+.skeleton-avatar.data-v-6a122881 {
+		width: 80rpx;
+		height: 80rpx;
+		border-radius: 50%;
+		background-color: #f0f2f5;
+		margin-right: 20rpx;
+}
+.skeleton-info.data-v-6a122881 {
+		flex: 1;
+}
+.skeleton-line.data-v-6a122881 {
+		height: 24rpx;
+		background-color: #f0f2f5;
+		border-radius: 8rpx;
+		margin-bottom: 12rpx;
+}
+.skeleton-content .skeleton-line.data-v-6a122881:last-child {
+		margin-bottom: 0;
+}
+@keyframes skeleton-blink-6a122881 {
+0% { opacity: 1;
+}
+50% { opacity: 0.6;
+}
+100% { opacity: 1;
+}
+}
+.skeleton-card .skeleton-avatar.data-v-6a122881,
+	.skeleton-card .skeleton-line.data-v-6a122881 {
+		animation: skeleton-blink-6a122881 1.5s infinite ease-in-out;
+}
+

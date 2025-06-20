@@ -1,0 +1,194 @@
+/**
+ * 这里是uni-app内置的常用样式变量
+ *
+ * uni-app 官方扩展插件及插件市场（https://ext.dcloud.net.cn）上很多三方插件均使用了这些样式变量
+ * 如果你是插件开发者，建议你使用scss预处理，并在插件代码中直接使用这些变量（无需 import 这个文件），方便用户通过搭积木的方式开发整体风格一致的App
+ *
+ */
+/**
+ * 如果你是App开发者（插件使用者），你可以通过修改这些变量来定制自己的插件主题，实现自定义主题功能
+ *
+ * 如果你的项目同样使用了scss预处理，你也可以直接在你的 scss 代码中使用如下变量，同时无需 import 这个文件
+ */
+/* 颜色变量 */
+/* 行为相关颜色 */
+/* 文字基本颜色 */
+/* 背景颜色 */
+/* 边框颜色 */
+/* 尺寸变量 */
+/* 文字尺寸 */
+/* 图片尺寸 */
+/* Border Radius */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+.user-quanzi-page {
+  background: linear-gradient(180deg, #f5f6fa 0%, #eaf2ff 100%);
+  min-height: 100vh;
+  padding-bottom: 40rpx;
+}
+.tab-bar {
+  display: flex;
+  background: #fff;
+  border-radius: 20rpx;
+  margin: 0 24rpx 0 24rpx;
+  box-shadow: 0 4px 16px rgba(64, 128, 255, 0.08);
+  overflow: hidden;
+}
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 16px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 1px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.tab-text {
+  font-size: 30rpx;
+  font-weight: 500;
+}
+.tab-count {
+  font-size: 26rpx;
+  font-weight: 700;
+  margin-top: 6rpx;
+}
+.tab-item:not(.active) .tab-count {
+  color: #999;
+}
+.tab-item.active .tab-text {
+  font-weight: 600;
+}
+.tab-item.active .tab-count {
+  color: #4080FF;
+}
+.contribution-list {
+  margin: 32rpx 24rpx 0 24rpx;
+}
+
+/* 自定义左滑样式 */
+.swipe-item {
+  position: relative;
+  margin-bottom: 24rpx;
+  overflow: hidden;
+  border-radius: 24rpx;
+}
+.contribution-card {
+  background: #fff;
+  border-radius: 20rpx;
+  box-shadow: 0 6px 20px rgba(64, 128, 255, 0.08);
+  padding: 32rpx 28rpx 28rpx 28rpx;
+  transition: all 0.3s ease;
+  border: 1rpx solid rgba(64, 128, 255, 0.05);
+  position: relative;
+  z-index: 2;
+}
+.contribution-card:active {
+  background-color: #f8f9fa;
+}
+.swipe-actions {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  z-index: 1;
+}
+.swipe-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 160rpx;
+  height: 98%;
+  color: #fff;
+  transition: background-color 0.2s ease;
+}
+.delete-btn {
+  background-color: #ff5252;
+}
+.delete-btn:active {
+  background-color: #e64a4a;
+}
+.swipe-action-btn .action-text {
+  font-size: 26rpx;
+  margin-top: 4rpx;
+}
+.contribution-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+  justify-content: space-between;
+}
+.contribution-type {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-left: 12rpx;
+  flex: 1;
+}
+.contribution-time {
+  font-size: 12px;
+  color: #999;
+}
+.contribution-content {
+  margin-bottom: 20rpx;
+}
+.contribution-text {
+  font-size: 15px;
+  color: #444;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.contribution-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+.contribution-stats {
+  display: flex;
+  gap: 20rpx;
+}
+.stat-item {
+  font-size: 12px;
+  color: #666;
+  background: #f8f9fa;
+  padding: 6rpx 12rpx;
+  border-radius: 12rpx;
+}
+.contribution-extra {
+  font-size: 12px;
+  color: #4080FF;
+  background: rgba(64, 128, 255, 0.1);
+  padding: 6rpx 12rpx;
+  border-radius: 12rpx;
+  font-weight: 500;
+}
+.empty-tip {
+  text-align: center;
+  color: #999;
+  margin-top: 120rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+.empty-tip text {
+  font-size: 16px;
+  letter-spacing: 1px;
+}

@@ -200,6 +200,15 @@ export default {
 		this.fetchPostsFromCloud();
 	},
 	methods: {
+		goIndex() {
+			uni.navigateTo({ url: '/pages/index/index' })
+		},
+		gomessage() {
+			uni.navigateTo({ url: '/pages/message/MessageCenter/MessageCenter' })
+		},
+		gouser() {
+			uni.navigateTo({ url: '/pages/user/user' })
+		},
 		// 初始化数据
 		initData() {
 			// 模拟网络请求获取数据
@@ -1151,4 +1160,31 @@ export default {
   margin-left: 4rpx;
   box-shadow: 0 2rpx 8rpx rgba(231, 215, 122, 0.10);
 }
+	/* 底部导航栏 */
+	.tab-bar {
+		display: flex;
+		justify-content: space-around;
+		align-items: center;
+		height: 100rpx;
+		background-color: #FFFFFF;
+		border-top: 1px solid #EEEEEE;
+		padding-bottom: env(safe-area-inset-bottom);
+	}
+
+	.tab-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 10rpx 0;
+	}
+
+	.tab-item text {
+		font-size: 12px;
+		color: #999;
+		margin-top: 6rpx;
+	}
+
+	.tab-item.active text {
+		color: #3B7FF3;
+	}
 </style>

@@ -482,8 +482,8 @@ export default {
     switchTestRole(role) {
       uni.setStorageSync('testRole', role);
       const user = this.TEST_USER[role] || this.TEST_USER.user;
-      uni.setStorageSync('userToken', 'test_token'); 
-      uni.setStorageSync('userId', user.id);
+      // uni.setStorageSync('userToken', 'test_token'); // 移除手动设置
+      // uni.setStorageSync('userId', user.id); // 移除手动设置
       uni.setStorageSync('userNickname', user.nickname);
       uni.setStorageSync('userAvatar', user.avatar);
 

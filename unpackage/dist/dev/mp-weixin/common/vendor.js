@@ -7319,7 +7319,7 @@ function isConsoleWritable() {
 function initRuntimeSocketService() {
   const hosts = "172.16.0.4,127.0.0.1";
   const port = "8090";
-  const id = "mp-weixin_kVPcmi";
+  const id = "mp-weixin_-6zKjQ";
   const lazy = typeof swan !== "undefined";
   let restoreError = lazy ? () => {
   } : initOnError();
@@ -8293,8 +8293,7 @@ const pages = [
   {
     path: "pages/task/TaskDetail/TaskDetail",
     style: {
-      navigationBarTitleText: "任务详情",
-      navigationStyle: "custom"
+      navigationBarTitleText: "任务详情"
     }
   },
   {
@@ -8334,9 +8333,21 @@ const pages = [
     }
   },
   {
+    path: "pages/task/TaskRelease/QuickRelease/QuickRelease",
+    style: {
+      navigationBarTitleText: "快速发布"
+    }
+  },
+  {
     path: "pages/message/MessageCenter/MessageCenter",
     style: {
       navigationBarTitleText: "消息中心"
+    }
+  },
+  {
+    path: "pages/message/Chat/Chat",
+    style: {
+      navigationBarTitleText: "对话"
     }
   },
   {
@@ -8501,6 +8512,18 @@ const pages = [
     style: {
       navigationBarTitleText: "发布帖子"
     }
+  },
+  {
+    path: "pages/user/user-quanzi/user-quanzi",
+    style: {
+      navigationBarTitleText: "圈子贡献"
+    }
+  },
+  {
+    path: "pages/user/user-activity/user-activity",
+    style: {
+      navigationBarTitleText: "活动中心"
+    }
   }
 ];
 const globalStyle = {
@@ -8508,6 +8531,30 @@ const globalStyle = {
   navigationBarTitleText: "校园圈子",
   navigationBarBackgroundColor: "#F8F8F8",
   backgroundColor: "#F8F8F8"
+};
+const tabBar = {
+  color: "#999999",
+  selectedColor: "#3B7FF3",
+  backgroundColor: "#FFFFFF",
+  borderStyle: "black",
+  list: [
+    {
+      pagePath: "pages/index/index",
+      text: "任务大厅"
+    },
+    {
+      pagePath: "pages/circle/circle",
+      text: "校园圈子"
+    },
+    {
+      pagePath: "pages/message/MessageCenter/MessageCenter",
+      text: "消息"
+    },
+    {
+      pagePath: "pages/user/user",
+      text: "我的"
+    }
+  ]
 };
 const uniIdRouter = {};
 const easycom = {
@@ -8519,6 +8566,7 @@ const easycom = {
 const pagesJson = {
   pages,
   globalStyle,
+  tabBar,
   uniIdRouter,
   easycom
 };
@@ -11387,6 +11435,7 @@ exports.onPullDownRefresh = onPullDownRefresh;
 exports.onReachBottom = onReachBottom;
 exports.onShow = onShow;
 exports.onUnload = onUnload;
+exports.onUnmounted = onUnmounted;
 exports.p = p$1;
 exports.pagesJson = pagesJson;
 exports.reactive = reactive;

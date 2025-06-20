@@ -13,7 +13,9 @@ if (!Math) {
   "./pages/task/TaskRelease/DeliveryTask/DeliveryTask.js";
   "./pages/task/TaskRelease/PurchaseTask/PurchaseTask.js";
   "./pages/task/TaskRelease/OutTask/OutTask.js";
+  "./pages/task/TaskRelease/QuickRelease/QuickRelease.js";
   "./pages/message/MessageCenter/MessageCenter.js";
+  "./pages/message/Chat/Chat.js";
   "./pages/user/user.js";
   "./pages/circle/activities/activities.js";
   "./pages/circle/activity-datail/activity-datail.js";
@@ -40,6 +42,8 @@ if (!Math) {
   "./pages/user/user-creditdetails/user-creditdetails.js";
   "./pages/circle/addactivities/addactivities.js";
   "./pages/circle/post-create/post-create.js";
+  "./pages/user/user-quanzi/user-quanzi.js";
+  "./pages/user/user-activity/user-activity.js";
 }
 const _sfc_main = {
   onLaunch: function() {

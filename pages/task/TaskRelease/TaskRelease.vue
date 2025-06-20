@@ -66,13 +66,6 @@ export default {
           color: '#2ecc71'
         },
         {
-          name: '以物换物',
-          type: 'exchange',
-          description: '用闲置物品交换你需要的东西，各取所需',
-          icon: 'refresh',
-          color: '#9b59b6'
-        },
-        {
           name: '快递代拿',
           type: 'express',
           description: '找人代取快递，省时又省力',
@@ -85,218 +78,59 @@ export default {
           description: '找人代取外卖，美食即刻享用',
           icon: 'location',
           color: '#e74c3c'
+        },
+        {
+          name: '其他',
+          type: 'other',
+          description: '其他你想要发布的任何任务',
+          icon: 'more-filled',
+          color: '#8E8E93'
         }
       ],
-      taskList: [
-        {
-          id: 1,
-          name: '外卖代拿',
-          description: '代取外卖，快速送达',
-          icon: 'shop',
-          color: '#FF9F1C',
-          path: '/pages/task/TaskRelease/TakeoutTask/TakeoutTask'
-        },
-        {
-          id: 2,
-          name: '快递代取',
-          description: '代取快递，安全可靠',
-          icon: 'car',
-          color: '#00BFFF',
-          path: '/pages/task/TaskRelease/DeliveryTask/DeliveryTask'
-        },
-        {
-          id: 3,
-          name: '物品交换',
-          description: '物品交换，互惠互利',
-          icon: 'refresh',
-          color: '#47B960',
-          path: '/pages/task/TaskRelease/ExchangeTask/ExchangeTask'
-        },
-        {
-          id: 4,
-          name: '求购服务',
-          description: '代购商品，方便快捷',
-          icon: 'cart',
-          color: '#FF6B6B',
-          path: '/pages/task/TaskRelease/PurchaseTask/PurchaseTask'
-        },
-        {
-          id: 5,
-          name: '出物服务',
-          description: '外出代办，省时省力',
-          icon: 'location',
-          color: '#9C27B0',
-          path: '/pages/task/TaskRelease/OutTask/OutTask'
-        }
-      ]
     }
   },
   methods: {
     handleQuickTask(type) {
-      this.selectedTask = type
-      // 这里可以直接跳转到对应的发布页面
+      this.handleSelectTask(type);
     },
 
     handleSelectTask(type) {
-      this.selectedTask = type
+      this.selectedTask = type;
       
       // 根据任务类型跳转到对应页面
       const taskMap = {
         'sell': '/pages/task/TaskRelease/OutTask/OutTask',
         'buy': '/pages/task/TaskRelease/PurchaseTask/PurchaseTask',
-        'exchange': '/pages/task/TaskRelease/ExchangeTask/ExchangeTask',
         'express': '/pages/task/TaskRelease/DeliveryTask/DeliveryTask',
-        'takeout': '/pages/task/TaskRelease/TakeoutTask/TakeoutTask'
-      }
+        'takeout': '/pages/task/TaskRelease/TakeoutTask/TakeoutTask',
+        'book': '/pages/task/TaskRelease/OutTask/OutTask',
+        'other': '/pages/task/TaskRelease/QuickRelease/QuickRelease'
+      };
 
-      const targetPath = taskMap[type]
+      const targetPath = taskMap[type];
       if (targetPath) {
         uni.navigateTo({
           url: targetPath,
           success: () => {
-            console.log('跳转成功:', type)
+            console.log('跳转成功:', type);
           },
           fail: (err) => {
-            console.error('跳转失败:', err)
+            console.error('跳转失败:', err);
             uni.showToast({
               title: '页面跳转失败',
               icon: 'none'
-            })
+            });
           }
-        })
+        });
       }
     },
-
-    handleTaskClick(task) {
-      uni.navigateTo({
-        url: task.path,
-        success: () => {
-          console.log('跳转成功:', task.name)
-        },
-        fail: (err) => {
-          console.error('跳转失败:', err)
-          uni.showToast({
-            title: '页面跳转失败',
-            icon: 'none'
-          })
-        }
-      })
-    },
-
-    getCurrentUser() {
-      const TEST_MODE = true // 确保这里的TEST_MODE也为true
-      const TEST_USER = {
-        publisher: {
-          id: 'test_publisher_id',
-          nickname: '测试发布者',
-          avatar: '/static/avatar/default.png'
-        },
-        claimer: {
-          id: 'test_claimer_id',
-          nickname: '测试接单者',
-          avatar: '/static/avatar/default.png'
-        },
-        user: {
-          id: 'test_user_id',
-          nickname: '测试用户',
-          avatar: '/static/avatar/default.png'
-        }
-      }
-      
-      if (TEST_MODE) {
-        const testRole = uni.getStorageSync('testRole') || 'user'
-        return TEST_USER[testRole] || TEST_USER.user
-      } else {
-        return {
-          id: uni.getStorageSync('userId'),
-          nickname: uni.getStorageSync('userNickname'),
-          avatar: uni.getStorageSync('userAvatar')
-        }
-      }
-    },
-
-    async submitTask() {
-      try {
-        // 表单验证
-        if (!this.validateForm()) {
-          return
-        }
-
-        // 构建任务数据
-        const taskData = {
-          id: Date.now(), // 临时ID，实际应该由后端生成
-          type: this.taskType,
-          title: this.title,
-          description: this.description,
-          reward: Number(this.reward),
-          publishTime: new Date().toLocaleString(),
-          status: 'pending',
-          tags: this.isUrgent ? ['加急'] : [],
-          // 根据任务类型添加特定字段
-          ...(this.taskType === 'express' || this.taskType === 'takeout' ? {
-            pickupAddress: this.pickupAddress,
-            deliveryAddress: this.deliveryAddress,
-            expectedDeliveryTime: this.expectedDeliveryTime
-          } : {}),
-          ...(this.taskType === 'buy' || this.taskType === 'sell' ? {
-            itemName: this.itemName,
-            selectedCondition: this.selectedCondition,
-            price: Number(this.price)
-          } : {}),
-          // 添加发布者信息，使用getCurrentUser()获取
-          publisher: this.getCurrentUser()
-        }
-
-        console.log('发布任务:', taskData)
-
-        // 将任务数据传递给TaskHall和MyTask页面
-        const taskInfo = encodeURIComponent(JSON.stringify(taskData))
-        
-        // 使用事件总线发送任务数据
-        uni.$emit('newTaskPublished', taskData)
-
-        // 显示成功提示
-        uni.showToast({
-          title: '发布成功',
-          icon: 'success',
-          duration: 2000
-        })
-
-        // 延迟跳转，让用户看到成功提示
-        setTimeout(() => {
-          // 跳转到任务大厅，并传递任务数据
-          uni.switchTab({
-            url: '/pages/task/TaskHall/TaskHall',
-            success: () => {
-              console.log('跳转到任务大厅成功')
-              // 在跳转成功后，通过事件总线传递任务数据
-              uni.$emit('newTaskPublished', taskData)
-            },
-            fail: (err) => {
-              console.error('跳转失败:', err)
-              uni.showToast({
-                title: '页面跳转失败',
-                icon: 'none'
-              })
-            }
-          })
-        }, 1500)
-
-      } catch (error) {
-        console.error('发布任务失败:', error)
-        uni.showToast({
-          title: '发布失败，请重试',
-          icon: 'error'
-        })
-      }
-    }
   }
 }
 </script>
 
 <style>
 page {
-height: 100%
+height: 100%;
 }
 .container {
 min-height: 100%;

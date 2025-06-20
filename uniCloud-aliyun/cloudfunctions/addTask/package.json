@@ -1,0 +1,7 @@
+{
+  "name": "addTask",
+  "dependencies": {},
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}

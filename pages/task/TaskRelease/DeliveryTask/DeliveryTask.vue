@@ -270,7 +270,7 @@
 
     <!-- 底部操作栏 -->
     <view class="bottom-bar">
-      <button class="submit-btn" @tap="handleSubmit">发布代拿任务</button>
+      <button class="submit-btn" @tap="handleSubmit">发布代取任务</button>
     </view>
   </view>
 </template>
@@ -327,7 +327,9 @@ export default {
         { value: '鹿田', label: '鹿田' },
         { value: '龙北', label: '龙北' },
         { value: '龙南', label: '龙南' }
-      ]
+      ],
+
+      userInfo: null, // 确保 userInfo 是响应式数据
     }
   },
   computed: {
@@ -349,6 +351,48 @@ export default {
       handler: 'calculatePrice',
       immediate: true
     }
+  },
+  onShow() { // 将登录检查移到 onShow
+    let userInfo = uni.getStorageSync('uni-id-pages-userInfo');
+    console.log('--- Debugging onShow ---');
+    console.log('1. Raw userInfo from storage:', userInfo);
+    console.log('2. Type of raw userInfo:', typeof userInfo);
+
+    if (typeof userInfo === 'string') {
+      try {
+        userInfo = JSON.parse(userInfo);
+      } catch (e) {
+        console.error('5. Error parsing userInfo:', e);
+        userInfo = null;
+      }
+    }
+
+    // 用户已登录，将用户信息存储到组件数据中，并确保头像URL正确
+    if (userInfo && userInfo._id) {
+      this.userInfo = {
+        _id: userInfo._id,
+        username: userInfo.username,
+        nickname: userInfo.nickname || userInfo.username || '用户',
+        // 优先使用 avatar_file.url，否则使用 avatar 字段，最后提供默认头像
+        avatar: (userInfo.avatar_file && userInfo.avatar_file.url) 
+                  ? userInfo.avatar_file.url 
+                  : (userInfo.avatar || '/static/images/default_avatar.png') // 确保有一个默认头像
+      };
+      console.log('11. User is logged in. ID:', this.userInfo._id, 'Avatar:', this.userInfo.avatar);
+    } else {
+      console.log('10. Condition `!userInfo || !userInfo._id` is TRUE. Redirecting...');
+      uni.showToast({
+        title: '请先登录',
+        icon: 'none'
+      });
+      setTimeout(() => {
+        uni.navigateTo({
+          url: '/uni_modules/uni-id-pages/pages/login/login-withoutpwd'
+        });
+      }, 1500);
+      return;
+    }
+    console.log('--- End Debugging onShow ---');
   },
   methods: {
     onMultiPickerChange(e) {
@@ -458,7 +502,7 @@ export default {
       }
       return baseReward.toFixed(2);
     },
-    handleSubmit() {
+    async handleSubmit() {
       if (!this.pickupAddress) {
         uni.showToast({
           title: '请输入取件地址',
@@ -511,40 +555,94 @@ export default {
 
       const taskData = {
         type: 'express',
-        status: 'pending',
         title: '快递代取',
         description: this.specialRequirements,
-        tags: this.isUrgent ? ['加急'] : [],
         reward: parseFloat(this.calculateTotalReward()),
-        publishTime: new Date().toLocaleString('zh-CN'),
-        expectedDeliveryTime: this.expectedDeliveryTime,
-        pickupAddress: this.pickupAddress,
-        deliveryAddress: this.deliveryAddress,
-        trackingNumber: this.trackingNumber,
-        contactName: this.recipientName,
-        contactPhone: this.contactPhone,
-        latestUpdate: '等待接单中',
-        images: [],
-        publisher: {
-          id: 'currentUserId',
-          nickname: '当前用户昵称',
-          avatar: '/static/avatar.png',
-          creditRating: 5
-        }
+        status: 'pending',
+        publisher_id: this.userInfo._id,
+        publisher_name: this.userInfo.nickname,
+        publisher_avatar: this.userInfo.avatar,
+        publish_time: new Date(),
+        is_urgent: this.isUrgent || false,
+        tags: this.isUrgent ? ['urgent'] : [],
+        pickup_address: this.pickupAddress,
+        delivery_address: this.deliveryAddress,
+        expected_time: this.expectedDeliveryTime,
+        contact_name: this.recipientName,
+        contact_phone: this.contactPhone
       };
-
       console.log('提交的任务数据:', taskData);
-
-      uni.showToast({
-        title: '发布成功',
-        icon: 'success',
-        success: () => {
-          const taskInfoString = encodeURIComponent(JSON.stringify(taskData));
-          uni.navigateTo({
-            url: `/pages/task/TaskDetail/TaskDetail?taskInfo=${taskInfoString}`
+      const handlePublish = async () => {
+        // 表单验证
+        if (!this.pickupAddress) {
+          uni.showToast({
+            title: '请输入取件地址',
+            icon: 'none'
           });
+          return;
         }
-      });
+        if (!this.deliveryAddress) {
+          uni.showToast({
+            title: '请输入送达地址',
+            icon: 'none'
+          });
+          return;
+        }
+        if (!this.recipientName) {
+          uni.showToast({
+            title: '请输入收件人姓名',
+            icon: 'none'
+          });
+          return;
+        }
+        if (!this.contactPhone) {
+          uni.showToast({
+            title: '请输入收件人电话',
+            icon: 'none'
+          });
+          return;
+        }
+        if (!this.manualReward) {
+          uni.showToast({
+            title: '请输入悬赏金额',
+            icon: 'none'
+          });
+          return;
+        }
+        // 调用云函数
+        try {
+          const res = await uniCloud.callFunction({
+            name: 'addTask',
+            data: {
+              taskData
+            }
+          });
+          if (res.result.code === 200) {
+            uni.showToast({
+              title: '发布成功',
+              icon: 'success'
+            });
+            setTimeout(() => {
+              uni.switchTab({
+                url: '/pages/index/index'
+              });
+            }, 1500);
+          } else {
+            uni.showToast({
+              title: res.result.msg || '发布失败',
+              icon: 'none'
+            });
+          }
+        } catch (e) {
+          uni.showToast({
+            title: '发布失败，请重试',
+            icon: 'none'
+          });
+          console.error('发布任务失败：', e);
+        }
+      }
+
+      handlePublish();
     },
     calculatePrice() {
       if (this.weight) {
@@ -880,21 +978,25 @@ export default {
 }
 
 .submit-btn {
-  flex: 1;
-  height: 88rpx;
-  line-height: 88rpx;
-  text-align: center;
-  background-color: var(--primary-color);
+  width: 100%;
+  height: 90rpx;
+  background: linear-gradient(135deg, #00BFFF, #0099FF);
+  border-radius: 45rpx;
   color: #ffffff;
-  font-size: 16px;
-  border-radius: 44rpx;
-  box-shadow: 0 8px 24px rgba(0, 191, 255, 0.3);
-  transition: all 0.2s
+  font-size: 32rpx;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(0, 191, 255, 0.2);
+  transition: all 0.3s;
+  border: none;
+  line-height: 1;
 }
 
 .submit-btn:active {
-  transform: translateY(2px);
-  box-shadow: 0 4px 12px rgba(0, 191, 255, 0.2)
+  transform: scale(0.98);
+  box-shadow: 0 4px 8px rgba(0, 191, 255, 0.15);
 }
 
 .reward-unit {

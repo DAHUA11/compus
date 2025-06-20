@@ -1,77 +1,63 @@
 
-page {
-		height: 100%;
-}
-.cursor-pointer {
-		cursor: pointer;
-}
 .container {
+		min-height: 100vh;
+		background-color: #F5F5F5;
 		display: flex;
 		flex-direction: column;
-		height: 100%;
-		background-color: #F6F6F6;
 }
-
-	/* 顶部导航栏 */
 .header {
+		background-color: #FFFFFF;
+		padding: 20rpx 30rpx;
 		display: flex;
 		align-items: center;
-		padding: 20rpx 30rpx;
-		background-color: #FFFFFF;
-		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-		position: relative;
-		z-index: 10;
+		justify-content: space-between;
+		position: -webkit-sticky;
+		position: sticky;
+		top: 0;
+		z-index: 100;
 }
 .category-filter {
 		display: flex;
 		align-items: center;
-		margin-right: 20rpx;
+		gap: 8rpx;
 }
 .filter-text {
-		font-size: 14px;
-		font-weight: 500;
-		margin-right: 6rpx;
+		font-size: 28rpx;
+		color: #333333;
 }
 .search-box {
 		flex: 1;
+		margin: 0 20rpx;
+		background-color: #F5F5F5;
+		border-radius: 32rpx;
+		padding: 12rpx 24rpx;
 		display: flex;
 		align-items: center;
-		background-color: #F5F5F5;
-		border-radius: 36rpx;
-		padding: 12rpx 24rpx;
-		margin: 0 20rpx;
+		gap: 12rpx;
 }
 .search-input {
 		flex: 1;
-		height: 36rpx;
-		font-size: 14px;
-		margin: 0 16rpx;
-		color: #333;
+		font-size: 28rpx;
+		color: #333333;
 }
 .voice-icon {
-		margin-left: 10rpx;
+		padding: 8rpx;
 }
 .publish-btn {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		width: 70rpx;
-		height: 70rpx;
-		border-radius: 50%;
+		width: 64rpx;
+		height: 64rpx;
 		background-color: #3B7FF3;
-		box-shadow: 0 4px 8px rgba(59, 127, 243, 0.3);
+		border-radius: 32rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 }
-
-	/* 内容区域 */
 .content-area {
 		flex: 1;
-		overflow: auto;
+		height: calc(100vh - 180rpx);
 }
-
-	/* 轮播图 */
 .banner-section {
 		padding: 20rpx 30rpx;
-		background-color: #FFFFFF;
 }
 .banner-swiper {
 		height: 300rpx;
@@ -81,191 +67,303 @@ page {
 .banner-image {
 		width: 100%;
 		height: 100%;
-		border-radius: 16rpx;
 }
-
-	/* 智能推荐发布 */
 .quick-publish {
+		margin: 20rpx 30rpx;
+		background-color: #FFFFFF;
+		border-radius: 16rpx;
+		padding: 20rpx;
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
-		background-color: #EEF5FF;
-		margin: 0 30rpx 20rpx;
-		padding: 20rpx 24rpx;
-		border-radius: 12rpx;
+		justify-content: space-between;
 }
 .quick-publish-left {
 		display: flex;
 		align-items: center;
+		gap: 12rpx;
 }
 .quick-publish-left text {
-		font-size: 14px;
-		color: #333;
-		margin-left: 10rpx;
+		font-size: 28rpx;
+		color: #333333;
 }
 .quick-publish-btn {
+		background-color: #3B7FF3;
+		border-radius: 32rpx;
+		padding: 12rpx 24rpx;
 		display: flex;
 		align-items: center;
-		background-color: #3B7FF3;
-		border-radius: 30rpx;
-		padding: 10rpx 20rpx;
+		gap: 8rpx;
 }
 .quick-publish-btn text {
-		font-size: 12px;
+		font-size: 28rpx;
 		color: #FFFFFF;
-		margin-right: 6rpx;
 }
-
-	/* 任务瀑布流 */
 .task-flow {
+		margin: 20rpx 30rpx;
 		background-color: #FFFFFF;
-		padding: 30rpx 30rpx 100rpx;
+		border-radius: 16rpx;
+		padding: 20rpx;
 }
 .flow-header {
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
+		justify-content: space-between;
 		margin-bottom: 20rpx;
 }
 .flow-title {
-		font-size: 16px;
+		font-size: 32rpx;
 		font-weight: bold;
-		color: #333;
+		color: #333333;
 }
 .flow-filter {
 		display: flex;
 		align-items: center;
-		font-size: 12px;
-		color: #999;
+		gap: 8rpx;
+}
+.flow-filter text {
+		font-size: 28rpx;
+		color: #999999;
+}
+.flow-filter .sort-icon {
+		margin-right: 8rpx;
+}
+.flow-filter .sort-text {
+		margin-right: 8rpx;
+}
+.flow-filter .sort-description {
+		font-size: 24rpx;
+		color: #B0B0B0;
+		margin-left: 10rpx;
 }
 .task-list {
-		display: flex;
-		flex-direction: column;
-		gap: 20rpx;
+		height: calc(100vh - 600rpx);
 }
 .task-card {
-		position: relative;
 		background-color: #FFFFFF;
-		border-radius: 12rpx;
-		padding: 24rpx;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-		border: 1px solid #EEEEEE;
+		border-radius: 16rpx;
+		padding: 20rpx;
+		margin-bottom: 20rpx;
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 }
-.task-tag {
-		position: absolute;
-		top: 0;
-		left: 24rpx;
-		padding: 6rpx 16rpx;
-		border-bottom-left-radius: 8rpx;
-		border-bottom-right-radius: 8rpx;
-		font-size: 12px;
-		color: #FFFFFF;
-		font-weight: 500;
+.task-card.is-top {
+		border: 2rpx solid #FF9500;
 }
-.task-tag-delivery {
-		background-color: #3B7FF3;
+.task-card.is-urgent {
+		border: 2rpx solid #FF3B30; /* 红色边框 */
+		background-color: #FFF0F0; /* 浅红色背景 */
+		box-shadow: 0 4rpx 16rpx rgba(255, 59, 48, 0.15); /* 更明显的阴影 */
 }
-.task-tag-buy {
-		background-color: #FF3B30;
+.task-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12rpx;
+		margin-bottom: 16rpx;
 }
-.task-tag-express {
-		background-color: #34C759;
+.tag {
+		display: flex;
+		align-items: center;
+		gap: 4rpx;
+		padding: 4rpx 12rpx;
+		border-radius: 8rpx;
+		font-size: 24rpx;
 }
-.task-tag-sell {
-		background-color: #FF9500;
+.tag-urgent {
+		background-color: #FFE5E5;
+		color: #FF3B30;
 }
-.task-tag-exchange {
-		background-color: #5856D6;
+.tag-new {
+		background-color: #E5FFE5;
+		color: #4CD964;
 }
-.task-content {
-		margin-top: 30rpx;
+.tag-hot {
+		background-color: #FFF0E5;
+		color: #FF9500;
 }
 .task-header {
 		display: flex;
 		justify-content: space-between;
-		align-items: center;
+		align-items: flex-start;
 		margin-bottom: 16rpx;
 }
-.task-title {
-		font-size: 16px;
-		font-weight: bold;
-		color: #333;
-}
-.user-credit {
+.user-info {
 		display: flex;
 		align-items: center;
-		font-size: 12px;
+		gap: 12rpx;
 }
-.user-credit text {
-		margin-left: 4rpx;
+.avatar-wrapper {
+		width: 64rpx;
+		height: 64rpx;
+		border-radius: 32rpx;
+		overflow: hidden;
+}
+.avatar {
+		width: 100%;
+		height: 100%;
+}
+.sub-title {
+		display: flex;
+		flex-direction: column;
+		gap: 4rpx;
+}
+.nickname {
+		font-size: 28rpx;
+		color: #333333;
+		font-weight: bold;
+}
+.sub-title text:last-child {
+		font-size: 24rpx;
+		color: #999999;
+}
+.task-type-status {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 8rpx;
+}
+.task-type {
+		display: flex;
+		align-items: center;
+		gap: 4rpx;
+		padding: 4rpx 12rpx;
+		border-radius: 8rpx;
+		font-size: 24rpx;
+		color: #FFFFFF;
+}
+.task-status {
+		font-size: 24rpx;
+		padding: 4rpx 12rpx;
+		border-radius: 8rpx;
+}
+.task-status.pending {
+		background-color: #E5F5FF;
+		color: #00BFFF;
+}
+.task-status.processing {
+		background-color: #E5FFE5;
+		color: #4CD964;
+}
+.task-status.completed {
+		background-color: #F5F5F5;
+		color: #8E8E93;
+}
+.task-status.cancelled {
+		background-color: #FFE5E5;
+		color: #FF3B30;
+}
+.task-title {
+		font-size: 32rpx;
+		color: #333333;
+		font-weight: bold;
+		margin-bottom: 16rpx;
+		text-align: left;
 }
 .task-info {
-		margin-bottom: 20rpx;
-}
-.task-desc {
-		font-size: 14px;
-		color: #666;
-		display: block;
-		margin-bottom: 12rpx;
-		line-height: 1.4;
-}
-.task-meta {
 		display: flex;
-		gap: 20rpx;
+		flex-direction: column;
+		gap: 12rpx;
+		margin-bottom: 16rpx;
 }
-.task-time,
-	.task-location {
+.info-item {
 		display: flex;
 		align-items: center;
-		font-size: 12px;
-		color: #999;
+		gap: 8rpx;
 }
-.task-time text,
-	.task-location text {
-		margin-left: 6rpx;
+.bullet {
+		flex-shrink: 0;
 }
-.task-footer {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-top: 16rpx;
+.label {
+		font-size: 28rpx;
+		color: #666666;
 }
-.task-price {
-		font-size: 18px;
+.value {
+		font-size: 28rpx;
+		color: #333333;
+}
+.value.reward {
+		color: #FF3B30;
 		font-weight: bold;
-		color: #FF3B30;
 }
-.task-hint {
-		background-color: #FFF2F2;
-		border-radius: 6rpx;
-		padding: 4rpx 10rpx;
+.task-actions {
+		display: flex;
+		justify-content: flex-start;
+		align-items: flex-end;
+		margin-top: 24rpx;
+		position: relative;
+		min-height: 60rpx;
 }
-.task-hint text {
-		font-size: 12px;
-		color: #FF3B30;
+.action-left {
+		display: flex;
+		align-items: center;
+		gap: 16rpx;
 }
-
-	/* 底部导航栏 */
+.distance, .views {
+		display: flex;
+		align-items: center;
+		gap: 4rpx;
+		font-size: 24rpx;
+		color: #999999;
+}
+.action-btn {
+		background-color: #0596ef;
+		color: #FFFFFF;
+		font-size: 28rpx;
+		padding: 12rpx 24rpx;
+		border-radius: 32rpx;
+		border: none;
+		position: absolute;
+		right: 0;
+		bottom: 0;
+}
+.loading-more, .no-more {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 20rpx;
+		gap: 8rpx;
+}
+.loading-more text, .no-more text {
+		font-size: 28rpx;
+		color: #999999;
+}
 .tab-bar {
+		background-color: #FFFFFF;
+		padding: 20rpx 30rpx;
 		display: flex;
 		justify-content: space-around;
 		align-items: center;
-		height: 100rpx;
-		background-color: #FFFFFF;
-		border-top: 1px solid #EEEEEE;
-		padding-bottom: env(safe-area-inset-bottom);
+		position: -webkit-sticky;
+		position: sticky;
+		bottom: 0;
+		z-index: 100;
 }
 .tab-item {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: 10rpx 0;
+		gap: 8rpx;
 }
 .tab-item text {
-		font-size: 12px;
-		color: #999;
-		margin-top: 6rpx;
+		font-size: 24rpx;
+		color: #999999;
 }
 .tab-item.active text {
 		color: #3B7FF3;
+}
+.cursor-pointer {
+		cursor: pointer;
+}
+.task-images {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 16rpx;
+		margin-top: 20rpx;
+		padding: 0 20rpx;
+}
+.task-image-thumbnail {
+		width: 160rpx;
+		height: 160rpx;
+		border-radius: 8rpx;
+		overflow: hidden;
+		object-fit: cover;
+		border: 1px solid #eee;
 }

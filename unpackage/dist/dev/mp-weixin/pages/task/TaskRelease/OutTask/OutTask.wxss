@@ -173,26 +173,40 @@
 }
 .condition-options {
   display: flex;
-  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
   gap: 20rpx;
-  width: 100%
+  margin-bottom: 20rpx;
+  width: 100%;
 }
 .condition-option {
-  flex: 1;
+  min-width: 150rpx;
+  max-width: 200rpx;
+  height: 90rpx;
+  background-color: #f5f5f5;
+  border-radius: 12rpx;
+
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  padding: 12rpx 0;
-  border-radius: 8rpx;
-  background-color: #f8f8f8;
-  transition: all 0.3s ease;
+  gap: 8rpx;
+
+  font-size: 24rpx;
+  color: #333333;
+  transition: all 0.2s;
   border: 1px solid transparent;
-  gap: 8rpx
 }
 .condition-option.active {
+  border-color: #00BFFF;
   background-color: rgba(0, 191, 255, 0.1);
-  color: var(--primary-color);
-  border: 1px solid var(--primary-color)
+  color: #00BFFF;
+}
+.condition-option text {
+  flex-shrink: 0;
+}
+.condition-option uni-icons {
+  flex-shrink: 0;
 }
 .trade-options {
   display: flex;
@@ -234,16 +248,6 @@
 .input-container {
   width: 100%
 }
-.input-container input,
-.bargain-range input {
-  width: 100%;
-  font-size: 14px;
-  color: #333333;
-  border: 1px solid #e8e8e8;
-  border-radius: 8rpx;
-  padding: 10rpx;
-  box-sizing: border-box
-}
 .price-container {
   display: flex;
   align-items: center;
@@ -267,6 +271,7 @@
   border-color: var(--primary-color);
   box-shadow: inset 0 2px 6px rgba(0, 191, 255, 0.1), 0 4px 12px rgba(0, 191, 255, 0.15)
 }
+.input-container input,
 .price-input input {
   flex: 1;
   font-size: 14px;
@@ -296,7 +301,8 @@
 }
 .description-textarea {
   width: 100%;
-  height: 240rpx;
+  /* 去掉固定高度，改成最小高度 */
+  min-height: 200rpx; 
   font-size: 14px;
   color: #333333;
   line-height: 1.5;
@@ -304,7 +310,7 @@
   border-radius: 8rpx;
   padding: 10rpx;
   transition: all 0.2s;
-  box-sizing: border-box
+  box-sizing: border-box;
 }
 .description-textarea:focus {
   border-color: var(--primary-color);
@@ -322,14 +328,32 @@
   color: var(--error-color)
 }
 .select-container {
-  width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between
+  justify-content: space-between;
+  width: 100%;
 }
 .select-input {
+  display: flex;
+  align-items: center;
   flex: 1;
-  padding: 10rpx 0
+  padding: 10rpx 0;
+  min-width: 0;
+}
+.select-input text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 选择框的箭头图标 */
+.select-container uni-icons {
+  font-size: 24rpx;
+  margin-left: 10rpx;
+  transform: translateY(1rpx);
+  flex-shrink: 0;
 }
 .has-value {
   color: #333333
@@ -373,20 +397,24 @@
   z-index: 10
 }
 .submit-btn {
-  flex: 1;
-  height: 88rpx;
-  line-height: 88rpx;
-  text-align: center;
-  background-color: var(--primary-color);
+  width: 100%;
+  height: 90rpx;
+  background: linear-gradient(135deg, #00BFFF, #0099FF);
+  border-radius: 45rpx;
   color: #ffffff;
-  font-size: 16px;
-  border-radius: 44rpx;
-  box-shadow: 0 8px 24px rgba(0, 191, 255, 0.3);
-  transition: all 0.2s
+  font-size: 32rpx;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(0, 191, 255, 0.2);
+  transition: all 0.3s;
+  border: none;
+  line-height: 1;
 }
 .submit-btn:active {
-  transform: translateY(2px);
-  box-shadow: 0 4px 12px rgba(0, 191, 255, 0.2)
+  transform: scale(0.98);
+  box-shadow: 0 4px 8px rgba(0, 191, 255, 0.15);
 }
 .price-breakdown {
   margin-top: 20rpx;
@@ -420,4 +448,14 @@
 .breakdown-item.total .item-value {
   color: #FF4D4F;
   font-size: 16px
+}
+.urgent-option {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 10rpx 0;
+}
+.urgent-fee {
+  color: #FF9F1C;
+  font-size: 24rpx;
 }

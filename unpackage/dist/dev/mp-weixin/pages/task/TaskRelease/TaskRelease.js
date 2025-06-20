@@ -24,13 +24,6 @@ const _sfc_main = {
           color: "#2ecc71"
         },
         {
-          name: "以物换物",
-          type: "exchange",
-          description: "用闲置物品交换你需要的东西，各取所需",
-          icon: "refresh",
-          color: "#9b59b6"
-        },
-        {
           name: "快递代拿",
           type: "express",
           description: "找人代取快递，省时又省力",
@@ -43,178 +36,45 @@ const _sfc_main = {
           description: "找人代取外卖，美食即刻享用",
           icon: "location",
           color: "#e74c3c"
-        }
-      ],
-      taskList: [
-        {
-          id: 1,
-          name: "外卖代拿",
-          description: "代取外卖，快速送达",
-          icon: "shop",
-          color: "#FF9F1C",
-          path: "/pages/task/TaskRelease/TakeoutTask/TakeoutTask"
         },
         {
-          id: 2,
-          name: "快递代取",
-          description: "代取快递，安全可靠",
-          icon: "car",
-          color: "#00BFFF",
-          path: "/pages/task/TaskRelease/DeliveryTask/DeliveryTask"
-        },
-        {
-          id: 3,
-          name: "物品交换",
-          description: "物品交换，互惠互利",
-          icon: "refresh",
-          color: "#47B960",
-          path: "/pages/task/TaskRelease/ExchangeTask/ExchangeTask"
-        },
-        {
-          id: 4,
-          name: "求购服务",
-          description: "代购商品，方便快捷",
-          icon: "cart",
-          color: "#FF6B6B",
-          path: "/pages/task/TaskRelease/PurchaseTask/PurchaseTask"
-        },
-        {
-          id: 5,
-          name: "出物服务",
-          description: "外出代办，省时省力",
-          icon: "location",
-          color: "#9C27B0",
-          path: "/pages/task/TaskRelease/OutTask/OutTask"
+          name: "其他",
+          type: "other",
+          description: "其他你想要发布的任何任务",
+          icon: "more-filled",
+          color: "#8E8E93"
         }
       ]
     };
   },
   methods: {
     handleQuickTask(type) {
-      this.selectedTask = type;
+      this.handleSelectTask(type);
     },
     handleSelectTask(type) {
       this.selectedTask = type;
       const taskMap = {
         "sell": "/pages/task/TaskRelease/OutTask/OutTask",
         "buy": "/pages/task/TaskRelease/PurchaseTask/PurchaseTask",
-        "exchange": "/pages/task/TaskRelease/ExchangeTask/ExchangeTask",
         "express": "/pages/task/TaskRelease/DeliveryTask/DeliveryTask",
-        "takeout": "/pages/task/TaskRelease/TakeoutTask/TakeoutTask"
+        "takeout": "/pages/task/TaskRelease/TakeoutTask/TakeoutTask",
+        "book": "/pages/task/TaskRelease/OutTask/OutTask",
+        "other": "/pages/task/TaskRelease/QuickRelease/QuickRelease"
       };
       const targetPath = taskMap[type];
       if (targetPath) {
         common_vendor.index.navigateTo({
           url: targetPath,
           success: () => {
-            common_vendor.index.__f__("log", "at pages/task/TaskRelease/TaskRelease.vue:157", "跳转成功:", type);
+            common_vendor.index.__f__("log", "at pages/task/TaskRelease/TaskRelease.vue:115", "跳转成功:", type);
           },
           fail: (err) => {
-            common_vendor.index.__f__("error", "at pages/task/TaskRelease/TaskRelease.vue:160", "跳转失败:", err);
+            common_vendor.index.__f__("error", "at pages/task/TaskRelease/TaskRelease.vue:118", "跳转失败:", err);
             common_vendor.index.showToast({
               title: "页面跳转失败",
               icon: "none"
             });
           }
-        });
-      }
-    },
-    handleTaskClick(task) {
-      common_vendor.index.navigateTo({
-        url: task.path,
-        success: () => {
-          common_vendor.index.__f__("log", "at pages/task/TaskRelease/TaskRelease.vue:174", "跳转成功:", task.name);
-        },
-        fail: (err) => {
-          common_vendor.index.__f__("error", "at pages/task/TaskRelease/TaskRelease.vue:177", "跳转失败:", err);
-          common_vendor.index.showToast({
-            title: "页面跳转失败",
-            icon: "none"
-          });
-        }
-      });
-    },
-    getCurrentUser() {
-      const TEST_USER = {
-        publisher: {
-          id: "test_publisher_id",
-          nickname: "测试发布者",
-          avatar: "/static/avatar/default.png"
-        },
-        claimer: {
-          id: "test_claimer_id",
-          nickname: "测试接单者",
-          avatar: "/static/avatar/default.png"
-        },
-        user: {
-          id: "test_user_id",
-          nickname: "测试用户",
-          avatar: "/static/avatar/default.png"
-        }
-      };
-      {
-        const testRole = common_vendor.index.getStorageSync("testRole") || "user";
-        return TEST_USER[testRole] || TEST_USER.user;
-      }
-    },
-    async submitTask() {
-      try {
-        if (!this.validateForm()) {
-          return;
-        }
-        const taskData = {
-          id: Date.now(),
-          // 临时ID，实际应该由后端生成
-          type: this.taskType,
-          title: this.title,
-          description: this.description,
-          reward: Number(this.reward),
-          publishTime: (/* @__PURE__ */ new Date()).toLocaleString(),
-          status: "pending",
-          tags: this.isUrgent ? ["加急"] : [],
-          // 根据任务类型添加特定字段
-          ...this.taskType === "express" || this.taskType === "takeout" ? {
-            pickupAddress: this.pickupAddress,
-            deliveryAddress: this.deliveryAddress,
-            expectedDeliveryTime: this.expectedDeliveryTime
-          } : {},
-          ...this.taskType === "buy" || this.taskType === "sell" ? {
-            itemName: this.itemName,
-            selectedCondition: this.selectedCondition,
-            price: Number(this.price)
-          } : {},
-          // 添加发布者信息，使用getCurrentUser()获取
-          publisher: this.getCurrentUser()
-        };
-        common_vendor.index.__f__("log", "at pages/task/TaskRelease/TaskRelease.vue:250", "发布任务:", taskData);
-        const taskInfo = encodeURIComponent(JSON.stringify(taskData));
-        common_vendor.index.$emit("newTaskPublished", taskData);
-        common_vendor.index.showToast({
-          title: "发布成功",
-          icon: "success",
-          duration: 2e3
-        });
-        setTimeout(() => {
-          common_vendor.index.switchTab({
-            url: "/pages/task/TaskHall/TaskHall",
-            success: () => {
-              common_vendor.index.__f__("log", "at pages/task/TaskRelease/TaskRelease.vue:271", "跳转到任务大厅成功");
-              common_vendor.index.$emit("newTaskPublished", taskData);
-            },
-            fail: (err) => {
-              common_vendor.index.__f__("error", "at pages/task/TaskRelease/TaskRelease.vue:276", "跳转失败:", err);
-              common_vendor.index.showToast({
-                title: "页面跳转失败",
-                icon: "none"
-              });
-            }
-          });
-        }, 1500);
-      } catch (error) {
-        common_vendor.index.__f__("error", "at pages/task/TaskRelease/TaskRelease.vue:286", "发布任务失败:", error);
-        common_vendor.index.showToast({
-          title: "发布失败，请重试",
-          icon: "error"
         });
       }
     }

@@ -35,40 +35,60 @@ const _sfc_main = {
       // 有效期
       isUrgent: false,
       // 加急发布
-      // 测试模式配置
-      TEST_MODE: true,
-      // 测试模式开关
-      TEST_USER: {
-        publisher: {
-          id: "test_publisher_id",
-          nickname: "测试发布者",
-          avatar: "/static/avatar/default.png"
-        },
-        claimer: {
-          id: "test_claimer_id",
-          nickname: "测试接单者",
-          avatar: "/static/avatar/default.png"
-        },
-        user: {
-          id: "test_user_id",
-          nickname: "测试用户",
-          avatar: "/static/avatar/default.png"
-        }
-      }
+      userInfo: null
+      // 确保 userInfo 是响应式数据
     };
+  },
+  onShow() {
+    let userInfo = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
+    common_vendor.index.__f__("log", "at pages/task/TaskRelease/PurchaseTask/PurchaseTask.vue:303", "--- Debugging onShow ---");
+    common_vendor.index.__f__("log", "at pages/task/TaskRelease/PurchaseTask/PurchaseTask.vue:304", "1. Raw userInfo from storage:", userInfo);
+    common_vendor.index.__f__("log", "at pages/task/TaskRelease/PurchaseTask/PurchaseTask.vue:305", "2. Type of raw userInfo:", typeof userInfo);
+    if (typeof userInfo === "string") {
+      try {
+        userInfo = JSON.parse(userInfo);
+      } catch (e) {
+        common_vendor.index.__f__("error", "at pages/task/TaskRelease/PurchaseTask/PurchaseTask.vue:311", "5. Error parsing userInfo:", e);
+        userInfo = null;
+      }
+    }
+    if (userInfo && userInfo._id) {
+      this.userInfo = {
+        _id: userInfo._id,
+        username: userInfo.username,
+        nickname: userInfo.nickname || userInfo.username || "用户",
+        // 优先使用 avatar_file.url，否则使用 avatar 字段，最后提供默认头像
+        avatar: userInfo.avatar_file && userInfo.avatar_file.url ? userInfo.avatar_file.url : userInfo.avatar || "/static/images/default_avatar.png"
+        // 确保有一个默认头像
+      };
+      common_vendor.index.__f__("log", "at pages/task/TaskRelease/PurchaseTask/PurchaseTask.vue:327", "11. User is logged in. ID:", this.userInfo._id, "Avatar:", this.userInfo.avatar);
+    } else {
+      common_vendor.index.__f__("log", "at pages/task/TaskRelease/PurchaseTask/PurchaseTask.vue:329", "10. Condition `!userInfo || !userInfo._id` is TRUE. Redirecting...");
+      common_vendor.index.showToast({
+        title: "请先登录",
+        icon: "none"
+      });
+      setTimeout(() => {
+        common_vendor.index.navigateTo({
+          url: "/uni_modules/uni-id-pages/pages/login/login-withoutpwd"
+        });
+      }, 1500);
+      return;
+    }
+    common_vendor.index.__f__("log", "at pages/task/TaskRelease/PurchaseTask/PurchaseTask.vue:341", "--- End Debugging onShow ---");
   },
   methods: {
     // 获取当前用户信息
     getCurrentUser() {
-      if (this.TEST_MODE) {
-        const testRole = common_vendor.index.getStorageSync("testRole") || "user";
-        return this.TEST_USER[testRole] || this.TEST_USER.user;
-      } else {
+      const userInfo = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
+      if (userInfo) {
         return {
-          id: common_vendor.index.getStorageSync("userId"),
-          nickname: common_vendor.index.getStorageSync("userNickname"),
-          avatar: common_vendor.index.getStorageSync("userAvatar")
+          id: userInfo._id,
+          nickname: userInfo.nickname,
+          avatar: userInfo.avatar_file && userInfo.avatar_file.url ? userInfo.avatar_file.url : "/static/images/avatar1.png"
         };
+      } else {
+        return null;
       }
     },
     // 处理选择图片
@@ -122,9 +142,9 @@ const _sfc_main = {
         }
       });
     },
-    // 处理加急开关
-    handleToggleUrgent() {
-      this.isUrgent = !this.isUrgent;
+    // 处理加急开关变化
+    handleUrgentChange(e) {
+      this.isUrgent = e.detail.value;
     },
     // 处理返回
     handleBack() {
@@ -146,11 +166,45 @@ const _sfc_main = {
       }
       return basePrice.toFixed(2);
     },
+    // 获取格式化标题
+    getFormattedTitle(task) {
+      if (!task)
+        return "未知任务";
+      switch (task.type) {
+        case "buy":
+          return `求购${task.itemName || ""}${task.selectedCondition ? `(${this.getConditionText(task.selectedCondition)})` : ""}`;
+        case "express":
+          return `${task.pickupAddress || ""}快递代取`;
+        case "sell":
+          return `出${task.selectedCondition ? this.getConditionText(task.selectedCondition) : ""}${task.itemName || ""}`;
+        case "takeout":
+          return `${task.pickupAddress || ""}外卖代拿`;
+        default:
+          return task.title || "未知任务";
+      }
+    },
+    // 获取物品成色文本
+    getConditionText(condition) {
+      const conditionMap = {
+        "new": "全新",
+        "like-new": "九成新",
+        "good": "八成新",
+        "fair": "七成新"
+      };
+      return conditionMap[condition] || "";
+    },
     // 处理提交
-    handleSubmit() {
+    async handleSubmit() {
       if (!this.itemName) {
         common_vendor.index.showToast({
-          title: "请输入求购物品名称",
+          title: "请输入物品名称",
+          icon: "none"
+        });
+        return;
+      }
+      if (!this.budgetRange) {
+        common_vendor.index.showToast({
+          title: "请输入预算金额",
           icon: "none"
         });
         return;
@@ -158,20 +212,6 @@ const _sfc_main = {
       if (!this.selectedCategory) {
         common_vendor.index.showToast({
           title: "请选择物品类别",
-          icon: "none"
-        });
-        return;
-      }
-      if (!this.selectedCondition) {
-        common_vendor.index.showToast({
-          title: "请选择成色期望",
-          icon: "none"
-        });
-        return;
-      }
-      if (!this.budgetRange) {
-        common_vendor.index.showToast({
-          title: "请输入预算范围",
           icon: "none"
         });
         return;
@@ -190,70 +230,66 @@ const _sfc_main = {
         });
         return;
       }
-      if (!this.description) {
-        common_vendor.index.showToast({
-          title: "请填写详细描述",
-          icon: "none"
-        });
-        return;
-      }
-      if (!this.duration) {
-        common_vendor.index.showToast({
-          title: "请选择有效期",
-          icon: "none"
-        });
-        return;
-      }
       const taskData = {
         type: "buy",
-        // 求购任务类型
+        title: this.getFormattedTitle({
+          type: "buy",
+          itemName: this.itemName,
+          selectedCondition: this.selectedCondition
+        }),
+        description: this.description || "",
+        reward: Number(this.calculateTotalPrice()),
         status: "pending",
-        // 初始状态为待接单
-        title: this.itemName,
-        // 物品名称作为标题
-        description: this.description,
-        // 详细描述
-        reward: parseFloat(this.calculateTotalPrice()),
-        // 使用计算后的总价格
-        publishTime: (/* @__PURE__ */ new Date()).toLocaleString("zh-CN"),
-        // 发布时间
+        publisher_id: this.userInfo._id,
+        publisher_name: this.userInfo.nickname,
+        publisher_avatar: this.userInfo.avatar,
+        publish_time: /* @__PURE__ */ new Date(),
+        is_urgent: this.isUrgent || false,
+        tags: this.isUrgent ? ["urgent"] : [],
+        selected_category: this.selectedCategory,
+        selected_condition: this.selectedCondition,
+        contact_name: this.contactName,
+        contact_phone: this.contactPhone,
         images: this.images,
-        // 图片参考
-        latestUpdate: "等待卖家联系",
-        // 添加初始最新动态
-        selectedCondition: this.selectedCondition,
-        // 成色期望
-        contactName: this.contactName,
-        // 联系人姓名
-        contactPhone: this.contactPhone,
-        // 联系电话
-        acceptRecommend: this.acceptRecommend,
-        // 接受类似物品推荐
-        recommendRange: this.recommendRange,
-        // 类似物品差异范围
-        duration: parseInt(this.duration),
-        // 有效期，转换为数字
-        isUrgent: this.isUrgent,
-        // 加急发布
-        tags: this.isUrgent ? ["加急"] : [],
-        // 添加加急标签
-        ownerType: "published",
-        // 添加ownerType字段，表示这是发布的任务
-        publisher: this.getCurrentUser()
-        // 使用测试用户或真实用户信息
+        budget_range: this.budgetRange
       };
-      common_vendor.index.showToast({
-        title: "发布成功",
-        icon: "success",
-        success: () => {
-          const taskInfoString = encodeURIComponent(JSON.stringify(taskData));
-          common_vendor.index.navigateTo({
-            url: `/pages/task/TaskDetail/TaskDetail?taskInfo=${taskInfoString}`
+      try {
+        common_vendor.index.showLoading({
+          title: "发布中..."
+        });
+        const res = await common_vendor.nr.callFunction({
+          name: "addTask",
+          data: {
+            taskData
+          }
+        });
+        common_vendor.index.hideLoading();
+        if (res.result.code === 200) {
+          common_vendor.index.showToast({
+            title: "发布成功",
+            icon: "success"
+          });
+          setTimeout(() => {
+            common_vendor.index.switchTab({
+              url: "/pages/index/index"
+            });
+          }, 1500);
+        } else {
+          common_vendor.index.showToast({
+            title: res.result.msg || "发布失败",
+            icon: "none"
           });
         }
-      });
+      } catch (e) {
+        common_vendor.index.hideLoading();
+        common_vendor.index.showToast({
+          title: "发布失败，请重试",
+          icon: "none"
+        });
+        common_vendor.index.__f__("error", "at pages/task/TaskRelease/PurchaseTask/PurchaseTask.vue:574", "发布任务失败：", e);
+      }
     },
-    // 处理switch开关变化
+    // 处理switch开关变化 (Keep for acceptRecommend)
     handleSwitchChange(field, event) {
       const value = event.detail.value;
       if (field === "acceptRecommend") {
@@ -261,8 +297,6 @@ const _sfc_main = {
         if (!value) {
           this.recommendRange = "";
         }
-      } else if (field === "isUrgent") {
-        this.isUrgent = value;
       }
     }
   }
@@ -321,12 +355,12 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   }, !$data.selectedCategory ? {} : {
     m: common_vendor.t($data.selectedCategory)
   }, {
-    n: $data.selectedCategory ? 1 : "",
-    o: common_vendor.p({
+    n: common_vendor.p({
       type: $data.selectedCategory ? "checkmark" : "arrowright",
       size: "16",
       color: "#00BFFF"
     }),
+    o: $data.selectedCategory ? 1 : "",
     p: common_vendor.o((...args) => $options.handleSelectCategory && $options.handleSelectCategory(...args)),
     q: common_vendor.p({
       type: "star",
@@ -337,7 +371,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       return {
         a: "3cb424cc-7-" + i0,
         b: common_vendor.p({
-          type: condition.icon,
+          type: $data.selectedCondition === condition.value ? "star-filled" : "star",
           size: "20",
           color: $data.selectedCondition === condition.value ? "#00BFFF" : "#333333"
         }),
@@ -370,17 +404,17 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     B: common_vendor.o(($event) => $data.budgetRange = $event.detail.value),
     C: common_vendor.o((...args) => $options.handleReferencePrice && $options.handleReferencePrice(...args)),
     D: common_vendor.p({
-      type: "heart",
+      type: "notification-filled",
       size: "18",
       color: "#FF9F1C"
     }),
-    E: $data.acceptRecommend,
-    F: common_vendor.o(($event) => $options.handleSwitchChange("acceptRecommend", $event)),
-    G: common_vendor.o((...args) => $options.handleToggleRecommend && $options.handleToggleRecommend(...args)),
-    H: $data.acceptRecommend
-  }, $data.acceptRecommend ? {
-    I: $data.recommendRange,
-    J: common_vendor.o(($event) => $data.recommendRange = $event.detail.value)
+    E: $data.isUrgent,
+    F: common_vendor.o((...args) => $options.handleUrgentChange && $options.handleUrgentChange(...args)),
+    G: common_vendor.o((...args) => _ctx.handleToggleUrgent && _ctx.handleToggleUrgent(...args)),
+    H: $data.isUrgent
+  }, $data.isUrgent ? {
+    I: common_vendor.t($data.budgetRange),
+    J: common_vendor.t($options.calculateTotalPrice())
   } : {}, {
     K: common_vendor.p({
       type: "compose",
@@ -391,34 +425,19 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     M: common_vendor.o(($event) => $data.description = $event.detail.value),
     N: common_vendor.t($data.description.length),
     O: common_vendor.p({
-      type: "calendar",
+      type: "heart",
       size: "18",
-      color: "#47B960"
+      color: "#FF9F1C"
     }),
-    P: !$data.duration
-  }, !$data.duration ? {} : {
-    Q: common_vendor.t($data.duration)
-  }, {
-    R: common_vendor.p({
-      type: "right",
-      size: "16",
-      color: "#999999"
-    }),
-    S: common_vendor.o((...args) => $options.handleSelectDuration && $options.handleSelectDuration(...args)),
-    T: common_vendor.p({
-      type: "notification-filled",
-      size: "18",
-      color: "#47B960"
-    }),
-    U: $data.isUrgent,
-    V: common_vendor.o(($event) => $options.handleSwitchChange("isUrgent", $event)),
-    W: common_vendor.o((...args) => $options.handleToggleUrgent && $options.handleToggleUrgent(...args)),
-    X: $data.isUrgent
-  }, $data.isUrgent ? {
-    Y: common_vendor.t($data.budgetRange),
-    Z: common_vendor.t($options.calculateTotalPrice())
+    P: $data.acceptRecommend,
+    Q: common_vendor.o(($event) => $options.handleSwitchChange("acceptRecommend", $event)),
+    R: common_vendor.o((...args) => $options.handleToggleRecommend && $options.handleToggleRecommend(...args)),
+    S: $data.acceptRecommend
+  }, $data.acceptRecommend ? {
+    T: $data.recommendRange,
+    U: common_vendor.o(($event) => $data.recommendRange = $event.detail.value)
   } : {}, {
-    aa: common_vendor.o((...args) => $options.handleSubmit && $options.handleSubmit(...args))
+    V: common_vendor.o((...args) => $options.handleSubmit && $options.handleSubmit(...args))
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

@@ -15,11 +15,10 @@
       "ignore": [],
       "disablePlugins": [],
       "outputPath": ""
-    },
-    "ignoreUploadUnusedFiles": false
+    }
   },
   "compileType": "miniprogram",
-  "libVersion": "3.8.7",
+  "libVersion": "3.8.8",
   "appid": "wxc21caa8713ccceff",
   "projectname": "Compus",
   "condition": {},

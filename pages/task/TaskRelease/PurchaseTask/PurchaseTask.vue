@@ -70,8 +70,9 @@
             <view class="select-input" :class="{ 'has-value': selectedCategory }">
               <text v-if="!selectedCategory">请选择物品类别</text>
               <text v-else>{{ selectedCategory }}</text>
+              <uni-icons :type="selectedCategory ? 'checkmark' : 'arrowright'" size="16" color="#00BFFF" />
             </view>
-            <uni-icons :type="selectedCategory ? 'checkmark' : 'arrowright'" size="16" color="#00BFFF" />
+           
           </view>
         </view>
 
@@ -92,7 +93,7 @@
                 :class="{ active: selectedCondition === condition.value }"
                 @tap="handleSelectCondition(condition.value)"
               >
-                <uni-icons :type="condition.icon" size="20" :color="selectedCondition === condition.value ? '#00BFFF' : '#333333'" />
+                <uni-icons :type="selectedCondition === condition.value ? 'star-filled' : 'star'" size="20" :color="selectedCondition === condition.value ? '#00BFFF' : '#333333'" />
                 <text>{{ condition.label }}</text>
               </view>
             </view>
@@ -167,32 +168,40 @@
           </view>
         </view>
 
-        <!-- 是否接受类似物品推荐 -->
+        <!-- 加急发布 -->
         <view class="form-item">
           <view class="item-label trade-label">
             <view class="icon-wrapper trade-icon">
-              <uni-icons type="heart" size="18" color="#FF9F1C" />
+              <uni-icons type="notification-filled" size="18" color="#FF9F1C" />
             </view>
-            <text class="trade-text">类似物品推荐</text>
+            <text class="trade-text">加急发布</text>
           </view>
           <view class="item-content">
-            <view class="bargain-option" @tap="handleToggleRecommend">
-              <!-- 修改：switch组件使用 :checked 和 @change 替代 v-model -->
+            <view class="urgent-option" @tap="handleToggleUrgent">
               <switch 
-                :checked="acceptRecommend" 
+                :checked="isUrgent" 
                 active-color="#00BFFF" 
-                @change="handleSwitchChange('acceptRecommend', $event)" 
+                @change="handleUrgentChange" 
               />
-              <text>接受类似物品推荐</text>
+              <text>加急发布</text>
+              <text class="urgent-fee">（价格上浮30%）</text>
             </view>
-            <view class="bargain-range" v-if="acceptRecommend">
-              <input 
-                type="text" 
-                v-model="recommendRange" 
-                placeholder="期望类似物品差异范围（选填，如：颜色不限，品牌可替代）"
-                placeholder-class="placeholder"
-              />
-            </view>
+          </view>
+        </view>
+
+        <!-- 价格明细 -->
+        <view class="price-breakdown" v-if="isUrgent">
+          <view class="breakdown-item">
+            <text class="item-label">基础价格</text>
+            <text class="item-value">¥{{ budgetRange }}</text>
+          </view>
+          <view class="breakdown-item">
+            <text class="item-label">加急费用</text>
+            <text class="item-value">+30%</text>
+          </view>
+          <view class="breakdown-item total">
+            <text class="item-label">总价格</text>
+            <text class="item-value">¥{{ calculateTotalPrice() }}</text>
           </view>
         </view>
       </view>
@@ -220,74 +229,43 @@
         </view>
       </view>
 
-      <!-- 发布设置 -->
-      <view class="form-section card-shadow">
-        <view class="section-title">发布设置</view>
-        
-        <!-- 有效期 -->
-        <view class="form-item">
-          <view class="item-label setting-label">
-            <view class="icon-wrapper setting-icon">
-              <uni-icons type="calendar" size="18" color="#47B960" />
-            </view>
-            <text class="setting-text">有效期</text>
+      <!-- 是否接受类似物品推荐 -->
+      <view class="form-item">
+        <view class="item-label trade-label">
+          <view class="icon-wrapper trade-icon">
+            <uni-icons type="heart" size="18" color="#FF9F1C" />
           </view>
-          <view class="item-content" @tap="handleSelectDuration">
-            <view class="select-input">
-              <text v-if="!duration">请选择有效期</text>
-              <text v-else>{{ duration }}天</text>
-            </view>
-            <uni-icons type="right" size="16" color="#999999" />
-          </view>
+          <text class="trade-text">类似物品推荐</text>
         </view>
-
-        <!-- 加急发布 -->
-        <view class="form-item">
-          <view class="item-label setting-label">
-            <view class="icon-wrapper setting-icon">
-              <uni-icons type="notification-filled" size="18" color="#47B960" />
-            </view>
-            <text class="setting-text">加急发布</text>
+        <view class="item-content">
+          <view class="bargain-option" @tap="handleToggleRecommend">
+            <switch 
+              :checked="acceptRecommend" 
+              active-color="#00BFFF" 
+              @change="handleSwitchChange('acceptRecommend', $event)" 
+            />
+            <text>接受类似物品推荐</text>
           </view>
-          <view class="item-content">
-            <view class="urgent-option" @tap="handleToggleUrgent">
-              <!-- 修改：switch组件使用 :checked 和 @change 替代 v-model -->
-              <switch 
-                :checked="isUrgent" 
-                active-color="#00BFFF" 
-                @change="handleSwitchChange('isUrgent', $event)" 
-              />
-              <text>加急发布</text>
-              <text class="urgent-fee">（价格上浮30%）</text>
-            </view>
-          </view>
-        </view>
-
-        <!-- 价格明细 -->
-        <view class="price-breakdown" v-if="isUrgent">
-          <view class="breakdown-item">
-            <text class="item-label">基础价格</text>
-            <text class="item-value">¥{{ budgetRange }}</text>
-          </view>
-          <view class="breakdown-item">
-            <text class="item-label">加急费用</text>
-            <text class="item-value">+30%</text>
-          </view>
-          <view class="breakdown-item total">
-            <text class="item-label">总价格</text>
-            <text class="item-value">¥{{ calculateTotalPrice() }}</text>
+          <view class="bargain-range" v-if="acceptRecommend">
+            <input 
+              type="text" 
+              v-model="recommendRange" 
+              placeholder="期望类似物品差异范围（选填，如：颜色不限，品牌可替代）"
+              placeholder-class="placeholder"
+            />
           </view>
         </view>
       </view>
 
+   
+
       <!-- 底部操作栏的占位符，确保滚动区域底部有足够空间 -->
       <view class="bottom-bar-placeholder"></view>
-
     </scroll-view>
         
     <!-- 底部操作栏 -->
     <view class="bottom-bar">
-      <button class="submit-btn" @tap="handleSubmit">发布求购</button>
+      <button class="submit-btn" @tap="handleSubmit">发布求购任务</button>
     </view>
   </view>
 </template>
@@ -317,40 +295,63 @@ export default {
       description: '', // 求购描述
       duration: '7', // 有效期
       isUrgent: false, // 加急发布
+      userInfo: null, // 确保 userInfo 是响应式数据
+    }
+  },
+  onShow() { // 将登录检查移到 onShow
+    let userInfo = uni.getStorageSync('uni-id-pages-userInfo');
+    console.log('--- Debugging onShow ---');
+    console.log('1. Raw userInfo from storage:', userInfo);
+    console.log('2. Type of raw userInfo:', typeof userInfo);
 
-      // 测试模式配置
-      TEST_MODE: true, // 测试模式开关
-      TEST_USER: {
-        publisher: {
-          id: 'test_publisher_id',
-          nickname: '测试发布者',
-          avatar: '/static/avatar/default.png'
-        },
-        claimer: {
-          id: 'test_claimer_id',
-          nickname: '测试接单者',
-          avatar: '/static/avatar/default.png'
-        },
-        user: {
-          id: 'test_user_id',
-          nickname: '测试用户',
-          avatar: '/static/avatar/default.png'
-        }
+    if (typeof userInfo === 'string') {
+      try {
+        userInfo = JSON.parse(userInfo);
+      } catch (e) {
+        console.error('5. Error parsing userInfo:', e);
+        userInfo = null;
       }
     }
+
+    // 用户已登录，将用户信息存储到组件数据中，并确保头像URL正确
+    if (userInfo && userInfo._id) {
+      this.userInfo = {
+        _id: userInfo._id,
+        username: userInfo.username,
+        nickname: userInfo.nickname || userInfo.username || '用户',
+        // 优先使用 avatar_file.url，否则使用 avatar 字段，最后提供默认头像
+        avatar: (userInfo.avatar_file && userInfo.avatar_file.url) 
+                  ? userInfo.avatar_file.url 
+                  : (userInfo.avatar || '/static/images/default_avatar.png') // 确保有一个默认头像
+      };
+      console.log('11. User is logged in. ID:', this.userInfo._id, 'Avatar:', this.userInfo.avatar);
+    } else {
+      console.log('10. Condition `!userInfo || !userInfo._id` is TRUE. Redirecting...');
+      uni.showToast({
+        title: '请先登录',
+        icon: 'none'
+      });
+      setTimeout(() => {
+        uni.navigateTo({
+          url: '/uni_modules/uni-id-pages/pages/login/login-withoutpwd'
+        });
+      }, 1500);
+      return;
+    }
+    console.log('--- End Debugging onShow ---');
   },
   methods: {
     // 获取当前用户信息
     getCurrentUser() {
-      if (this.TEST_MODE) {
-        const testRole = uni.getStorageSync('testRole') || 'user';
-        return this.TEST_USER[testRole] || this.TEST_USER.user;
-      } else {
+      const userInfo = uni.getStorageSync('uni-id-pages-userInfo');
+      if (userInfo) {
         return {
-          id: uni.getStorageSync('userId'),
-          nickname: uni.getStorageSync('userNickname'),
-          avatar: uni.getStorageSync('userAvatar')
+          id: userInfo._id,
+          nickname: userInfo.nickname,
+          avatar: (userInfo.avatar_file && userInfo.avatar_file.url) ? userInfo.avatar_file.url : '/static/images/avatar1.png'
         };
+      } else {
+        return null; // 用户未登录
       }
     },
 
@@ -412,9 +413,9 @@ export default {
       });
     },
 
-    // 处理加急开关
-    handleToggleUrgent() {
-      this.isUrgent = !this.isUrgent;
+    // 处理加急开关变化
+    handleUrgentChange(e) {
+      this.isUrgent = e.detail.value;
     },
 
     // 处理返回
@@ -440,12 +441,48 @@ export default {
       return basePrice.toFixed(2);
     },
 
+    // 获取格式化标题
+    getFormattedTitle(task) {
+      if (!task) return '未知任务';
+
+      switch (task.type) {
+        case 'buy':
+          return `求购${task.itemName || ''}${task.selectedCondition ? `(${this.getConditionText(task.selectedCondition)})` : ''}`;
+        case 'express':
+          return `${task.pickupAddress || ''}快递代取`;
+        case 'sell':
+          return `出${task.selectedCondition ? this.getConditionText(task.selectedCondition) : ''}${task.itemName || ''}`;
+        case 'takeout':
+          return `${task.pickupAddress || ''}外卖代拿`;
+        default:
+          return task.title || '未知任务';
+      }
+    },
+
+    // 获取物品成色文本
+    getConditionText(condition) {
+      const conditionMap = {
+        'new': '全新',
+        'like-new': '九成新',
+        'good': '八成新',
+        'fair': '七成新'
+      };
+      return conditionMap[condition] || '';
+    },
+
     // 处理提交
-    handleSubmit() {
+    async handleSubmit() {
       // 表单验证
       if (!this.itemName) {
         uni.showToast({
-          title: '请输入求购物品名称',
+          title: '请输入物品名称',
+          icon: 'none'
+        });
+        return;
+      }
+      if (!this.budgetRange) {
+        uni.showToast({
+          title: '请输入预算金额',
           icon: 'none'
         });
         return;
@@ -453,20 +490,6 @@ export default {
       if (!this.selectedCategory) {
         uni.showToast({
           title: '请选择物品类别',
-          icon: 'none'
-        });
-        return;
-      }
-      if (!this.selectedCondition) {
-        uni.showToast({
-          title: '请选择成色期望',
-          icon: 'none'
-        });
-        return;
-      }
-      if (!this.budgetRange) {
-        uni.showToast({
-          title: '请输入预算范围',
           icon: 'none'
         });
         return;
@@ -485,58 +508,74 @@ export default {
         });
         return;
       }
-      if (!this.description) {
-        uni.showToast({
-          title: '请填写详细描述',
-          icon: 'none'
-        });        
-        return;
-      }
-      if (!this.duration) {
-        uni.showToast({
-          title: '请选择有效期',
-          icon: 'none'
-        });
-        return;
-      }
 
-      // 收集数据
       const taskData = {
-        type: 'buy', // 求购任务类型
-        status: 'pending', // 初始状态为待接单
-        title: this.itemName, // 物品名称作为标题
-        description: this.description, // 详细描述
-        reward: parseFloat(this.calculateTotalPrice()), // 使用计算后的总价格
-        publishTime: new Date().toLocaleString('zh-CN'), // 发布时间
-        images: this.images, // 图片参考
-        latestUpdate: '等待卖家联系', // 添加初始最新动态
-        selectedCondition: this.selectedCondition, // 成色期望
-        contactName: this.contactName, // 联系人姓名
-        contactPhone: this.contactPhone, // 联系电话
-        acceptRecommend: this.acceptRecommend, // 接受类似物品推荐
-        recommendRange: this.recommendRange, // 类似物品差异范围
-        duration: parseInt(this.duration), // 有效期，转换为数字
-        isUrgent: this.isUrgent, // 加急发布
-        tags: this.isUrgent ? ['加急'] : [], // 添加加急标签
-        ownerType: 'published', // 添加ownerType字段，表示这是发布的任务
-        publisher: this.getCurrentUser() // 使用测试用户或真实用户信息
+        type: 'buy',
+        title: this.getFormattedTitle({
+          type: 'buy',
+          itemName: this.itemName,
+          selectedCondition: this.selectedCondition
+        }),
+        description: this.description || '',
+        reward: Number(this.calculateTotalPrice()),
+        status: 'pending',
+        publisher_id: this.userInfo._id,
+        publisher_name: this.userInfo.nickname,
+        publisher_avatar: this.userInfo.avatar,
+        publish_time: new Date(),
+        is_urgent: this.isUrgent || false,
+        tags: this.isUrgent ? ['urgent'] : [],
+        selected_category: this.selectedCategory,
+        selected_condition: this.selectedCondition,
+        contact_name: this.contactName,
+        contact_phone: this.contactPhone,
+        images: this.images,
+        budget_range: this.budgetRange
       };
 
-      // 模拟提交成功后跳转到任务详情页
-      uni.showToast({
-        title: '发布成功',
-        icon: 'success',
-        success: () => {
-          // 跳转并传递数据
-          const taskInfoString = encodeURIComponent(JSON.stringify(taskData));
-          uni.navigateTo({
-            url: `/pages/task/TaskDetail/TaskDetail?taskInfo=${taskInfoString}`
+      // 调用云函数
+      try {
+        uni.showLoading({
+          title: '发布中...'
+        });
+
+        const res = await uniCloud.callFunction({
+          name: 'addTask',
+          data: {
+            taskData
+          }
+        });
+
+        uni.hideLoading();
+        if (res.result.code === 200) {
+          uni.showToast({
+            title: '发布成功',
+            icon: 'success'
+          });
+          
+          // 发布成功后跳转到首页
+          setTimeout(() => {
+            uni.switchTab({
+              url: '/pages/index/index'
+            });
+          }, 1500);
+        } else {
+          uni.showToast({
+            title: res.result.msg || '发布失败',
+            icon: 'none'
           });
         }
-      });
+      } catch (e) {
+        uni.hideLoading();
+        uni.showToast({
+          title: '发布失败，请重试',
+          icon: 'none'
+        });
+        console.error('发布任务失败：', e);
+      }
     },
 
-    // 处理switch开关变化
+    // 处理switch开关变化 (Keep for acceptRecommend)
     handleSwitchChange(field, event) {
       // 获取switch组件的值
       const value = event.detail.value;
@@ -547,9 +586,8 @@ export default {
         if (!value) {
           this.recommendRange = '';
         }
-      } else if (field === 'isUrgent') {
-        this.isUrgent = value;
       }
+      // Removed 'else if (field === 'isUrgent')' as handleUrgentChange handles it directly.
     }
   }
 }
@@ -760,28 +798,42 @@ export default {
 
 .condition-options {
   display: flex;
-  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
   gap: 20rpx;
-  width: 100%
+  margin-bottom: 20rpx;
+  width: 100%;
 }
 
 .condition-option {
-  flex: 1;
+  min-width: 150rpx;
+  max-width: 200rpx;
+  height: 90rpx;
+  background-color: #f5f5f5;
+  border-radius: 12rpx;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  padding: 12rpx 0;
-  border-radius: 8rpx;
-  background-color: #f8f8f8;
-  transition: all 0.3s ease;
+  gap: 8rpx;
+  font-size: 24rpx;
+  color: #333333;
+  transition: all 0.2s;
   border: 1px solid transparent;
-  gap: 8rpx
 }
 
 .condition-option.active {
+  border-color: #00BFFF;
   background-color: rgba(0, 191, 255, 0.1);
-  color: var(--primary-color);
-  border: 1px solid var(--primary-color)
+  color: #00BFFF;
+}
+
+.condition-option text {
+  flex-shrink: 0;
+}
+
+.condition-option uni-icons {
+  flex-shrink: 0;
 }
 
 .trade-options {
@@ -833,13 +885,14 @@ export default {
 
 .input-container input,
 .bargain-range input {
-  width: 100%;
+  flex: 1;
   font-size: 14px;
-  color: #333333;
-  border: 1px solid #e8e8e8;
-  border-radius: 8rpx;
-  padding: 10rpx;
-  box-sizing: border-box
+  color: #333;
+  border: none;
+  background: transparent;
+  height: 100%;
+  padding: 0;
+  box-sizing: content-box;
 }
 
 .price-container {
@@ -931,17 +984,35 @@ export default {
 }
 
 .select-container {
-  width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between
+  justify-content: space-between;
+  width: 100%;
 }
 
 .select-input {
+  display: flex;
+  align-items: center;
   flex: 1;
-  padding: 10rpx 0
+  padding: 10rpx 0;
+  min-width: 0;
 }
 
+.select-input text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 选择框的箭头图标 */
+.select-container uni-icons {
+  font-size: 24rpx;
+  margin-left: 10rpx;
+  transform: translateY(1rpx);
+  flex-shrink: 0;
+}
 .has-value {
   color: #333333
 }
@@ -958,7 +1029,8 @@ export default {
 }
 
 .urgent-fee {
-  color: #ff4d4f
+  color: #FF9F1C;
+  font-size: 24rpx;
 }
 
 .bargain-range {
@@ -992,21 +1064,25 @@ export default {
 }
 
 .submit-btn {
-  flex: 1;
-  height: 88rpx;
-  line-height: 88rpx;
-  text-align: center;
-  background-color: var(--primary-color);
+  width: 100%;
+  height: 90rpx;
+  background: linear-gradient(135deg, #00BFFF, #0099FF);
+  border-radius: 45rpx;
   color: #ffffff;
-  font-size: 16px;
-  border-radius: 44rpx;
-  box-shadow: 0 8px 24px rgba(0, 191, 255, 0.3);
-  transition: all 0.2s
+  font-size: 32rpx;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(0, 191, 255, 0.2);
+  transition: all 0.3s;
+  border: none;
+  line-height: 1;
 }
 
 .submit-btn:active {
-  transform: translateY(2px);
-  box-shadow: 0 4px 12px rgba(0, 191, 255, 0.2)
+  transform: scale(0.98);
+  box-shadow: 0 4px 8px rgba(0, 191, 255, 0.15);
 }
 
 .price-breakdown {

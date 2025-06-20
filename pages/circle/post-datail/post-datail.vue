@@ -425,7 +425,7 @@ export default {
   padding-bottom: 120rpx;
 }
 .post-detail-container {
-  margin: 32rpx 0;
+  margin: 0rpx 0;
   padding: 0 24rpx 24rpx 24rpx;
 }
 .post-header-card {

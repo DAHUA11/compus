@@ -59,7 +59,9 @@ const _sfc_main = {
         { value: "鹿田", label: "鹿田" },
         { value: "龙北", label: "龙北" },
         { value: "龙南", label: "龙南" }
-      ]
+      ],
+      userInfo: null
+      // 确保 userInfo 是响应式数据
     };
   },
   computed: {
@@ -81,6 +83,44 @@ const _sfc_main = {
       handler: "calculatePrice",
       immediate: true
     }
+  },
+  onShow() {
+    let userInfo = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
+    common_vendor.index.__f__("log", "at pages/task/TaskRelease/DeliveryTask/DeliveryTask.vue:357", "--- Debugging onShow ---");
+    common_vendor.index.__f__("log", "at pages/task/TaskRelease/DeliveryTask/DeliveryTask.vue:358", "1. Raw userInfo from storage:", userInfo);
+    common_vendor.index.__f__("log", "at pages/task/TaskRelease/DeliveryTask/DeliveryTask.vue:359", "2. Type of raw userInfo:", typeof userInfo);
+    if (typeof userInfo === "string") {
+      try {
+        userInfo = JSON.parse(userInfo);
+      } catch (e) {
+        common_vendor.index.__f__("error", "at pages/task/TaskRelease/DeliveryTask/DeliveryTask.vue:365", "5. Error parsing userInfo:", e);
+        userInfo = null;
+      }
+    }
+    if (userInfo && userInfo._id) {
+      this.userInfo = {
+        _id: userInfo._id,
+        username: userInfo.username,
+        nickname: userInfo.nickname || userInfo.username || "用户",
+        // 优先使用 avatar_file.url，否则使用 avatar 字段，最后提供默认头像
+        avatar: userInfo.avatar_file && userInfo.avatar_file.url ? userInfo.avatar_file.url : userInfo.avatar || "/static/images/default_avatar.png"
+        // 确保有一个默认头像
+      };
+      common_vendor.index.__f__("log", "at pages/task/TaskRelease/DeliveryTask/DeliveryTask.vue:381", "11. User is logged in. ID:", this.userInfo._id, "Avatar:", this.userInfo.avatar);
+    } else {
+      common_vendor.index.__f__("log", "at pages/task/TaskRelease/DeliveryTask/DeliveryTask.vue:383", "10. Condition `!userInfo || !userInfo._id` is TRUE. Redirecting...");
+      common_vendor.index.showToast({
+        title: "请先登录",
+        icon: "none"
+      });
+      setTimeout(() => {
+        common_vendor.index.navigateTo({
+          url: "/uni_modules/uni-id-pages/pages/login/login-withoutpwd"
+        });
+      }, 1500);
+      return;
+    }
+    common_vendor.index.__f__("log", "at pages/task/TaskRelease/DeliveryTask/DeliveryTask.vue:395", "--- End Debugging onShow ---");
   },
   methods: {
     onMultiPickerChange(e) {
@@ -190,7 +230,7 @@ const _sfc_main = {
       }
       return baseReward.toFixed(2);
     },
-    handleSubmit() {
+    async handleSubmit() {
       if (!this.pickupAddress) {
         common_vendor.index.showToast({
           title: "请输入取件地址",
@@ -242,38 +282,91 @@ const _sfc_main = {
       }
       const taskData = {
         type: "express",
-        status: "pending",
         title: "快递代取",
         description: this.specialRequirements,
-        tags: this.isUrgent ? ["加急"] : [],
         reward: parseFloat(this.calculateTotalReward()),
-        publishTime: (/* @__PURE__ */ new Date()).toLocaleString("zh-CN"),
-        expectedDeliveryTime: this.expectedDeliveryTime,
-        pickupAddress: this.pickupAddress,
-        deliveryAddress: this.deliveryAddress,
-        trackingNumber: this.trackingNumber,
-        contactName: this.recipientName,
-        contactPhone: this.contactPhone,
-        latestUpdate: "等待接单中",
-        images: [],
-        publisher: {
-          id: "currentUserId",
-          nickname: "当前用户昵称",
-          avatar: "/static/avatar.png",
-          creditRating: 5
+        status: "pending",
+        publisher_id: this.userInfo._id,
+        publisher_name: this.userInfo.nickname,
+        publisher_avatar: this.userInfo.avatar,
+        publish_time: /* @__PURE__ */ new Date(),
+        is_urgent: this.isUrgent || false,
+        tags: this.isUrgent ? ["urgent"] : [],
+        pickup_address: this.pickupAddress,
+        delivery_address: this.deliveryAddress,
+        expected_time: this.expectedDeliveryTime,
+        contact_name: this.recipientName,
+        contact_phone: this.contactPhone
+      };
+      common_vendor.index.__f__("log", "at pages/task/TaskRelease/DeliveryTask/DeliveryTask.vue:574", "提交的任务数据:", taskData);
+      const handlePublish = async () => {
+        if (!this.pickupAddress) {
+          common_vendor.index.showToast({
+            title: "请输入取件地址",
+            icon: "none"
+          });
+          return;
+        }
+        if (!this.deliveryAddress) {
+          common_vendor.index.showToast({
+            title: "请输入送达地址",
+            icon: "none"
+          });
+          return;
+        }
+        if (!this.recipientName) {
+          common_vendor.index.showToast({
+            title: "请输入收件人姓名",
+            icon: "none"
+          });
+          return;
+        }
+        if (!this.contactPhone) {
+          common_vendor.index.showToast({
+            title: "请输入收件人电话",
+            icon: "none"
+          });
+          return;
+        }
+        if (!this.manualReward) {
+          common_vendor.index.showToast({
+            title: "请输入悬赏金额",
+            icon: "none"
+          });
+          return;
+        }
+        try {
+          const res = await common_vendor.nr.callFunction({
+            name: "addTask",
+            data: {
+              taskData
+            }
+          });
+          if (res.result.code === 200) {
+            common_vendor.index.showToast({
+              title: "发布成功",
+              icon: "success"
+            });
+            setTimeout(() => {
+              common_vendor.index.switchTab({
+                url: "/pages/index/index"
+              });
+            }, 1500);
+          } else {
+            common_vendor.index.showToast({
+              title: res.result.msg || "发布失败",
+              icon: "none"
+            });
+          }
+        } catch (e) {
+          common_vendor.index.showToast({
+            title: "发布失败，请重试",
+            icon: "none"
+          });
+          common_vendor.index.__f__("error", "at pages/task/TaskRelease/DeliveryTask/DeliveryTask.vue:641", "发布任务失败：", e);
         }
       };
-      common_vendor.index.__f__("log", "at pages/task/TaskRelease/DeliveryTask/DeliveryTask.vue:536", "提交的任务数据:", taskData);
-      common_vendor.index.showToast({
-        title: "发布成功",
-        icon: "success",
-        success: () => {
-          const taskInfoString = encodeURIComponent(JSON.stringify(taskData));
-          common_vendor.index.navigateTo({
-            url: `/pages/task/TaskDetail/TaskDetail?taskInfo=${taskInfoString}`
-          });
-        }
-      });
+      handlePublish();
     },
     calculatePrice() {
       if (this.weight) {

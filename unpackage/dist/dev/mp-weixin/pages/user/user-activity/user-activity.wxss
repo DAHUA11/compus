@@ -1,0 +1,67 @@
+
+page {
+		background-color: #F5F6FA;
+		height: 100%;
+}
+.page-container {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+}
+.tabs-container {
+		background-color: #FFFFFF;
+		padding: 0 20rpx;
+		border-bottom: 1rpx solid #EBEEF5;
+}
+.tabs {
+		display: flex;
+		justify-content: space-around;
+		height: 88rpx;
+}
+.tab-item {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+		font-size: 15px;
+		color: #606266;
+		position: relative;
+		transition: color 0.3s;
+}
+.tab-item.active {
+		color: #409EFF;
+		font-weight: 500;
+}
+.tab-item.active::after {
+		content: '';
+		position: absolute;
+		bottom: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 60rpx;
+		height: 6rpx;
+		background-color: #409EFF;
+		border-radius: 3rpx;
+}
+.swiper {
+		flex: 1;
+}
+.swiper-item,
+	.scroll-view {
+		height: 100%;
+}
+.activity-list {
+		padding: 20rpx;
+}
+.empty-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+		color: #909399;
+}
+.empty-text {
+		margin-top: 20rpx;
+		font-size: 14px;
+}

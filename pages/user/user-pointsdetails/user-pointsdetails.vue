@@ -167,7 +167,7 @@
 		background: #fff;
 		border-radius: 18rpx;
 		box-shadow: 0 4px 16px rgba(64,128,255,0.10);
-		margin: 32rpx 24rpx 0 24rpx;
+		margin: 0rpx 24rpx 0 24rpx;
 		padding: 32rpx 24rpx 24rpx 24rpx;
 		display: flex;
 		align-items: center;
@@ -196,7 +196,7 @@
 		display: flex;
 		background: #fff;
 		border-radius: 16rpx;
-		margin: 32rpx 24rpx 0 24rpx;
+		margin: 0rpx 24rpx 0 24rpx;
 		box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 		overflow: hidden;
 	}

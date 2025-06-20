@@ -1,0 +1,36 @@
+
+.quick-release-container.data-v-59f47cdf {
+  padding: 20rpx;
+}
+.header.data-v-59f47cdf {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+.form-container.data-v-59f47cdf {
+  margin-top: 40rpx;
+}
+.form-item.data-v-59f47cdf {
+  margin-bottom: 40rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #eee;
+}
+.label.data-v-59f47cdf {
+  display: block;
+  margin-bottom: 20rpx;
+  font-size: 16px;
+  color: #333;
+}
+textarea.data-v-59f47cdf, input.data-v-59f47cdf {
+  width: 100%;
+  font-size: 16px;
+  padding: 10rpx 0;
+}
+.submit-btn.data-v-59f47cdf {
+  margin-top: 60rpx;
+  background: linear-gradient(135deg, #3498db, #9b59b6);
+  color: white;
+  border-radius: 50rpx;
+}

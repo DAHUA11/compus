@@ -1,0 +1,11 @@
+{
+  "cloudfunction-config": {
+    "name": "sendChatMessage",
+    "description": "发送聊天消息并处理用户认证",
+    "memorySize": 256,
+    "timeout": 10
+  },
+  "dependencies": {
+    "uni-id-common": "file:../../../uni_modules/uni-id-common"
+  }
+} 

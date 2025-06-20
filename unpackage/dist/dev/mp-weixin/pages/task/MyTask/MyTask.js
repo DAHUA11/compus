@@ -285,8 +285,6 @@ const _sfc_main = {
     switchTestRole(role) {
       common_vendor.index.setStorageSync("testRole", role);
       const user = this.TEST_USER[role] || this.TEST_USER.user;
-      common_vendor.index.setStorageSync("userToken", "test_token");
-      common_vendor.index.setStorageSync("userId", user.id);
       common_vendor.index.setStorageSync("userNickname", user.nickname);
       common_vendor.index.setStorageSync("userAvatar", user.avatar);
       this.loadStoredTasks();

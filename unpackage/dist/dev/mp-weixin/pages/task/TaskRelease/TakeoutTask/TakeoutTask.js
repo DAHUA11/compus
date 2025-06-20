@@ -17,7 +17,17 @@ const _sfc_main = {
       orderImages: [],
       // 订单截图 (多张，使用数组)
       expectedDeliveryTime: "",
-      // 期望送达时间段
+      timeSlots: [
+        "11:30-12:00",
+        "12:00-12:30",
+        "12:30-13:00",
+        "13:00-13:30",
+        "17:30-18:00",
+        "18:00-18:30",
+        "18:30-19:00",
+        "19:00-19:30"
+      ],
+      showTimePicker: false,
       specialRequirements: "",
       // 特殊要求
       hidePhoneNumber: true,
@@ -35,8 +45,10 @@ const _sfc_main = {
       // 每份加价
       distanceSurcharge: 3,
       // 远距离加价
-      rushFeeRate: 0.3
+      rushFeeRate: 0.3,
       // 加急费率
+      userInfo: null
+      // 确保 userInfo 是响应式数据
     };
   },
   computed: {
@@ -78,6 +90,44 @@ const _sfc_main = {
         this.virtualPhone = this.generateVirtualPhone();
       }
     }
+  },
+  onShow() {
+    let userInfo = common_vendor.index.getStorageSync("uni-id-pages-userInfo");
+    common_vendor.index.__f__("log", "at pages/task/TaskRelease/TakeoutTask/TakeoutTask.vue:387", "--- Debugging onShow ---");
+    common_vendor.index.__f__("log", "at pages/task/TaskRelease/TakeoutTask/TakeoutTask.vue:388", "1. Raw userInfo from storage:", userInfo);
+    common_vendor.index.__f__("log", "at pages/task/TaskRelease/TakeoutTask/TakeoutTask.vue:389", "2. Type of raw userInfo:", typeof userInfo);
+    if (typeof userInfo === "string") {
+      try {
+        userInfo = JSON.parse(userInfo);
+      } catch (e) {
+        common_vendor.index.__f__("error", "at pages/task/TaskRelease/TakeoutTask/TakeoutTask.vue:396", "5. Error parsing userInfo:", e);
+        userInfo = null;
+      }
+    }
+    if (userInfo && userInfo._id) {
+      this.userInfo = {
+        _id: userInfo._id,
+        username: userInfo.username,
+        nickname: userInfo.nickname || userInfo.username || "用户",
+        // 优先使用 avatar_file.url，否则使用 avatar 字段，最后提供默认头像
+        avatar: userInfo.avatar_file && userInfo.avatar_file.url ? userInfo.avatar_file.url : userInfo.avatar || "/static/images/default_avatar.png"
+        // 确保有一个默认头像
+      };
+      common_vendor.index.__f__("log", "at pages/task/TaskRelease/TakeoutTask/TakeoutTask.vue:412", "11. User is logged in. ID:", this.userInfo._id, "Avatar:", this.userInfo.avatar);
+    } else {
+      common_vendor.index.__f__("log", "at pages/task/TaskRelease/TakeoutTask/TakeoutTask.vue:414", "10. Condition `!userInfo || !userInfo._id` is TRUE. Redirecting...");
+      common_vendor.index.showToast({
+        title: "请先登录",
+        icon: "none"
+      });
+      setTimeout(() => {
+        common_vendor.index.navigateTo({
+          url: "/uni_modules/uni-id-pages/pages/login/login-withoutpwd"
+        });
+      }, 1500);
+      return;
+    }
+    common_vendor.index.__f__("log", "at pages/task/TaskRelease/TakeoutTask/TakeoutTask.vue:426", "--- End Debugging onShow ---");
   },
   methods: {
     // 处理返回按钮点击
@@ -121,10 +171,10 @@ const _sfc_main = {
         // 可以指定来源是相册还是相机，默认二者都有
         success: (res) => {
           this.orderImages = [...this.orderImages, ...res.tempFilePaths];
-          common_vendor.index.__f__("log", "at pages/task/TaskRelease/TakeoutTask/TakeoutTask.vue:391", "选择图片成功", this.orderImages);
+          common_vendor.index.__f__("log", "at pages/task/TaskRelease/TakeoutTask/TakeoutTask.vue:476", "选择图片成功", this.orderImages);
         },
         fail: (err) => {
-          common_vendor.index.__f__("error", "at pages/task/TaskRelease/TakeoutTask/TakeoutTask.vue:394", "选择图片失败:", err);
+          common_vendor.index.__f__("error", "at pages/task/TaskRelease/TakeoutTask/TakeoutTask.vue:479", "选择图片失败:", err);
           common_vendor.index.showToast({
             title: "选择图片失败",
             icon: "none"
@@ -164,27 +214,17 @@ const _sfc_main = {
     },
     // 处理选择送达时间
     handleSelectDeliveryTime() {
-      const timeOptions = [];
-      const startHour = 10;
-      const startMinute = 30;
-      const endHour = 20;
-      const endMinute = 30;
-      let currentHour = startHour;
-      let currentMinute = startMinute;
-      while (currentHour < endHour || currentHour === endHour && currentMinute <= endMinute) {
-        timeOptions.push(`${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`);
-        currentMinute += 15;
-        if (currentMinute >= 60) {
-          currentMinute = 0;
-          currentHour++;
-        }
-      }
-      common_vendor.index.showActionSheet({
-        itemList: timeOptions,
-        success: (res) => {
-          this.expectedDeliveryTime = timeOptions[res.tapIndex];
-        }
+      this.showTimePicker = true;
+      this.$nextTick(() => {
+        this.$refs.timePicker.open("bottom");
       });
+    },
+    handleTimeSelect(time) {
+      this.expectedDeliveryTime = time;
+      this.showTimePicker = false;
+    },
+    handleCloseTimePicker() {
+      this.showTimePicker = false;
     },
     // 处理提交
     handleSubmit() {
@@ -239,65 +279,79 @@ const _sfc_main = {
       }
       const taskData = {
         type: "takeout",
-        // 外卖代拿任务类型
-        status: "pending",
-        // 初始状态为待接单
         title: "外卖代拿",
-        // 固定标题
-        description: this.specialRequirements || "无特殊要求",
-        // 特殊要求，如果没有则显示"无特殊要求"
-        reward: parseFloat(this.rewardAmount) || 0,
-        // 赏金金额
-        publishTime: (/* @__PURE__ */ new Date()).toLocaleString("zh-CN"),
-        // 发布时间
-        expectedDeliveryTime: this.expectedDeliveryTime,
-        // 期望送达时间段
-        pickupAddress: this.pickupAddress,
-        // 取货地址
-        deliveryAddress: this.deliveryAddress,
-        // 送达地址
-        latestUpdate: "等待接单中",
-        // 添加初始最新动态
-        images: this.orderImages,
-        // 添加订单截图数组
-        contactName: this.recipientName,
-        // 添加收件人姓名
-        contactPhone: this.realPhone,
-        // 添加联系电话
-        publisher: {
-          // 发布者信息
-          id: "currentUserId",
-          nickname: "当前用户昵称",
-          avatar: "/static/avatar.png",
-          creditRating: 5
-        }
+        description: this.specialRequirements || "",
+        reward: Number(this.rewardAmount),
+        status: "pending",
+        publisher_id: this.userInfo._id,
+        publisher_name: this.userInfo.nickname,
+        publisher_avatar: this.userInfo.avatar,
+        publish_time: /* @__PURE__ */ new Date(),
+        is_urgent: this.isRush || false,
+        tags: this.isRush ? ["urgent"] : [],
+        pickup_address: this.pickupAddress,
+        delivery_address: this.deliveryAddress,
+        expected_time: this.expectedDeliveryTime,
+        contact_name: this.recipientName,
+        contact_phone: this.realPhone,
+        food_quantity: Number(this.foodQuantity),
+        order_images: this.orderImages
       };
-      common_vendor.index.showLoading({
-        title: "发布中..."
-      });
-      setTimeout(() => {
-        common_vendor.index.hideLoading();
-        common_vendor.index.showToast({
-          title: "发布成功",
-          icon: "success",
-          success: () => {
-            const taskInfoString = encodeURIComponent(JSON.stringify(taskData));
-            common_vendor.index.navigateTo({
-              url: `/pages/task/TaskDetail/TaskDetail?taskInfo=${taskInfoString}`
+      try {
+        common_vendor.index.showLoading({
+          title: "发布中..."
+        });
+        common_vendor.nr.callFunction({
+          name: "addTask",
+          data: {
+            taskData
+          }
+        }).then((res) => {
+          common_vendor.index.hideLoading();
+          if (res.result.code === 200) {
+            common_vendor.index.showToast({
+              title: "发布成功",
+              icon: "success"
+            });
+            setTimeout(() => {
+              common_vendor.index.switchTab({
+                url: "/pages/index/index"
+              });
+            }, 1500);
+          } else {
+            common_vendor.index.showToast({
+              title: res.result.msg || "发布失败",
+              icon: "none"
             });
           }
+        }).catch((err) => {
+          common_vendor.index.hideLoading();
+          common_vendor.index.showToast({
+            title: "发布失败，请重试",
+            icon: "none"
+          });
+          common_vendor.index.__f__("error", "at pages/task/TaskRelease/TakeoutTask/TakeoutTask.vue:652", "发布任务失败：", err);
         });
-      }, 1500);
+      } catch (e) {
+        common_vendor.index.hideLoading();
+        common_vendor.index.showToast({
+          title: "发布失败，请重试",
+          icon: "none"
+        });
+        common_vendor.index.__f__("error", "at pages/task/TaskRelease/TakeoutTask/TakeoutTask.vue:660", "发布任务失败：", e);
+      }
     }
   }
 };
 if (!Array) {
   const _easycom_uni_icons2 = common_vendor.resolveComponent("uni-icons");
-  _easycom_uni_icons2();
+  const _easycom_uni_popup2 = common_vendor.resolveComponent("uni-popup");
+  (_easycom_uni_icons2 + _easycom_uni_popup2)();
 }
 const _easycom_uni_icons = () => "../../../../uni_modules/uni-icons/components/uni-icons/uni-icons.js";
+const _easycom_uni_popup = () => "../../../../uni_modules/uni-popup/components/uni-popup/uni-popup.js";
 if (!Math) {
-  _easycom_uni_icons();
+  (_easycom_uni_icons + _easycom_uni_popup)();
 }
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
@@ -383,54 +437,82 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     }),
     B: common_vendor.o((...args) => $options.handleSelectDeliveryTime && $options.handleSelectDeliveryTime(...args)),
     C: common_vendor.p({
+      type: "close",
+      size: "20",
+      color: "#999999"
+    }),
+    D: common_vendor.o((...args) => $options.handleCloseTimePicker && $options.handleCloseTimePicker(...args)),
+    E: common_vendor.f($data.timeSlots, (time, index, i0) => {
+      return common_vendor.e({
+        a: common_vendor.t(time),
+        b: time === $data.expectedDeliveryTime
+      }, time === $data.expectedDeliveryTime ? {
+        c: "7253bae6-12-" + i0 + ",7253bae6-10",
+        d: common_vendor.p({
+          type: "checkmarkempty",
+          size: "16",
+          color: "#3B7FF3"
+        })
+      } : {}, {
+        e: index,
+        f: time === $data.expectedDeliveryTime ? 1 : "",
+        g: common_vendor.o(($event) => $options.handleTimeSelect(time), index)
+      });
+    }),
+    F: common_vendor.sr("timePicker", "7253bae6-10"),
+    G: common_vendor.o($options.handleCloseTimePicker),
+    H: common_vendor.p({
+      type: "bottom"
+    }),
+    I: common_vendor.p({
       type: "info",
       size: "18",
       color: "#47B960"
     }),
-    D: $data.specialRequirements,
-    E: common_vendor.o(($event) => $data.specialRequirements = $event.detail.value),
-    F: common_vendor.t($data.specialRequirements.length),
-    G: common_vendor.p({
+    J: $data.specialRequirements,
+    K: common_vendor.o(($event) => $data.specialRequirements = $event.detail.value),
+    L: common_vendor.t($data.specialRequirements.length),
+    M: common_vendor.p({
       type: "list",
       size: "18",
       color: "#FF9F1C"
     }),
-    H: $data.foodQuantity,
-    I: common_vendor.o(($event) => $options.handleQuantityChange($event.detail.value)),
-    J: $data.foodQuantity && $data.foodQuantity !== ""
+    N: $data.foodQuantity,
+    O: common_vendor.o(($event) => $options.handleQuantityChange($event.detail.value)),
+    P: $data.foodQuantity && $data.foodQuantity !== ""
   }, $data.foodQuantity && $data.foodQuantity !== "" ? common_vendor.e({
-    K: common_vendor.t($options.calculatePrice),
-    L: common_vendor.t($data.basePrice),
-    M: common_vendor.t((parseInt($data.foodQuantity) - 1) * $data.perUnitPrice),
-    N: $data.deliveryAddress.includes("留学生公寓")
+    Q: common_vendor.t($options.calculatePrice),
+    R: common_vendor.t($data.basePrice),
+    S: common_vendor.t((parseInt($data.foodQuantity) - 1) * $data.perUnitPrice),
+    T: $data.deliveryAddress.includes("留学生公寓")
   }, $data.deliveryAddress.includes("留学生公寓") ? {
-    O: common_vendor.t($data.distanceSurcharge)
+    U: common_vendor.t($data.distanceSurcharge)
   } : {}, {
-    P: $data.isRush
+    V: $data.isRush
   }, $data.isRush ? {} : {}, {
-    Q: $data.isRush,
-    R: common_vendor.o((e) => $data.isRush = e.detail.value),
-    S: $data.isRush
+    W: $data.isRush,
+    X: common_vendor.o((e) => $data.isRush = e.detail.value),
+    Y: $data.isRush
   }, $data.isRush ? {
-    T: common_vendor.p({
+    Z: common_vendor.p({
       type: "checkmarkempty",
       size: "14",
       color: "#47B960"
     }),
-    U: common_vendor.p({
+    aa: common_vendor.p({
       type: "checkmarkempty",
       size: "14",
       color: "#47B960"
     })
   } : {}) : {}, {
-    V: common_vendor.p({
+    ab: common_vendor.p({
       type: "wallet",
       size: "18",
       color: "#FF9F1C"
     }),
-    W: $data.rewardAmount,
-    X: common_vendor.o(($event) => $data.rewardAmount = $event.detail.value),
-    Y: common_vendor.o((...args) => $options.handleSubmit && $options.handleSubmit(...args))
+    ac: $data.rewardAmount,
+    ad: common_vendor.o(($event) => $data.rewardAmount = $event.detail.value),
+    ae: common_vendor.o((...args) => $options.handleSubmit && $options.handleSubmit(...args))
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

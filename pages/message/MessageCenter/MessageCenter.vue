@@ -1,543 +1,810 @@
 <template>
-  <view class="message-center-container">
-    <!-- 顶部导航栏 -->
-    <view class="header">
-      <text class="header-title">消息</text>
-      <view class="header-settings-icon" @tap="goToSettings">
-        <!-- 齿轮图标占位符 -->
-        <text>设置</text>
-      </view>
-    </view>
-
-    <!-- 通知消息 -->
-    <view class="message-section notification-messages" @tap="goToNotificationDetails">
-      <view class="section-icon">
-        <!-- 铃铛图标占位符 -->
-        <text>&#x1F514;</text> 
-      </view>
-      <view class="section-content">
-        <text class="section-title">通知消息</text>
-        <text class="section-prompt" v-if="notificationMessage.prompt">{{ notificationMessage.prompt }}</text>
-      </view>
-      <view class="unread-dot" v-if="notificationMessage.hasUnread"></view>
-    </view>
-
-    <!-- 互动消息 -->
-    <view class="message-section interaction-messages">
-       <view class="section-header">
-         <text class="section-title">互动消息</text>
-         <!-- 未读红点或计数 -->
-         <view class="unread-dot" v-if="interactionUnreadCount > 0">{{ interactionUnreadCount }}</view>
-       </view>
-      <scroll-view class="interaction-list" scroll-y>
-        <view v-if="interactionMessages.length === 0 && !interactionLoading" class="empty-state">
-          <image src="/static/images/empty_notification.png" mode="aspectFit" class="empty-icon" />
-          <text class="empty-text">暂无新的互动通知</text>
+  <view>
+    <view class="message-center-container">
+      <!-- 顶部导航栏 -->
+      <view class="navbar">
+        <text class="navbar-title">消息中心</text>
+        <view class="navbar-action" @click="clearUnread">
+          <uni-icons type="trash" size="20" color="#666"></uni-icons>
+          <text class="action-text">清除未读</text>
         </view>
-         <view 
-           class="interaction-item" 
-           v-for="msg in interactionMessages" 
-           :key="msg.id"
-           @tap="handleInteractionClick(msg)"
-         >
-           <view class="item-icon">
-             <!-- 互动类型图标占位符 -->
-              <text>{{ getInteractionIcon(msg.type) }}</text>
-           </view>
-           <view class="item-content">
-             <text class="item-title" :class="{'is-read': msg.isRead}">{{ getInteractionTitle(msg.type) }}</text>
-             <text class="item-snippet">{{ msg.snippet }}</text>
-           </view>
-            <view class="item-time">{{ formatTime(msg.time) }}</view>
-             <view class="unread-dot small" v-if="!msg.isRead"></view>
-         </view>
-          <!-- 加载更多提示 -->
-          <view class="loading-more" v-if="interactionLoading"><text>加载中...</text></view>
-          <view class="loading-more" v-else-if="!hasMoreInteractions && interactionMessages.length > 0"><text>没有更多了</text></view>
+      </view>
+
+      <!-- 功能按钮区 -->
+      <scroll-view scroll-x class="function-buttons">
+        <view 
+          v-for="button in functionButtons" 
+          :key="button.type"
+          class="function-button"
+          :class="{ active: activeButton === button.type }"
+          @click="switchFunction(button.type)"
+        >
+          <view class="button-icon">
+            <uni-icons :type="button.icon" size="28" :color="activeButton === button.type ? '#1890ff' : '#666'"></uni-icons>
+          </view>
+          <text class="button-text">{{ button.text }}</text>
+          <view v-if="button.badge > 0" class="button-badge">{{ button.badge }}</view>
+        </view>
+      </scroll-view>
+
+      <!-- 对话列表 -->
+      <scroll-view 
+        scroll-y 
+        class="conversation-list"
+        @scrolltolower="loadMore"
+      >
+        <!-- 私信模块 -->
+        <view v-if="activeButton === 'private'" class="message-group">
+          <view class="group-date">私信列表</view>
+          <view 
+            v-for="(conversation, index) in privateMessages" 
+            :key="index"
+            class="conversation-item"
+            :class="{ unread: !conversation.read }"
+            @click="enterPrivateChat(conversation)"
+            @longpress="showPrivateActions(conversation)"
+          >
+            <image :src="conversation.avatar" class="avatar" @error="e => e.target.src='/static/images/default-avatar.png'"></image>
+            
+            <view class="conversation-content">
+              <view class="conversation-header">
+                <text class="nickname">{{ conversation.nickname }}</text>
+                <text class="time">{{ formatTime(conversation.time) }}</text>
+              </view>
+              
+              <view class="message-preview">
+                <text class="message-text">{{ conversation.lastMessage }}</text>
+                <view v-if="conversation.unread > 0" class="unread-badge">
+                  {{ conversation.unread > 99 ? '99+' : conversation.unread }}
+                </view>
+              </view>
+            </view>
+          </view>
+          
+          <view v-if="privateMessages.length === 0" class="empty-state">
+            <text>暂无私信消息</text>
+        </view>
+      </view>
+
+        <!-- 互动消息模块 -->
+        <view v-if="activeButton === 'interaction'" class="message-group">
+          <view class="group-date">互动消息</view>
+          <view 
+            v-for="(interaction, index) in interactionMessages" 
+            :key="index"
+            class="conversation-item"
+            :class="{ unread: !interaction.read }"
+            @click="viewInteraction(interaction)"
+          >
+            <image :src="interaction.avatar" class="avatar"></image>
+            
+            <view class="conversation-content">
+              <view class="conversation-header">
+                <text class="nickname">{{ interaction.nickname }}</text>
+                <text class="time">{{ formatTime(interaction.time) }}</text>
+              </view>
+              
+              <view class="message-preview">
+                <text class="message-text">{{ interaction.content }}</text>
+                <view v-if="interaction.unread > 0" class="unread-badge">
+                  {{ interaction.unread > 99 ? '99+' : interaction.unread }}
+                </view>
+              </view>
+              
+              <view class="interaction-type">
+                <text>{{ getInteractionTypeText(interaction.type) }}</text>
+              </view>
+            </view>
+          </view>
+          
+          <view v-if="interactionMessages.length === 0" class="empty-state">
+            <text>暂无互动消息</text>
+          </view>
+        </view>
+        
+        <!-- 通知消息模块 -->
+        <view v-if="activeButton === 'notification'" class="message-group">
+          <view class="group-date">系统通知</view>
+          <view 
+            v-for="(notification, index) in notificationMessages" 
+            :key="index"
+            class="conversation-item"
+            :class="{ unread: !notification.read }"
+            @click="viewNotification(notification)"
+          >
+            <image :src="notification.avatar" class="avatar"></image>
+            
+            <view class="conversation-content">
+              <view class="conversation-header">
+                <text class="nickname">{{ notification.title }}</text>
+                <text class="time">{{ formatTime(notification.time) }}</text>
+              </view>
+              
+              <view class="message-preview">
+                <text class="message-text">{{ notification.content }}</text>
+                <view v-if="notification.unread > 0" class="unread-badge">
+                  {{ notification.unread > 99 ? '99+' : notification.unread }}
+                </view>
+              </view>
+              
+              <view class="notification-type">
+                <text>{{ notification.type === 'task' ? '任务通知' : '系统通知' }}</text>
+              </view>
+            </view>
+          </view>
+          
+          <view v-if="notificationMessages.length === 0" class="empty-state">
+            <text>暂无通知消息</text>
+          </view>
+        </view>
+        
+        <!-- 推荐消息模块 -->
+        <view v-if="activeButton === 'recommend'" class="message-group">
+          <view class="group-date">推荐消息</view>
+          <view 
+            v-for="(recommend, index) in recommendMessages" 
+            :key="index"
+            class="conversation-item"
+            :class="{ unread: !recommend.read }"
+            @click="viewRecommend(recommend)"
+          >
+            <image :src="recommend.avatar" class="avatar"></image>
+            
+            <view class="conversation-content">
+              <view class="conversation-header">
+                <text class="nickname">{{ recommend.title }}</text>
+                <text class="time">{{ formatTime(recommend.time) }}</text>
+              </view>
+              
+              <view class="message-preview">
+                <text class="message-text">{{ recommend.content }}</text>
+                <view v-if="recommend.unread > 0" class="unread-badge">
+                  {{ recommend.unread > 99 ? '99+' : recommend.unread }}
+                </view>
+              </view>
+
+              <view class="recommend-type">
+                <text>{{ recommend.type === 'task' ? '任务推荐' : '活动推荐' }}</text>
+              </view>
+            </view>
+          </view>
+          
+          <view v-if="recommendMessages.length === 0" class="empty-state">
+            <text>暂无推荐消息</text>
+          </view>
+        </view>
+        
+        <!-- 加载状态 -->
+        <view v-if="loading" class="loading-state">
+          <uni-icons type="spinner-cycle" size="24" color="#999" class="rotating"></uni-icons>
+          <text>加载中...</text>
+      </view>
+
+        <view v-if="noMore" class="no-more">
+          <text>没有更多消息了</text>
+      </view>
       </scroll-view>
     </view>
-    
-    <!-- 闲鱼精选 -->
-    <view class="message-section selection-messages" @tap="goToSelectionPage">
-      <view class="section-icon">
-         <!-- 购物袋图标占位符 -->
-        <text>&#x1F6CD;</text>
-      </view>
-      <view class="section-content">
-        <text class="section-title">闲鱼精选</text>
-        <text class="section-prompt">{{ selectionMessage.prompt }}</text>
-      </view>
-       <view class="unread-dot" v-if="selectionMessage.hasUnread"></view>
-    </view>
-
-    <!-- 交易成功/评价提醒 -->
-     <view class="message-section review-prompts" v-if="reviewPrompts.length > 0">
-        <view class="section-header">
-            <text class="section-title">订单与评价</text>
-        </view>
-        <view 
-            class="review-item" 
-            v-for="prompt in reviewPrompts" 
-            :key="prompt.id"
-            @tap="goToReview(prompt.orderId)"
-        >
-             <view class="item-icon">
-                 <!-- 星星图标占位符 -->
-                 <text>&#x2B50;</text>
-             </view>
-             <view class="item-content">
-                 <text class="item-prompt-text">{{ prompt.text }}</text>
-             </view>
-             <view class="review-button">去评价</view>
-        </view>
-     </view>
-     
   </view>
 </template>
 
-<script>
-import { ref, onMounted } from 'vue';
-import { onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
+<script setup>
+import { ref, onMounted } from 'vue'
 
-export default {
-  setup() {
-    // 模拟数据
-    const notificationMessage = ref({
-      prompt: '您有待使用的权益即将到期，点击查看', // 例如优惠券、积分等
-      hasUnread: true,
-      jumpUrl: '/pages/BenefitsCenter/BenefitsCenter' // 假设有权益中心页面
-    });
+// 当前激活tab
+const activeButton = ref('private')
 
-    const interactionMessages = ref([]); // 互动消息列表
-    const interactionUnreadCount = ref(0);
-    const interactionLoading = ref(false);
-    const hasMoreInteractions = ref(true);
-    const interactionPage = ref(1);
+// 私信会话列表（动态获取）
+const privateMessages = ref([])
 
-    const selectionMessage = ref({
-      prompt: '发现更多宝贝，上闲鱼精选！',
-      hasUnread: false,
-      jumpUrl: '/pages/SelectionPage/SelectionPage' // 假设有精选页面
-    });
-
-    const reviewPrompts = ref([]); // 评价提醒列表
-
-    // 模拟获取互动消息列表
-    const loadInteractionMessages = async (isRefresh = false) => {
-      console.log('loadInteractionMessages called, isRefresh:', isRefresh);
-      if (interactionLoading.value) return;
-
-      interactionLoading.value = true;
-      if (isRefresh) {
-        interactionPage.value = 1;
-        hasMoreInteractions.value = true;
-      }
-      if (!hasMoreInteractions.value && !isRefresh) {
-          interactionLoading.value = false;
-          return;
-      }
-
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 800)); 
-
-      const mockMessages = [
-        { id: 1, type: 'reply', snippet: '回复了您的评论...', isRead: false, time: Date.now(), jumpUrl: '/pages/TaskDetail/TaskDetail?id=task1#comment' },
-        { id: 2, type: 'like', snippet: '点赞了您的商品...', isRead: true, time: Date.now() - 60000, jumpUrl: '/pages/GoodsDetail/GoodsDetail?id=goods1' },
-        { id: 3, type: 'follow', snippet: '关注了您...', isRead: false, time: Date.now() - 120000, jumpUrl: '/pages/UserProfile/UserProfile?id=user1' },
-         { id: 4, type: 'reply', snippet: '回复了您的评论...', isRead: true, time: Date.now() - 180000, jumpUrl: '/pages/TaskDetail/TaskDetail?id=task2#comment' },
-        { id: 5, type: 'like', snippet: '点赞了您的商品...', isRead: true, time: Date.now() - 240000, jumpUrl: '/pages/GoodsDetail/GoodsDetail?id=goods2' },
-      ];
-      
-      const pageSize = 4; // 模拟每页加载数量
-      const start = (interactionPage.value - 1) * pageSize;
-      const end = start + pageSize;
-      const list = mockMessages.slice(start, end);
-
-      if (isRefresh) {
-        interactionMessages.value = list;
-      } else {
-        interactionMessages.value = [...interactionMessages.value, ...list];
-      }
-
-      interactionUnreadCount.value = interactionMessages.value.filter(msg => !msg.isRead).length;
-      hasMoreInteractions.value = list.length === pageSize;
-
-      if (hasMoreInteractions.value && !isRefresh) {
-        interactionPage.value++;
-      }
-
-      interactionLoading.value = false;
-      uni.stopPullDownRefresh(); // 停止页面下拉刷新动画
-    };
-
-    // 模拟获取评价提醒
-    const loadReviewPrompts = async () => {
-         console.log('loadReviewPrompts called');
-          // 模拟API调用
-         await new Promise(resolve => setTimeout(resolve, 500)); 
-         
-         // 模拟数据
-         reviewPrompts.value = [
-             { id: 101, orderId: 'order_001', text: '您的订单已完成，快去给TA一个评价吧！' },
-             { id: 102, orderId: 'order_002', text: '请对本次交易进行评价。' },
-         ];
-    };
-
-    // 格式化时间
-    const formatTime = (time) => {
-      const date = new Date(time)
-      const now = new Date();
-      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
-      
-      if (diffInMinutes < 1) return '刚刚';
-      if (diffInMinutes < 60) return `${diffInMinutes}分钟前`;
-      if (diffInMinutes < 24 * 60) return `${Math.floor(diffInMinutes / 60)}小时前`;
-      if (diffInMinutes < 7 * 24 * 60) return `${Math.floor(diffInMinutes / (24 * 60))}天前`;
-      
-      return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
-    };
-
-    // 获取互动类型图标 (模拟)
-    const getInteractionIcon = (type) => {
-        const iconMap = {
-            reply: '&#x1F4AC;', // 对话气泡
-            like: '&#x2764;', // 红心
-            follow: '&#x1F464;' // 人物
-        };
-        return iconMap[type] || '&#x1F4C3;'; // 默认图标 (文件)
-    };
-
-    // 获取互动类型标题 (模拟)
-    const getInteractionTitle = (type) => {
-        const titleMap = {
-            reply: '评论和回复',
-            like: '赞和收藏',
-            follow: '新增关注'
-        };
-        return titleMap[type] || '互动通知';
-    };
-
-    // 跳转到设置页面
-    const goToSettings = () => {
-      console.log('Navigate to settings page');
-      // uni.navigateTo({ url: '/pages/MessageSettings/MessageSettings' }); // 假设有设置页面
-    };
-
-    // 跳转到通知详情页/权益中心
-    const goToNotificationDetails = () => {
-       console.log('Navigate to notification details/benefits center', notificationMessage.value.jumpUrl);
-       if(notificationMessage.value.jumpUrl) {
-            // uni.navigateTo({ url: notificationMessage.value.jumpUrl });
-       }
-    };
-
-    // 处理互动消息点击
-    const handleInteractionClick = (msg) => {
-      console.log('Handle interaction click', msg);
-      // 标记为已读（模拟）
-      msg.isRead = true;
-       interactionUnreadCount.value = interactionMessages.value.filter(m => !m.isRead).length;
-      // 跳转到关联页面
-       if(msg.jumpUrl) {
-           // uni.navigateTo({ url: msg.jumpUrl });
-       }
-    };
-
-    // 跳转到评价页面
-    const goToReview = (orderId) => {
-        console.log('Navigate to review page for order', orderId);
-        // uni.navigateTo({ url: `/pages/ReviewPage/ReviewPage?orderId=${orderId}` }); // 假设有评价页面
-    };
-
-    // 下拉刷新
-    onPullDownRefresh(() => {
-       console.log('onPullDownRefresh triggered');
-       loadInteractionMessages(true);
-    });
-
-    // 上拉加载
-    onReachBottom(() => {
-       console.log('onReachBottom triggered');
-       loadInteractionMessages(false);
-    });
-
-    onMounted(() => {
-       console.log('MessageCenter onMounted');
-       // 页面挂载后不立即加载，等待 onShow
-    });
-
-    onShow(() => {
-      console.log('MessageCenter onShow');
-      // 每次进入页面时加载数据
-      loadInteractionMessages(true); // 刷新互动消息
-      loadReviewPrompts(); // 加载评价提醒
-    });
-
-    return {
-      notificationMessage,
-      interactionMessages,
-      interactionUnreadCount,
-      interactionLoading,
-      hasMoreInteractions,
-      selectionMessage,
-      reviewPrompts,
-      formatTime,
-      getInteractionIcon,
-      getInteractionTitle,
-      goToSettings,
-      goToNotificationDetails,
-      handleInteractionClick,
-      goToReview
-    };
+// 时间格式化
+function formatTime(time) {
+  if (!time) return ''
+  const date = new Date(time)
+  const now = new Date()
+  const diff = now - date
+  if (diff < 60 * 1000) return '刚刚'
+  if (diff < 60 * 60 * 1000) return Math.floor(diff / 60000) + '分钟前'
+  if (diff < 24 * 60 * 60 * 1000 && date.getDate() === now.getDate()) {
+    return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
   }
-};
+  if (diff < 48 * 60 * 60 * 1000 && date.getDate() === now.getDate() - 1) {
+    return `昨天 ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
+  }
+  return `${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
+}
+
+// 获取当前用户ID
+function getCurrentUserId() {
+  try {
+    let userInfo = uni.getStorageSync('uni-id-pages-userInfo')
+    if (!userInfo) return ''
+    // 兼容字符串和对象
+    if (typeof userInfo === 'string') {
+      userInfo = JSON.parse(userInfo)
+    }
+    return userInfo._id || ''
+  } catch (e) {
+    return ''
+  }
+}
+
+// 获取私信会话列表（每个用户一条最新消息）
+async function fetchPrivateMessages() {
+  const userId = getCurrentUserId()
+  console.log('[调试] 当前userId:', userId)
+  if (!userId) return
+  try {
+    const result = await uniCloud.callFunction({
+      name: 'getChatList',
+      data: { userId }
+    })
+    console.log('[调试] getChatList返回:', result)
+    if (result.result.code === 200 && Array.isArray(result.result.data)) {
+      privateMessages.value = result.result.data.map(conv => ({
+        id: conv.partnerId,
+        avatar: conv.partnerAvatar || '/static/images/default-avatar.png',
+        nickname: conv.partnerNickname || '对方',
+        lastMessage: conv.lastMessage || '',
+        time: conv.lastMessageTime || '',
+        read: !conv.unread || conv.unread === 0,
+        unread: conv.unread || 0,
+        lastTaskId: conv.lastTaskId,
+        lastMessageType: conv.lastMessageType
+      }))
+      console.log('[调试] privateMessages.value:', privateMessages.value)
+    }
+  } catch (e) {
+    console.error('[fetchPrivateMessages] 获取私信会话失败', e)
+  }
+}
+
+onMounted(() => {
+  const userInfo = uni.getStorageSync('userInfo')
+  console.log('[onMounted] userInfo:', userInfo)
+  const userId = getCurrentUserId()
+  console.log('[onMounted] 当前userId:', userId)
+  console.log('[onMounted] 当前activeButton:', activeButton.value)
+  if (activeButton.value === 'private') fetchPrivateMessages()
+})
+
+// 切换功能按钮
+function switchFunction(type) {
+  console.log('[switchFunction] 切换tab:', type)
+  activeButton.value = type
+  if (type === 'private') fetchPrivateMessages()
+}
+
+// 跳转到聊天页
+function enterPrivateChat(conversation) {
+  uni.navigateTo({
+    url: `/pages/message/Chat/Chat?partnerId=${conversation.id}&taskId=${conversation.lastTaskId}`
+  })
+}
+
+// 互动、通知、推荐等模块的响应式数据和方法可根据后端接口后续补充
+function viewInteraction() {}
+function viewNotification() {}
+function viewRecommend() {}
+function showPrivateActions() {}
+function clearUnread() {}
+function updateUnreadCounts() {}
+function loadMore() {}
+function getInteractionTypeText(type) {
+  const typeMap = {
+    'like': '点赞',
+    'comment': '评论',
+    'reply': '回复',
+    'follow': '关注'
+  }
+  return typeMap[type] || type
+}
+function goIndex() {
+  uni.navigateTo({ url: '/pages/index/index' })
+}
+function gocircle() {
+  uni.navigateTo({ url: '/pages/circle/circle' })
+}
+function gouser() {
+  uni.navigateTo({ url: '/pages/user/user' })
+}
+</script>
+
+<script>
+export default {
+  data() {
+    return {
+      activeButton: 'private', // 默认显示私信模块
+      loading: false,
+      noMore: false,
+      page: 1,
+      pageSize: 10,
+      functionButtons: [
+        { type: 'private', icon: 'chat', text: '私信', badge: 3 },
+        { type: 'interaction', icon: 'heart', text: '互动', badge: 5 },
+        { type: 'notification', icon: 'notification', text: '通知', badge: 2 },
+        { type: 'recommend', icon: 'star', text: '推荐', badge: 1 }
+      ],
+      // 互动消息（点赞、评论等）
+      interactionMessages: [
+        {
+          id: 'ia1',
+          type: 'like',
+          avatar: '/static/avatars/user4.jpg',
+          nickname: '校园同学',
+          content: '点赞了您的任务发布',
+          time: Date.now() - 1000 * 60 * 60, // 1小时前
+          read: false,
+          unread: 1,
+          postId: 'post123'
+        },
+        {
+          id: 'ia2',
+          type: 'comment',
+          avatar: '/static/avatars/user5.jpg',
+          nickname: '热心校友',
+          content: '评论了您的任务：这个任务描述很清晰，希望能尽快完成！',
+          time: Date.now() - 1000 * 60 * 60 * 3, // 3小时前
+          read: false,
+          unread: 1,
+          postId: 'post456'
+        },
+        {
+          id: 'ia3',
+          type: 'reply',
+          avatar: '/static/avatars/user6.jpg',
+          nickname: '同校学长',
+          content: '回复了您的评论：谢谢您的建议，我会尽快处理',
+          time: Date.now() - 1000 * 60 * 60 * 5, // 5小时前
+          read: true,
+          unread: 0,
+          postId: 'post789'
+        }
+      ],
+      // 通知消息（任务相关）
+      notificationMessages: [
+        {
+          id: 'nt1',
+          type: 'task',
+          avatar: '/static/avatars/system.png',
+          title: '任务通知',
+          content: '您的"代拿外卖"任务已被用户TestUser领取',
+          time: Date.now() - 1000 * 60 * 10, // 10分钟前
+          read: false,
+          unread: 1,
+          taskId: 'task111'
+        },
+        {
+          id: 'nt2',
+          type: 'task',
+          avatar: '/static/avatars/system.png',
+          title: '任务通知',
+          content: '您领取的"教材求购"任务将在1小时后到期',
+          time: Date.now() - 1000 * 60 * 60, // 1小时前
+          read: false,
+          unread: 1,
+          taskId: 'task222'
+        },
+        {
+          id: 'nt3',
+          type: 'system',
+          avatar: '/static/avatars/system.png',
+          title: '系统通知',
+          content: '您的账号信用分已更新，当前信用分：120',
+          time: Date.now() - 1000 * 60 * 60 * 24, // 1天前
+          read: true,
+          unread: 0
+        }
+      ],
+      // 推荐消息
+      recommendMessages: [
+        {
+          id: 'rc1',
+          type: 'task',
+          avatar: '/static/avatars/recommend.png',
+          title: '任务推荐',
+          content: '根据您的兴趣，推荐查看"校园跑腿"相关任务',
+          time: Date.now() - 1000 * 60 * 60 * 2, // 2小时前
+          read: false,
+          unread: 1,
+          taskId: 'task333'
+        },
+        {
+          id: 'rc2',
+          type: 'activity',
+          avatar: '/static/avatars/recommend.png',
+          title: '活动推荐',
+          content: '您可能感兴趣的新活动：校园二手交易节',
+          time: Date.now() - 1000 * 60 * 60 * 24, // 1天前
+          read: true,
+          unread: 0,
+          activityId: 'activity123'
+        }
+      ]
+    }
+  },
+  methods: {
+    // 切换功能按钮
+    switchFunction(type) {
+      this.activeButton = type
+      this.page = 1
+      this.noMore = false
+    },
+    
+    // 进入私信聊天
+    enterPrivateChat(conversation) {
+      console.log('进入私信:', conversation.id)
+      // 标记为已读
+      conversation.read = true
+      conversation.unread = 0
+      this.updateUnreadCounts()
+      
+      uni.navigateTo({
+        url: `/pages/message/private-chat?id=${conversation.id}&taskId=${conversation.lastTaskId}`
+      })
+    },
+
+    // 查看互动消息
+    viewInteraction(interaction) {
+      console.log('查看互动:', interaction.id)
+      interaction.read = true
+      interaction.unread = 0
+      this.updateUnreadCounts()
+      
+      // 跳转到对应的帖子
+      uni.navigateTo({
+        url: `/pages/community/post?id=${interaction.postId}`
+      })
+    },
+    
+    // 查看通知消息
+    viewNotification(notification) {
+      console.log('查看通知:', notification.id)
+      notification.read = true
+      notification.unread = 0
+      this.updateUnreadCounts()
+      
+      if (notification.type === 'task') {
+        // 跳转到任务详情
+        uni.navigateTo({
+          url: `/pages/task/detail?id=${notification.taskId}`
+        })
+      }
+    },
+    
+    // 查看推荐消息
+    viewRecommend(recommend) {
+      console.log('查看推荐:', recommend.id)
+      recommend.read = true
+      recommend.unread = 0
+      this.updateUnreadCounts()
+      
+      if (recommend.type === 'task') {
+        uni.navigateTo({
+          url: `/pages/task/detail?id=${recommend.taskId}`
+        })
+      } else {
+        uni.navigateTo({
+          url: `/pages/activity/detail?id=${recommend.activityId}`
+        })
+      }
+    },
+
+    // 显示私信操作菜单
+    showPrivateActions(conversation) {
+      uni.showActionSheet({
+        itemList: ['置顶聊天', '标记未读', '删除聊天'],
+        success: (res) => {
+          console.log('选择了:', res.tapIndex)
+          // 处理操作
+        }
+      })
+    },
+
+    // 清除所有未读
+    clearUnread() {
+      this.privateMessages.forEach(c => c.read = true)
+      this.interactionMessages.forEach(i => i.read = true)
+      this.notificationMessages.forEach(n => n.read = true)
+      this.recommendMessages.forEach(r => r.read = true)
+      
+      this.updateUnreadCounts()
+      uni.showToast({
+        title: '已清除未读消息',
+        icon: 'success'
+      })
+    },
+
+    // 更新功能按钮的未读计数
+    updateUnreadCounts() {
+      this.functionButtons[0].badge = this.privateMessages.filter(c => !c.read).length
+      this.functionButtons[1].badge = this.interactionMessages.filter(i => !i.read).length
+      this.functionButtons[2].badge = this.notificationMessages.filter(n => !n.read).length
+      this.functionButtons[3].badge = this.recommendMessages.filter(r => !r.read).length
+    },
+    
+    // 加载更多数据
+    loadMore() {
+      if (this.noMore || this.loading) return
+      
+      this.loading = true
+      console.log('加载更多数据...')
+      
+      // 模拟加载更多数据
+        setTimeout(() => {
+        let newData = []
+        
+        if (this.activeButton === 'private') {
+          newData = [{
+            id: 'pm' + (this.privateMessages.length + 1),
+            type: 'private',
+            avatar: '/static/avatars/user' + (this.privateMessages.length + 1) + '.jpg',
+            nickname: '新用户' + (this.privateMessages.length + 1),
+            lastMessage: '你好，我想咨询任务详情',
+            time: Date.now() - 1000 * 60 * 60 * 24 * this.page,
+            read: false,
+            unread: 1,
+            taskType: '咨询',
+            taskId: 'task' + (this.privateMessages.length + 1)
+          }]
+          this.privateMessages = [...this.privateMessages, ...newData]
+        } 
+        // 其他模块的加载逻辑类似...
+        
+        this.page++
+        this.loading = false
+        
+        // 模拟没有更多数据
+        if (this.page >= 3) {
+          this.noMore = true
+        }
+      }, 1000)
+    },
+    
+    // 获取互动类型文本
+    getInteractionTypeText(type) {
+      const typeMap = {
+        'like': '点赞',
+        'comment': '评论',
+        'reply': '回复',
+        'follow': '关注'
+      }
+      return typeMap[type] || type
+    }
+  }
+}
 </script>
 
 <style scoped>
-/* 页面容器 */
 .message-center-container {
+  min-height: 100vh;
+  background: #f6f8fc;
   display: flex;
   flex-direction: column;
-  min-height: 100vh; /* 最小高度为视口高度 */
-  background-color: #f8f8f8;
-  padding-bottom: 20rpx; /* 底部留白 */
 }
 
-/* 顶部导航栏 */
-.header {
-  height: 100rpx;
-  background-color: #ffffff;
+.navbar {
+  height: 110rpx;
+  background: #fff;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0 30rpx;
-  border-bottom: 1rpx solid #eeeeee;
-  position: sticky; /* 吸顶 */
-  top: 0;
-  z-index: 10;
+  justify-content: space-between;
+  padding: 0 32rpx;
+  border-bottom: 1rpx solid #e0e6f1;
+  box-shadow: 0 2rpx 8rpx rgba(160,180,220,0.08);
 }
-
-.header-title {
-  font-size: 36rpx;
+.navbar-title {
+  font-size: 38rpx;
   font-weight: bold;
   color: #333;
+  letter-spacing: 2rpx;
 }
-
-.header-settings-icon {
-  font-size: 36rpx; /* 图标大小 */
-  color: #666; /* 图标颜色 */
-}
-
-/* 消息区域通用样式 */
-.message-section {
-  margin: 20rpx 30rpx 0; /* 上左右外边距 */
-  padding: 25rpx; /* 内边距 */
-  background-color: #ffffff;
-  border-radius: 12rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.05);
+.navbar-action {
   display: flex;
   align-items: center;
-  position: relative; /* 用于定位红点 */
+  gap: 16rpx;
+  font-size: 28rpx;
+  color: #666;
+}
+.action-text {
+  margin-left: 6rpx;
+  font-size: 28rpx;
+  color: #666;
 }
 
-.message-section .section-icon {
-  width: 60rpx; /* 图标区域宽度 */
-  height: 60rpx;
-  margin-right: 25rpx;
-  /* background-color: #e0e0e0; /* 图标背景 */
-  border-radius: 50%;
-  display: flex;
+/* 顶部功能按钮横向滚动区 */
+.function-buttons {
+  width: 100%;
+  background: #fff;
+  padding: 18rpx 0 8rpx 0;
+  box-shadow: 0 2rpx 8rpx rgba(160,180,220,0.04);
+  white-space: nowrap;
+  overflow-x: auto;
+}
+.function-button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  width: 120rpx;
+  margin: 0 18rpx;
+  position: relative;
+  cursor: pointer;
+  border-radius: 20rpx;
+  transition: background 0.2s;
+}
+.function-button.active {
+  background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+}
+.button-icon {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background: #f6f8fc;
+  display: flex;
   align-items: center;
-  font-size: 36rpx; /* 模拟图标大小 */
+  justify-content: center;
+  margin-bottom: 8rpx;
+  box-shadow: 0 2rpx 8rpx #e6f7ff80;
+}
+.button-text {
+  font-size: 26rpx;
+  color: #333;
+  margin-top: 2rpx;
+}
+.button-badge {
+  position: absolute;
+  top: 10rpx;
+  right: 22rpx;
+  min-width: 28rpx;
+  height: 28rpx;
+  background: #ff3b30;
+  color: #fff;
+  font-size: 20rpx;
+  border-radius: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8rpx;
+  box-shadow: 0 2rpx 8rpx #ff3b30a0;
+  font-weight: bold;
+  z-index: 2;
 }
 
-.message-section .section-content {
+/* 对话/消息列表区 */
+.conversation-list {
+  flex: 1;
+  background: #f6f8fc;
+  padding: 0 0 20rpx 0;
+}
+.message-group {
+  margin: 24rpx 0 0 0;
+}
+.group-date {
+  font-size: 26rpx;
+  color: #8a99b3;
+  margin: 0 0 12rpx 32rpx;
+  font-weight: 500;
+}
+.conversation-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 0 24rpx 18rpx 24rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 24rpx rgba(160,180,220,0.10);
+  min-height: 110rpx;
+  padding: 0 24rpx;
+  position: relative;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+.conversation-item:active {
+  box-shadow: 0 2rpx 8rpx rgba(58,141,255,0.10);
+  background: #e6f7ff;
+}
+.conversation-item.unread {
+  background: #e6f7ff;
+}
+.avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: #e9f0fb;
+  border: 2rpx solid #e0e6f1;
+  object-fit: cover;
+  margin-right: 20rpx;
+}
+.conversation-content {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
-
-.message-section .section-title {
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #333333;
-  margin-bottom: 8rpx;
+.conversation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-
-.message-section .section-prompt {
+.nickname {
+  font-size: 32rpx;
+  color: #222;
+  font-weight: 500;
+  margin-right: 12rpx;
+  display: flex;
+  align-items: center;
+}
+.time {
+  font-size: 24rpx;
+  color: #bbb;
+  margin-left: 12rpx;
+}
+.message-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8rpx;
+}
+.message-text {
   font-size: 26rpx;
-  color: #ff7d00; /* 强调色 */
+  color: #8a99b3;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-
-/* 未读红点 */
-.unread-dot {
-  position: absolute;
-  top: 15rpx; /* 根据需要调整位置 */
-  right: 15rpx; /* 根据需要调整位置 */
-  width: 20rpx; 
-  height: 20rpx;
-  background-color: #ff4d4f; /* 红色 */
-  border-radius: 50%;
-  /* border: 2rpx solid #ffffff; */
-  z-index: 5;
+.unread-badge {
+  min-width: 36rpx;
+  height: 36rpx;
+  background: #ff3b30;
+  color: #fff;
+  font-size: 22rpx;
+  border-radius: 36rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10rpx;
+  margin-left: 12rpx;
+  box-shadow: 0 2rpx 8rpx #ff3b30a0;
+  font-weight: bold;
 }
-/* 未读红点（带数字） */
-.unread-dot.small {
-   width: 16rpx; 
-   height: 16rpx;
-}
-
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    margin-bottom: 15rpx;
-}
-
-.section-header .unread-dot {
-    position: static;
-    width: auto;
-    height: auto;
-    background: none;
-    border-radius: 0;
-    color: #ff4d4f; /* 红色数字 */
-    font-size: 26rpx;
-    font-weight: bold;
-    margin-left: 10rpx;
-}
-
-/* 互动消息列表 */
-.interaction-messages {
-    flex-direction: column; /* 垂直布局 */
-    align-items: flex-start; /* 左对齐 */
-}
-
-.interaction-list {
-    width: 100%; /* 占据父容器宽度 */
-    /* height: 300rpx; /* 示例高度，可根据内容调整或使用flex */ 
-}
-
-.interaction-item {
-    display: flex;
-    align-items: center;
-    padding: 15rpx 0;
-    border-bottom: 1rpx solid #f5f5f5; /* 列表项分隔线 */
-     position: relative;
-}
-
-.interaction-item .item-icon {
-    width: 50rpx;
-    height: 50rpx;
-    margin-right: 20rpx;
-    /* background-color: #d0d0d0; */
-    border-radius: 50%;
-     display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 30rpx;
-}
-
-.interaction-item .item-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.interaction-item .item-title {
-    font-size: 28rpx;
-    color: #333;
-    margin-bottom: 5rpx;
-}
-.interaction-item .item-title.is-read {
-    font-weight: normal;
-    color: #666;
-}
-
-.interaction-item .item-snippet {
-    font-size: 24rpx;
-    color: #999;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.interaction-item .item-time {
-    font-size: 22rpx;
-    color: #999;
-    margin-left: 20rpx;
-    flex-shrink: 0; /* 防止时间被压缩 */
+.interaction-type, .notification-type, .recommend-type {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #1890ff;
+  background: #e6f7ff;
+  border-radius: 8rpx;
+  padding: 2rpx 12rpx;
+  display: inline-block;
 }
 
 .empty-state {
+  height: 300rpx;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 50rpx 0;
+  color: #bbb;
+  font-size: 30rpx;
+}
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30rpx 0 10rpx 0;
   color: #999;
   font-size: 28rpx;
 }
-.empty-icon {
-    width: 100rpx;
-    height: 100rpx;
-     margin-bottom: 15rpx;
+.rotating {
+  animation: rotating 1s linear infinite;
 }
-
-/* 评价提醒样式 */
-.review-prompts {
-    flex-direction: column;
-     align-items: flex-start;
+@keyframes rotating {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
-
-.review-item {
-    display: flex;
-    align-items: center;
-    padding: 15rpx 0;
-     border-bottom: 1rpx solid #f5f5f5;
-     width: 100%; /* 占据父容器宽度 */
+.no-more {
+  text-align: center;
+  color: #bbb;
+  font-size: 26rpx;
+  padding: 20rpx 0 10rpx 0;
 }
-
-.review-item .item-icon {
-    width: 50rpx;
-    height: 50rpx;
-    margin-right: 20rpx;
-    /* background-color: #ffcc00; /* 星星颜色 */ 
-     border-radius: 50%;
-     display: flex;
-    justify-content: center;
-    align-items: center;
-     font-size: 30rpx;
-}
-
-.review-item .item-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.review-item .item-prompt-text {
-    font-size: 28rpx;
-    color: #333;
-}
-
-.review-button {
-    background-color: #00bfff; /* 柔和的蓝色 */
-    color: white;
-    font-size: 26rpx;
-    padding: 8rpx 20rpx;
-    border-radius: 30rpx;
-    margin-left: 20rpx;
-    flex-shrink: 0;
-}
-
-/* 加载更多提示 */
-.loading-more {
-    text-align: center;
-    padding: 20rpx;
-    font-size: 28rpx;
-    color: #999;
-}
-
 </style>

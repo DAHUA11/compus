@@ -300,24 +300,24 @@
   z-index: 10
 }
 .submit-btn {
-  flex: 1;
-  height: 88rpx;
-  line-height: 88rpx;
-  text-align: center;
-  background-color: var(--primary-color);
+  width: 100%;
+  height: 90rpx;
+  background: linear-gradient(135deg, #00BFFF, #0099FF);
+  border-radius: 45rpx;
   color: #ffffff;
-  font-size: 16px;
-  border-radius: 44rpx;
-  box-shadow: 0 8px 24px rgba(0, 191, 255, 0.3);
-  transition: all 0.2s;
-  position: relative;
-  z-index: 2;
-  cursor: pointer;
-  border: none
+  font-size: 32rpx;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(0, 191, 255, 0.2);
+  transition: all 0.3s;
+  border: none;
+  line-height: 1;
 }
 .submit-btn:active {
-  transform: translateY(2px);
-  box-shadow: 0 4px 12px rgba(0, 191, 255, 0.2)
+  transform: scale(0.98);
+  box-shadow: 0 4px 8px rgba(0, 191, 255, 0.15);
 }
 .reward-unit {
   color: rgb(255, 159, 28);
@@ -691,4 +691,58 @@ to {
 }
 .delete-btn:active {
   transform: scale(0.95)
+}
+.time-picker-container {
+  background-color: #FFFFFF;
+  border-radius: 24rpx 24rpx 0 0;
+  padding: 30rpx;
+  max-height: 60vh;
+}
+.time-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #EEEEEE;
+  margin-bottom: 20rpx;
+}
+.time-picker-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333333;
+}
+.time-picker-close {
+  padding: 10rpx;
+}
+.time-slots-list {
+  max-height: 50vh;
+}
+.time-slot-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #EEEEEE;
+}
+.time-slot-item:last-child {
+  border-bottom: none;
+}
+.time-slot-item text {
+  font-size: 28rpx;
+  color: #333333;
+}
+.time-slot-item.selected {
+  color: #3B7FF3;
+}
+.time-slot-item.selected text {
+  color: #3B7FF3;
+  font-weight: bold;
+}
+.select-input {
+  font-size: 28rpx;
+  color: #999999;
+  flex: 1;
+}
+.select-input.has-value {
+  color: #333333;
 }
